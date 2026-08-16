@@ -1,4 +1,4 @@
-name: Update Scholar Metrics
+name: Update Publication Metrics
 
 on:
   schedule:
@@ -83,10 +83,61 @@ jobs:
           PYEOF
           python scrape.py
 
+      - name: Fetch ORCID publication count
+        run: |
+          cat > orcid.py <<'PYEOF'
+          import json
+          import sys
+          from datetime import date
+
+          import requests
+
+          ORCID_ID = "0000-0002-1251-6210"
+          URL = f"https://pub.orcid.org/v3.0/{ORCID_ID}/works"
+          HEADERS = {"Accept": "application/json"}
+
+          def is_journal_article(work_summary):
+              if work_summary.get("type") == "journal-article":
+                  return True
+              # Some records are added without ORCID's controlled "type" set correctly;
+              # a populated journal-title is a reliable second signal.
+              jt = work_summary.get("journal-title")
+              return bool(jt and jt.get("value"))
+
+          def main():
+              try:
+                  resp = requests.get(URL, headers=HEADERS, timeout=20)
+                  resp.raise_for_status()
+                  groups = resp.json().get("group", [])
+                  if not groups:
+                      raise ValueError("no work groups returned")
+                  count = sum(
+                      1 for g in groups if is_journal_article(g["work-summary"][0])
+                  )
+              except Exception as e:
+                  print(f"ORCID fetch failed, keeping existing metrics unchanged: {e}", file=sys.stderr)
+                  return  # exit 0 -- do not overwrite good data with a failed fetch
+
+              data = {
+                  "journal_articles": count,
+                  "updated": date.today().isoformat(),
+              }
+
+              with open("orcid-metrics.json", "w") as f:
+                  json.dump(data, f, indent=2)
+                  f.write("\n")
+
+              print("Updated orcid-metrics.json:", data)
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python orcid.py
+
       - name: Commit changes if any
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add scholar-metrics.json
-          git diff --cached --quiet || git commit -m "Update Scholar citation metrics"
+          git add scholar-metrics.json orcid-metrics.json
+          git diff --cached --quiet || git commit -m "Update publication metrics (Scholar + ORCID)"
           git push

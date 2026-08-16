@@ -654,7 +654,7 @@
       <h1>Structural concrete research for a lower-carbon built environment.</h1>
       <p class="sub">Assistant Professor of Civil Engineering with a Ph.D. from IIT Bhubaneswar and postdoctoral research at IIT Madras. My work sits at the intersection of Recycled Aggregate Concrete, Limestone Calcined Clay Cement (LC&sup3;), geopolymer systems, and industrial-waste utilization &mdash; backed by Life Cycle Assessment and machine-learning-based property prediction.</p>
       <div class="metrics">
-        <div class="metric"><div class="n mono">8</div><div class="l">Journal articles</div></div>
+        <div class="metric"><div class="n mono" id="journalArticlesCount">8</div><div class="l">Journal articles</div></div>
         <div class="metric"><div class="n mono" id="citCount">309</div><div class="l">Citations</div></div>
         <div class="metric"><div class="n mono" id="hIndexCount">7</div><div class="l">h-index</div></div>
         <div class="metric"><div class="n mono" id="i10IndexCount">7</div><div class="l">i10-index</div></div>
@@ -997,6 +997,17 @@
       if (data.updated) {
         var updatedEl = document.getElementById('metricsUpdated');
         if (updatedEl) updatedEl.textContent = 'As of ' + data.updated + '.';
+      }
+    })
+    .catch(function () { /* keep static fallback numbers already in the page */ });
+
+  fetch('orcid-metrics.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      var el = document.getElementById('journalArticlesCount');
+      if (el && data.journal_articles !== undefined && data.journal_articles !== null) {
+        el.textContent = data.journal_articles;
       }
     })
     .catch(function () { /* keep static fallback numbers already in the page */ });
