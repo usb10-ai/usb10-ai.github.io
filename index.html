@@ -655,9 +655,9 @@
       <p class="sub">Assistant Professor of Civil Engineering with a Ph.D. from IIT Bhubaneswar and postdoctoral research at IIT Madras. My work sits at the intersection of Recycled Aggregate Concrete, Limestone Calcined Clay Cement (LC&sup3;), geopolymer systems, and industrial-waste utilization &mdash; backed by Life Cycle Assessment and machine-learning-based property prediction.</p>
       <div class="metrics">
         <div class="metric"><div class="n mono">8</div><div class="l">Journal articles</div></div>
-        <div class="metric"><div class="n mono">300+</div><div class="l">Citations</div></div>
-        <div class="metric"><div class="n mono">7</div><div class="l">h-index</div></div>
-        <div class="metric"><div class="n mono">7</div><div class="l">i10-index</div></div>
+        <div class="metric"><div class="n mono" id="citCount">309</div><div class="l">Citations</div></div>
+        <div class="metric"><div class="n mono" id="hIndexCount">7</div><div class="l">h-index</div></div>
+        <div class="metric"><div class="n mono" id="i10IndexCount">7</div><div class="l">i10-index</div></div>
       </div>
     </section>
 
@@ -770,7 +770,7 @@
         <span class="sheet-num mono">SHEET 05</span>
         <h2>Publications</h2>
       </div>
-      <p class="lede">Google Scholar metrics &mdash; Citations 300+ &middot; h-index 7 &middot; i10-index 7. Full list on <a href="https://scholar.google.com/citations?user=688nlsAAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>.</p>
+      <p class="lede">Google Scholar metrics &mdash; Citations <span id="pubCitCount">309</span> &middot; h-index <span id="pubHIndexCount">7</span> &middot; i10-index <span id="pubI10IndexCount">7</span>. Full list on <a href="https://scholar.google.com/citations?user=688nlsAAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>. <span id="metricsUpdated" class="mono" style="font-size:0.78rem;color:var(--ink-faint);"></span></p>
 
       <div class="pub-group-title mono">Peer-Reviewed Journal Articles (8)</div>
       <ol class="pubs">
@@ -978,3 +978,26 @@
     </footer>
   </main>
 </div>
+
+<script>
+  fetch('scholar-metrics.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      var setText = function (id, value) {
+        var el = document.getElementById(id);
+        if (el && value !== undefined && value !== null) el.textContent = value;
+      };
+      setText('citCount', data.citations);
+      setText('hIndexCount', data.h_index);
+      setText('i10IndexCount', data.i10_index);
+      setText('pubCitCount', data.citations);
+      setText('pubHIndexCount', data.h_index);
+      setText('pubI10IndexCount', data.i10_index);
+      if (data.updated) {
+        var updatedEl = document.getElementById('metricsUpdated');
+        if (updatedEl) updatedEl.textContent = 'As of ' + data.updated + '.';
+      }
+    })
+    .catch(function () { /* keep static fallback numbers already in the page */ });
+</script>

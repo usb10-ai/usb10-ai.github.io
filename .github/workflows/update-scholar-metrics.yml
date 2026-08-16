@@ -1,0 +1,92 @@
+name: Update Scholar Metrics
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'   # every Monday, 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Scrape Google Scholar metrics
+        run: |
+          cat > scrape.py <<'PYEOF'
+          import json
+          import sys
+          from datetime import date
+
+          import requests
+          from bs4 import BeautifulSoup
+
+          URL = "https://scholar.google.com/citations?user=688nlsAAAAAJ&hl=en"
+          HEADERS = {
+              "User-Agent": (
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                  "AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/124.0 Safari/537.36"
+              )
+          }
+
+          def load_existing():
+              try:
+                  with open("scholar-metrics.json") as f:
+                      return json.load(f)
+              except FileNotFoundError:
+                  return None
+
+          def main():
+              existing = load_existing()
+              try:
+                  resp = requests.get(URL, headers=HEADERS, timeout=20)
+                  resp.raise_for_status()
+                  soup = BeautifulSoup(resp.text, "html.parser")
+                  cells = soup.select("td.gsc_rsb_std")
+                  if len(cells) < 6:
+                      raise ValueError(f"unexpected page structure ({len(cells)} cells found)")
+                  values = [int(c.get_text(strip=True)) for c in cells]
+              except Exception as e:
+                  print(f"Scrape failed, keeping existing metrics unchanged: {e}", file=sys.stderr)
+                  return  # exit 0 -- do not overwrite good data with a failed scrape
+
+              data = {
+                  "citations": values[0],
+                  "citations_since2021": values[1],
+                  "h_index": values[2],
+                  "h_index_since2021": values[3],
+                  "i10_index": values[4],
+                  "i10_index_since2021": values[5],
+                  "updated": date.today().isoformat(),
+              }
+
+              with open("scholar-metrics.json", "w") as f:
+                  json.dump(data, f, indent=2)
+                  f.write("\n")
+
+              print("Updated scholar-metrics.json:", data)
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python scrape.py
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scholar-metrics.json
+          git diff --cached --quiet || git commit -m "Update Scholar citation metrics"
+          git push
