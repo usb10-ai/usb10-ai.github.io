@@ -513,6 +513,45 @@
     .services-grid{grid-template-columns:1fr;}
   }
 
+  .reel-label{
+    font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
+    font-size:0.7rem;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin:1.6rem 0 0.6rem;
+  }
+  .reel-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1.2rem;
+  }
+  .reel-card{
+    border:1px solid var(--line);
+    background:var(--surface);
+  }
+  .reel-card video{
+    width:100%;
+    display:block;
+    background:#000;
+  }
+  .reel-caption{
+    padding:0.7rem 0.9rem;
+    border-top:1px solid var(--line);
+  }
+  .reel-caption .reel-title{
+    font-size:0.9rem;
+    color:var(--ink);
+  }
+  .reel-caption .reel-desc{
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    margin-top:0.15rem;
+  }
+  @media (max-width: 700px){
+    .reel-grid{grid-template-columns:1fr;}
+  }
+
   .philosophy{
     margin-top:2rem;
     padding:1.5rem 1.7rem;
@@ -971,6 +1010,29 @@
           <p class="svc-deliver">Deliverable: a rendered visualization film from plan/section input.</p>
         </div>
       </div>
+
+      <div class="reel-label">Sample Reels &mdash; Architectural Visualization</div>
+      <div class="reel-grid">
+        <div class="reel-card">
+          <video controls preload="metadata" playsinline>
+            <source src="assets/videos/palmyra-villa.mp4" type="video/mp4">
+          </video>
+          <div class="reel-caption">
+            <div class="reel-title">Palmyra Villas</div>
+            <div class="reel-desc">Section-to-render walkthrough of a G+1 courtyard villa, from dimensioned draft to photoreal veranda.</div>
+          </div>
+        </div>
+        <div class="reel-card">
+          <video controls preload="metadata" playsinline>
+            <source src="assets/videos/higgspark.mp4" type="video/mp4">
+          </video>
+          <div class="reel-caption">
+            <div class="reel-title">Higgspark</div>
+            <div class="reel-desc">AI-generated architectural CGI film.</div>
+          </div>
+        </div>
+      </div>
+
       <a class="btn" style="margin-top:1.6rem;display:inline-block;" href="mailto:usb10@iitbbs.ac.in?subject=Project%20inquiry">Discuss a project</a>
     </section>
 
