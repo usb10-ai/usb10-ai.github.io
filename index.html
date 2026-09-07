@@ -530,10 +530,7 @@
     display:block;
     border:1px solid var(--line);
     background:var(--surface);
-    text-decoration:none;
   }
-  .reel-card:hover{text-decoration:none;}
-  .reel-card:hover .reel-title{text-decoration:underline;}
   .reel-thumb{
     position:relative;
     aspect-ratio:16/9;
@@ -546,19 +543,30 @@
     object-fit:cover;
     display:block;
   }
+  .reel-thumb iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    display:block;
+  }
   .reel-play{
     position:absolute;
     inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
+    background:none;
+    border:0;
+    padding:0;
+    cursor:pointer;
   }
   .reel-play svg{
     width:56px;height:56px;
     filter:drop-shadow(0 1px 4px rgba(0,0,0,0.45));
     transition:transform 0.15s ease;
   }
-  .reel-card:hover .reel-play svg{transform:scale(1.08);}
+  .reel-play:hover svg{transform:scale(1.08);}
+  .reel-play:focus-visible{outline:2px solid var(--accent);outline-offset:-4px;}
   .reel-caption{
     padding:0.7rem 0.9rem;
     border-top:1px solid var(--line);
@@ -1037,30 +1045,30 @@
 
       <div class="reel-label">Sample Reels &mdash; Architectural Visualization</div>
       <div class="reel-grid">
-        <a class="reel-card" href="https://youtu.be/CROjxai4UFY" target="_blank" rel="noopener">
-          <div class="reel-thumb">
+        <div class="reel-card">
+          <div class="reel-thumb" data-yt-id="CROjxai4UFY">
             <img src="https://img.youtube.com/vi/CROjxai4UFY/maxresdefault.jpg" alt="Palmyra Villas visualization film thumbnail" loading="lazy">
-            <div class="reel-play">
+            <button class="reel-play" type="button" aria-label="Play Palmyra Villas video">
               <svg viewBox="0 0 68 48"><path d="M66.5,7.7c-0.8-2.9-2.4-4.5-5.3-5.3C56.4,1,34,1,34,1S11.6,1,6.8,2.4c-2.9,0.8-4.5,2.4-5.3,5.3C0,12.5,0,24,0,24s0,11.5,1.5,16.3c0.8,2.9,2.4,4.5,5.3,5.3C11.6,47,34,47,34,47s22.4,0,27.2-1.4c2.9-0.8,4.5-2.4,5.3-5.3C68,35.5,68,24,68,24S68,12.5,66.5,7.7z" fill="#ff0000"></path><path d="M45,24L27,14v20L45,24z" fill="#fff"></path></svg>
-            </div>
+            </button>
           </div>
           <div class="reel-caption">
             <div class="reel-title">Palmyra Villas</div>
             <div class="reel-desc">Section-to-render walkthrough of a G+1 courtyard villa, from dimensioned draft to photoreal veranda.</div>
           </div>
-        </a>
-        <a class="reel-card" href="https://youtu.be/atTOiqrmzRQ" target="_blank" rel="noopener">
-          <div class="reel-thumb">
+        </div>
+        <div class="reel-card">
+          <div class="reel-thumb" data-yt-id="atTOiqrmzRQ">
             <img src="https://img.youtube.com/vi/atTOiqrmzRQ/maxresdefault.jpg" alt="Higgs Park visualization film thumbnail" loading="lazy">
-            <div class="reel-play">
+            <button class="reel-play" type="button" aria-label="Play Higgs Park video">
               <svg viewBox="0 0 68 48"><path d="M66.5,7.7c-0.8-2.9-2.4-4.5-5.3-5.3C56.4,1,34,1,34,1S11.6,1,6.8,2.4c-2.9,0.8-4.5,2.4-5.3,5.3C0,12.5,0,24,0,24s0,11.5,1.5,16.3c0.8,2.9,2.4,4.5,5.3,5.3C11.6,47,34,47,34,47s22.4,0,27.2-1.4c2.9-0.8,4.5-2.4,5.3-5.3C68,35.5,68,24,68,24S68,12.5,66.5,7.7z" fill="#ff0000"></path><path d="M45,24L27,14v20L45,24z" fill="#fff"></path></svg>
-            </div>
+            </button>
           </div>
           <div class="reel-caption">
             <div class="reel-title">Higgs Park</div>
             <div class="reel-desc">Blueprint-to-reality launch film for a 12-storey stepped-terrace tower &mdash; ink-to-matter ignition, dimensional proof overlay, and golden-hour reveal.</div>
           </div>
-        </a>
+        </div>
       </div>
 
       <a class="btn" style="margin-top:1.6rem;display:inline-block;" href="mailto:usb10@iitbbs.ac.in?subject=Project%20inquiry">Discuss a project</a>
@@ -1108,4 +1116,18 @@
       }
     })
     .catch(function () { /* keep static fallback numbers already in the page */ });
+
+  document.querySelectorAll('.reel-thumb').forEach(function (thumb) {
+    var playBtn = thumb.querySelector('.reel-play');
+    playBtn.addEventListener('click', function () {
+      var id = thumb.getAttribute('data-yt-id');
+      var iframe = document.createElement('iframe');
+      iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+      iframe.title = thumb.querySelector('img').alt;
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+      thumb.innerHTML = '';
+      thumb.appendChild(iframe);
+    });
+  });
 </script>
