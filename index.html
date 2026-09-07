@@ -512,6 +512,30 @@
   @media (max-width: 700px){
     .services-grid{grid-template-columns:1fr;}
   }
+  .service-card-wide{grid-column:1 / -1;}
+  .service-card-wide .svc-body{
+    display:flex;
+    gap:2rem;
+    align-items:flex-start;
+  }
+  .service-card-wide .svc-body p{margin:0;flex:1;}
+  .service-card-wide .svc-body p.svc-deliver{
+    border-top:none;
+    border-left:1px solid var(--line);
+    padding-top:0;
+    padding-left:1.4rem;
+    margin-top:0;
+  }
+  @media (max-width: 700px){
+    .service-card-wide .svc-body{flex-direction:column;gap:0;}
+    .service-card-wide .svc-body p.svc-deliver{
+      border-left:none;
+      border-top:1px solid var(--line);
+      padding-left:0;
+      padding-top:0.6rem;
+      margin-top:0.6rem;
+    }
+  }
 
   .reel-label{
     font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
@@ -1035,11 +1059,13 @@
           <p>RCPT, surface resistivity, accelerated carbonation, and corrosion assessment of concrete and reinforced systems.</p>
           <p class="svc-deliver">Deliverable: a durability assessment report against relevant standards.</p>
         </div>
-        <div class="service-card">
+        <div class="service-card service-card-wide">
           <div class="svc-num">05</div>
           <h3>Architectural Visualization</h3>
-          <p>AI-generated CGI walkthroughs and design films rendered from your drawings &mdash; material-accurate visuals of sections, elevations, and finished spaces.</p>
-          <p class="svc-deliver">Deliverable: a rendered visualization film, ready to present or publish.</p>
+          <div class="svc-body">
+            <p>AI-generated CGI walkthroughs and design films rendered from your drawings &mdash; material-accurate visuals of sections, elevations, and finished spaces.</p>
+            <p class="svc-deliver">Deliverable: a rendered visualization film, ready to present or publish.</p>
+          </div>
         </div>
       </div>
 
