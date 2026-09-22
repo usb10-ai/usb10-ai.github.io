@@ -26,20 +26,59 @@ jobs:
         run: |
           cat > scrape.py <<'PYEOF'
           import json
+          import random
           import sys
+          import time
           from datetime import date
 
           import requests
           from bs4 import BeautifulSoup
 
-          URL = "https://scholar.google.com/citations?user=688nlsAAAAAJ&hl=en"
-          HEADERS = {
-              "User-Agent": (
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/124.0 Safari/537.36"
+          PROFILE_URL = "https://scholar.google.com/citations?user=688nlsAAAAAJ&hl=en"
+          HOME_URL = "https://scholar.google.com/"
+
+          USER_AGENTS = [
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 "
+              "(KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+              "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/127.0.0.0 Safari/537.36",
+          ]
+
+          def build_session():
+              ua = random.choice(USER_AGENTS)
+              session = requests.Session()
+              session.headers.update({
+                  "User-Agent": ua,
+                  "Accept": (
+                      "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                      "image/avif,image/webp,*/*;q=0.8"
+                  ),
+                  "Accept-Language": "en-US,en;q=0.9",
+                  "Accept-Encoding": "gzip, deflate, br",
+                  "Connection": "keep-alive",
+                  "Upgrade-Insecure-Requests": "1",
+                  "Sec-Fetch-Dest": "document",
+                  "Sec-Fetch-Mode": "navigate",
+                  "Sec-Fetch-Site": "none",
+                  "Sec-Fetch-User": "?1",
+                  "Cache-Control": "max-age=0",
+              })
+              return session
+
+          def fetch_profile():
+              session = build_session()
+              # Warm up like a real visit: land on the homepage first so Scholar
+              # issues its usual cookies, then navigate to the profile with a
+              # matching Referer -- rather than requesting the profile cold.
+              session.get(HOME_URL, timeout=20)
+              time.sleep(random.uniform(1.5, 3.5))
+              resp = session.get(
+                  PROFILE_URL, timeout=20, headers={"Referer": HOME_URL}
               )
-          }
+              resp.raise_for_status()
+              return resp.text
 
           def load_existing():
               try:
@@ -50,16 +89,34 @@ jobs:
 
           def main():
               existing = load_existing()
-              try:
-                  resp = requests.get(URL, headers=HEADERS, timeout=20)
-                  resp.raise_for_status()
-                  soup = BeautifulSoup(resp.text, "html.parser")
-                  cells = soup.select("td.gsc_rsb_std")
-                  if len(cells) < 6:
-                      raise ValueError(f"unexpected page structure ({len(cells)} cells found)")
-                  values = [int(c.get_text(strip=True)) for c in cells]
-              except Exception as e:
-                  print(f"Scrape failed, keeping existing metrics unchanged: {e}", file=sys.stderr)
+              last_error = None
+              attempts = 4
+              for attempt in range(1, attempts + 1):
+                  try:
+                      html = fetch_profile()
+                      soup = BeautifulSoup(html, "html.parser")
+                      cells = soup.select("td.gsc_rsb_std")
+                      if len(cells) < 6:
+                          raise ValueError(
+                              f"unexpected page structure ({len(cells)} cells found)"
+                          )
+                      values = [int(c.get_text(strip=True)) for c in cells]
+                      break
+                  except Exception as e:
+                      last_error = e
+                      print(f"Attempt {attempt}/{attempts} failed: {e}", file=sys.stderr)
+                      if attempt < attempts:
+                          # Back off with jitter; Scholar rate-limits by IP, so a
+                          # short pause between tries gives the block a chance to lift.
+                          delay = attempt * random.uniform(20, 40)
+                          print(f"Retrying in {delay:.0f}s...", file=sys.stderr)
+                          time.sleep(delay)
+              else:
+                  print(
+                      f"Scrape failed after {attempts} attempts, keeping existing "
+                      f"metrics unchanged: {last_error}",
+                      file=sys.stderr,
+                  )
                   return  # exit 0 -- do not overwrite good data with a failed scrape
 
               data = {
