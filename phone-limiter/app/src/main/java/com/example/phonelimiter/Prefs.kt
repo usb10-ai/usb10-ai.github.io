@@ -9,4 +9,9 @@ object Prefs {
     fun enabled(c: Context) = sp(c).getBoolean("enabled", false)
     fun set(c: Context, limit: Int, brk: Int) = sp(c).edit().putInt("limit", limit).putInt("break", brk).apply()
     fun setEnabled(c: Context, on: Boolean) = sp(c).edit().putBoolean("enabled", on).apply()
+    fun nightOn(c: Context) = sp(c).getBoolean("nightOn", true)
+    fun nightStart(c: Context) = sp(c).getInt("nightStart", 23)
+    fun nightEnd(c: Context) = sp(c).getInt("nightEnd", 4)
+    fun setNight(c: Context, on: Boolean, start: Int, end: Int) =
+        sp(c).edit().putBoolean("nightOn", on).putInt("nightStart", start).putInt("nightEnd", end).apply()
 }

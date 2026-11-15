@@ -35,4 +35,20 @@ class SessionTrackerTest {
         assertFalse(t.shouldNudge(34 * min))
         assertTrue(t.shouldNudge(36 * min))
     }
+
+    @Test fun nightWindowWrapsMidnight() {
+        assertTrue(SessionTracker.isNight(23, 23, 4))
+        assertTrue(SessionTracker.isNight(0, 23, 4))
+        assertTrue(SessionTracker.isNight(3, 23, 4))
+        assertFalse(SessionTracker.isNight(4, 23, 4))
+        assertFalse(SessionTracker.isNight(12, 23, 4))
+    }
+
+    @Test fun nightNudgeOnUnlockThenRepeats() {
+        val t = tracker(); t.onScreenOn(0)
+        assertTrue(t.shouldNightNudge(0, 1, 23, 4))
+        assertFalse(t.shouldNightNudge(min, 1, 23, 4))
+        assertTrue(t.shouldNightNudge(3 * min, 1, 23, 4))
+        assertFalse(t.shouldNightNudge(10 * min, 14, 23, 4))
+    }
 }

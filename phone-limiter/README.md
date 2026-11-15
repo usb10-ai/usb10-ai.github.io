@@ -1,6 +1,6 @@
 # Phone Limiter (Android)
 
-Nudges you after 20 minutes (configurable) of continuous phone use.
+Nudges you after 20 minutes (configurable) of continuous phone use, and tells you to stay off the phone at night (default 11pm-4am, configurable).
 
 **How "continuous" works:** the clock runs while the screen is on. Brief lock/unlock
 cycles don't reset it; the screen must stay off for the break length (default 5 min) to count as a real break.

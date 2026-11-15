@@ -5,6 +5,7 @@ import android.content.*
 import android.os.*
 import android.provider.Settings
 import android.os.PowerManager
+import java.util.Calendar
 
 class UsageService : Service() {
     private lateinit var tracker: SessionTracker
@@ -18,7 +19,7 @@ class UsageService : Service() {
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
             when (i.action) {
-                Intent.ACTION_SCREEN_ON -> { tracker.onScreenOn(now()); startTicking() }
+                Intent.ACTION_SCREEN_ON -> { tracker.onScreenOn(now()); startTicking(); handler.postDelayed({ check() }, 1_500L) }
                 Intent.ACTION_SCREEN_OFF -> { tracker.onScreenOff(now()); handler.removeCallbacks(tick) }
             }
         }
@@ -53,15 +54,23 @@ class UsageService : Service() {
     private fun startTicking() { handler.removeCallbacks(tick); handler.postDelayed(tick, 30_000L) }
 
     private fun check() {
-        if (!tracker.shouldNudge(now())) return
-        val mins = (tracker.elapsedMs(now()) / 60_000L).toInt()
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        if (Prefs.nightOn(this) &&
+            tracker.shouldNightNudge(now(), hour, Prefs.nightStart(this), Prefs.nightEnd(this))) {
+            nudge("It's night time", "Don't use your phone. Go to sleep.", 0, true)
+        } else if (tracker.shouldNudge(now())) {
+            val mins = (tracker.elapsedMs(now()) / 60_000L).toInt()
+            nudge("$mins minutes on your phone", "Put it down and take a break.", mins, false)
+        }
+    }
+
+    private fun nudge(title: String, text: String, mins: Int, night: Boolean) {
         val breakIntent = Intent(this, BreakActivity::class.java)
-            .putExtra("minutes", mins).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .putExtra("minutes", mins).putExtra("night", night).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pi = PendingIntent.getActivity(this, 0, breakIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val n = Notification.Builder(this, "nudge")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle("$mins minutes on your phone")
-            .setContentText("Put it down and take a break.")
+            .setContentTitle(title).setContentText(text)
             .setContentIntent(pi).setFullScreenIntent(pi, true).setAutoCancel(true).build()
         getSystemService(NotificationManager::class.java).notify(2, n)
         (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
