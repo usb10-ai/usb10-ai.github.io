@@ -53,9 +53,6 @@ class UsageService : Service() {
                 tracker.snooze(now(), 5 * 60_000L)
                 getSystemService(NotificationManager::class.java).cancel(2)
             }
-            ACTION_TEST -> handler.postDelayed({
-                nudge("Test prompt", "This is how a break reminder looks.", Prefs.limitMin(this), false)
-            }, 5_000L)
         }
         return START_STICKY
     }
@@ -158,7 +155,6 @@ class UsageService : Service() {
 
     companion object {
         const val ACTION_SNOOZE = "com.example.phonelimiter.SNOOZE"
-        const val ACTION_TEST = "com.example.phonelimiter.TEST"
         fun start(c: Context, action: String? = null) =
             c.startForegroundService(Intent(c, UsageService::class.java).setAction(action))
         fun stop(c: Context) = c.stopService(Intent(c, UsageService::class.java))

@@ -101,14 +101,6 @@ class MainActivity : Activity() {
             })
         })
 
-        root.addView(Ui.button(c, "Test the prompt (in 5 seconds)", Color.parseColor("#263449")).apply {
-            setOnClickListener {
-                // Switch to YouTube (or any app) now to check the prompt shows on top of it.
-                UsageService.start(c, UsageService.ACTION_TEST)
-                Toast.makeText(c, "Open YouTube now. The prompt appears in 5 seconds.", Toast.LENGTH_LONG).show()
-            }
-        })
-
         fun save() {
             Prefs.set(c, limit.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 20,
                 brk.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 5)
