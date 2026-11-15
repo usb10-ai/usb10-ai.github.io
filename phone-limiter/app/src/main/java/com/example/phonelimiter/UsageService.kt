@@ -5,6 +5,9 @@ import android.content.*
 import android.os.*
 import android.provider.Settings
 import android.os.PowerManager
+import android.graphics.PixelFormat
+import android.view.View
+import android.view.WindowManager
 import java.util.Calendar
 
 class UsageService : Service() {
@@ -12,7 +15,7 @@ class UsageService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private val tick = object : Runnable {
         override fun run() {
-            check(); handler.postDelayed(this, 30_000L)
+            check(); updateStatus(); handler.postDelayed(this, 30_000L)
         }
     }
 
@@ -38,17 +41,31 @@ class UsageService : Service() {
         val nm = getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(NotificationChannel("status", "Monitoring", NotificationManager.IMPORTANCE_MIN))
         nm.createNotificationChannel(NotificationChannel("nudge", "Break reminders", NotificationManager.IMPORTANCE_HIGH))
-        startForeground(1, Notification.Builder(this, "status")
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle("Phone Limiter is watching your screen time").build())
+        startForeground(1, statusNotification("Watching your screen time"))
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_SNOOZE) {
-            tracker.snooze(now(), 5 * 60_000L)
-            getSystemService(NotificationManager::class.java).cancel(2)
+        when (intent?.action) {
+            ACTION_SNOOZE -> {
+                tracker.snooze(now(), 5 * 60_000L)
+                getSystemService(NotificationManager::class.java).cancel(2)
+            }
+            ACTION_TEST -> handler.postDelayed({
+                nudge("Test prompt", "This is how a break reminder looks.", Prefs.limitMin(this), false)
+            }, 5_000L)
         }
         return START_STICKY
+    }
+
+    private fun statusNotification(text: String) = Notification.Builder(this, "status")
+        .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+        .setContentTitle("Phone Limiter").setContentText(text).setOnlyAlertOnce(true).build()
+
+    /** Lets you see tracking working, e.g. while watching YouTube. */
+    private fun updateStatus() {
+        val mins = tracker.elapsedMs(now()) / 60_000L
+        getSystemService(NotificationManager::class.java)
+            .notify(1, statusNotification("Screen on for $mins min (reminder at ${Prefs.limitMin(this)})"))
     }
 
     private fun startTicking() { handler.removeCallbacks(tick); handler.postDelayed(tick, 30_000L) }
@@ -75,11 +92,29 @@ class UsageService : Service() {
         getSystemService(NotificationManager::class.java).notify(2, n)
         (getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager).defaultVibrator
             .vibrate(VibrationEffect.createWaveform(longArrayOf(0, 300, 150, 300), -1))
-        // With the overlay permission Android lets us open the break screen directly.
-        if (Settings.canDrawOverlays(this)) startActivity(breakIntent)
+        if (Settings.canDrawOverlays(this)) showOverlay(night, mins)
+    }
+
+    private var overlay: View? = null
+
+    /** Drawn straight on top of every app (YouTube included) — no activity launch needed. */
+    private fun showOverlay(night: Boolean, mins: Int) {
+        if (overlay != null) return
+        val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        fun dismiss() { overlay?.let { runCatching { wm.removeView(it) } }; overlay = null }
+        val v = BreakView.build(this, night, mins,
+            onStop = { dismiss(); BreakActivity.goHome(this) },
+            onSnooze = { dismiss(); onStartCommand(Intent(ACTION_SNOOZE), 0, 0) })
+        val lp = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.OPAQUE)
+        runCatching { wm.addView(v, lp); overlay = v }
     }
 
     override fun onDestroy() {
+        overlay?.let { runCatching { (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(it) } }
         handler.removeCallbacks(tick); unregisterReceiver(screenReceiver); super.onDestroy()
     }
 
@@ -87,7 +122,9 @@ class UsageService : Service() {
 
     companion object {
         const val ACTION_SNOOZE = "com.example.phonelimiter.SNOOZE"
-        fun start(c: Context) = c.startForegroundService(Intent(c, UsageService::class.java))
+        const val ACTION_TEST = "com.example.phonelimiter.TEST"
+        fun start(c: Context, action: String? = null) =
+            c.startForegroundService(Intent(c, UsageService::class.java).setAction(action))
         fun stop(c: Context) = c.stopService(Intent(c, UsageService::class.java))
     }
 }
