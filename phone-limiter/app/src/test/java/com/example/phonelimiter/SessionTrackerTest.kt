@@ -51,4 +51,23 @@ class SessionTrackerTest {
         assertTrue(t.shouldNightNudge(3 * min, 1, 23, 4))
         assertFalse(t.shouldNightNudge(10 * min, 14, 23, 4))
     }
+
+    @Test fun limitedAfterLimitUntilSnoozedOrBreak() {
+        val t = tracker(); t.onScreenOn(0)
+        assertFalse(t.isLimited(19 * min))
+        assertTrue(t.isLimited(20 * min))
+        t.snooze(20 * min, 5 * min)
+        assertFalse(t.isLimited(22 * min))
+        assertTrue(t.isLimited(26 * min))
+        t.onScreenOff(27 * min); t.onScreenOn(33 * min)
+        assertFalse(t.isLimited(34 * min))
+    }
+
+    @Test fun restrictionBlocksEverythingExceptAllowedHomeAndOwn() {
+        assertTrue(Restriction.shouldBlock("com.google.android.youtube", "com.whatsapp", "com.sec.android.app.launcher", "com.example.phonelimiter"))
+        assertFalse(Restriction.shouldBlock("com.whatsapp", "com.whatsapp", "com.sec.android.app.launcher", "com.example.phonelimiter"))
+        assertFalse(Restriction.shouldBlock("com.sec.android.app.launcher", "com.whatsapp", "com.sec.android.app.launcher", "com.example.phonelimiter"))
+        assertFalse(Restriction.shouldBlock("com.example.phonelimiter", "com.whatsapp", null, "com.example.phonelimiter"))
+        assertFalse(Restriction.shouldBlock("com.android.systemui", "com.whatsapp", null, "x"))
+    }
 }

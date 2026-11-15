@@ -28,6 +28,10 @@ class SessionTracker(var limitMs: Long, var breakMs: Long, var nagIntervalMs: Lo
 
     fun snooze(now: Long, ms: Long) { snoozeUntil = now + ms; lastNudge = now }
 
+    /** Over the continuous-use limit and not snoozed (drives the one-app restriction). */
+    fun isLimited(now: Long): Boolean =
+        screenOffAt == null && elapsedMs(now) >= limitMs && now >= snoozeUntil
+
     /** True when the user should be nudged right now; records the nudge. */
     fun shouldNudge(now: Long): Boolean {
         if (screenOffAt != null || elapsedMs(now) < limitMs || now < snoozeUntil) return false

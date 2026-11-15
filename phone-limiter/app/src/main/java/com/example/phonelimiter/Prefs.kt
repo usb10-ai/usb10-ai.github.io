@@ -14,4 +14,6 @@ object Prefs {
     fun nightEnd(c: Context) = sp(c).getInt("nightEnd", 4)
     fun setNight(c: Context, on: Boolean, start: Int, end: Int) =
         sp(c).edit().putBoolean("nightOn", on).putInt("nightStart", start).putInt("nightEnd", end).apply()
+    fun allowedPkg(c: Context): String? = sp(c).getString("allowedPkg", null)
+    fun setAllowedPkg(c: Context, pkg: String?) = sp(c).edit().putString("allowedPkg", pkg).apply()
 }

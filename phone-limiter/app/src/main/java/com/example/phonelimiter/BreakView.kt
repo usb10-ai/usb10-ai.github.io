@@ -49,4 +49,24 @@ object BreakView {
         stop.setOnClickListener { onStop() }
         return root
     }
+
+    /** "Only <app> is allowed right now" prompt. */
+    fun buildRestricted(c: Context, appLabel: String, night: Boolean,
+                        onOpenAllowed: () -> Unit, onHome: () -> Unit, onSnooze: (() -> Unit)?): View {
+        val root = LinearLayout(c).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            setBackgroundColor(if (night) Color.parseColor("#070B14") else Ui.BG)
+            setPadding(Ui.dp(c, 32), Ui.dp(c, 32), Ui.dp(c, 32), Ui.dp(c, 32))
+            isClickable = true
+        }
+        fun centered(s: String, size: Float, color: Int = Color.WHITE, bold: Boolean = false) =
+            Ui.text(c, s, size, color, bold).apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(c, 16)) }
+        root.addView(centered(if (night) "🌙" else "🔒", 64f))
+        root.addView(centered("Only $appLabel is allowed", 26f, bold = true))
+        root.addView(centered(if (night) "It's night time. Put the phone down." else "You've had your 20-minute limit. Take a break.", 17f, Ui.MUTED))
+        root.addView(Ui.button(c, "Open $appLabel").apply { setOnClickListener { onOpenAllowed() } })
+        root.addView(Ui.button(c, "Go to home screen", Color.parseColor("#263449")).apply { setOnClickListener { onHome() } })
+        if (onSnooze != null) root.addView(Ui.button(c, "5 more minutes", Color.parseColor("#263449")).apply { setOnClickListener { onSnooze() } })
+        return root
+    }
 }

@@ -11,6 +11,9 @@ import android.view.ViewGroup
 import android.widget.*
 
 class MainActivity : Activity() {
+    private var refreshAllowedHook: (() -> Unit)? = null
+    override fun onResume() { super.onResume(); refreshAllowedHook?.invoke() }
+
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
         requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
@@ -52,6 +55,40 @@ class MainActivity : Activity() {
             addView(Ui.row(c, "Starts at (hour, 0-23)", ns))
             addView(Ui.row(c, "Ends at (hour, 0-23)", ne))
         })
+
+        // One allowed app
+        val allowedText = Ui.text(c, "", 15f, Ui.MUTED).apply { setPadding(0, Ui.dp(c, 10), 0, 0) }
+        val usageBtn = Ui.button(c, "Grant usage access (needed)", Color.parseColor("#7A4B12"))
+        val removeBtn = Ui.button(c, "Remove restriction", Color.parseColor("#5A2A36"))
+        fun refreshAllowed() {
+            val p = Prefs.allowedPkg(c)
+            allowedText.text = if (p == null) "No restriction is set." else "Allowed app: ${Restriction.appLabel(c, p)}"
+            removeBtn.visibility = if (p == null) android.view.View.GONE else android.view.View.VISIBLE
+            usageBtn.visibility = if (p != null && !Restriction.usageAccessGranted(c)) android.view.View.VISIBLE else android.view.View.GONE
+        }
+        refreshAllowedHook = ::refreshAllowed
+        usageBtn.setOnClickListener { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
+        removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed() }
+        root.addView(Ui.card(c).apply {
+            addView(Ui.text(c, "Allow only one app", 18f, bold = true))
+            addView(Ui.text(c, "When your break reminder is due, or at night, every app except the one you choose is blocked. Only one app can be allowed.", 14f, Ui.MUTED))
+            addView(allowedText)
+            addView(Ui.button(c, "Choose the allowed app").apply {
+                setOnClickListener {
+                    val pm = packageManager
+                    val apps = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
+                        .map { it.activityInfo.packageName }.distinct().filter { it != packageName }
+                        .map { it to Restriction.appLabel(c, it) }.sortedBy { it.second.lowercase() }
+                    android.app.AlertDialog.Builder(c).setTitle("Choose the one allowed app")
+                        .setItems(apps.map { it.second }.toTypedArray()) { _, i ->
+                            Prefs.setAllowedPkg(c, apps[i].first); refreshAllowed()
+                            if (!Restriction.usageAccessGranted(c)) startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                        }.show()
+                }
+            })
+            addView(usageBtn); addView(removeBtn)
+        })
+        refreshAllowed()
 
         // Overlay permission
         root.addView(Ui.card(c).apply {

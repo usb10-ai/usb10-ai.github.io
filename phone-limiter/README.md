@@ -18,4 +18,5 @@ Push to GitHub → Actions → "Build Phone Limiter APK" → download `phone-lim
 ## Notes
 - Android 13+: allow notifications when prompted.
 - Some vendors (Xiaomi, Samsung, OnePlus…) kill background apps: set battery to "Unrestricted" for this app.
-- Only the screen-on/off state is read; nothing leaves your phone.
+- **Allow only one app:** pick one app in the app; after the limit (and at night) every other app is covered by a block screen. Needs "Usage access" + "Appear on top". "Remove restriction" clears it.
+- Only screen state and the foreground app name are read, on-device; nothing leaves your phone.

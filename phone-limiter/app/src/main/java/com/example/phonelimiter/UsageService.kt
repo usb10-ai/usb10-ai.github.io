@@ -13,9 +13,12 @@ import java.util.Calendar
 class UsageService : Service() {
     private lateinit var tracker: SessionTracker
     private val handler = Handler(Looper.getMainLooper())
+    private var ticks = 0
+    private val detector by lazy { ForegroundDetector(this) }
+    private var overlayIsRestriction = false
     private val tick = object : Runnable {
         override fun run() {
-            check(); updateStatus(); handler.postDelayed(this, 30_000L)
+            check(); enforce(); if (++ticks % 10 == 0) updateStatus(); handler.postDelayed(this, 3_000L)
         }
     }
 
@@ -68,7 +71,7 @@ class UsageService : Service() {
             .notify(1, statusNotification("Screen on for $mins min (reminder at ${Prefs.limitMin(this)})"))
     }
 
-    private fun startTicking() { handler.removeCallbacks(tick); handler.postDelayed(tick, 30_000L) }
+    private fun startTicking() { handler.removeCallbacks(tick); handler.postDelayed(tick, 3_000L) }
 
     private fun check() {
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
@@ -96,6 +99,39 @@ class UsageService : Service() {
     }
 
     private var overlay: View? = null
+
+    private fun dismissOverlay() {
+        overlay?.let { v -> runCatching { (getSystemService(WINDOW_SERVICE) as WindowManager).removeView(v) } }
+        overlay = null; overlayIsRestriction = false
+    }
+
+    /** One-app restriction: when limited (or at night), cover every app except the allowed one. */
+    private fun enforce() {
+        val allowed = Prefs.allowedPkg(this)
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val night = Prefs.nightOn(this) && SessionTracker.isNight(hour, Prefs.nightStart(this), Prefs.nightEnd(this))
+        val restricted = allowed != null && (night || tracker.isLimited(now()))
+        if (!restricted) { if (overlayIsRestriction) dismissOverlay(); return }
+        if (overlay != null || !Settings.canDrawOverlays(this) || !Restriction.usageAccessGranted(this)) return
+        val fg = detector.foreground() ?: return
+        if (!Restriction.shouldBlock(fg, allowed!!, Restriction.homePackage(this), packageName)) return
+
+        val wm = getSystemService(WINDOW_SERVICE) as WindowManager
+        val label = Restriction.appLabel(this, allowed)
+        val v = BreakView.buildRestricted(this, label, night,
+            onOpenAllowed = {
+                dismissOverlay()
+                packageManager.getLaunchIntentForPackage(allowed)?.let { startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            },
+            onHome = { dismissOverlay(); BreakActivity.goHome(this) },
+            onSnooze = if (night) null else ({ dismissOverlay(); onStartCommand(Intent(ACTION_SNOOZE), 0, 0) }))
+        val lp = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+            PixelFormat.OPAQUE)
+        runCatching { wm.addView(v, lp); overlay = v; overlayIsRestriction = true }
+    }
 
     /** Drawn straight on top of every app (YouTube included) — no activity launch needed. */
     private fun showOverlay(night: Boolean, mins: Int) {
