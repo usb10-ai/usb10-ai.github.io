@@ -32,6 +32,41 @@ class MainActivity : Activity() {
         val hero = Ui.card(c).apply { addView(status); addView(toggle) }
         root.addView(hero)
 
+        // Today's 3 priorities
+        val boxes = ArrayList<CheckBox>(); val fields = ArrayList<EditText>()
+        val prio = Ui.card(c).apply {
+            addView(Ui.text(c, "Today's 3 priorities", 18f, bold = true))
+            addView(Ui.text(c, "Shown on the break screen. Resets every day.", 14f, Ui.MUTED))
+        }
+        for (i in 0..2) {
+            val box = CheckBox(c).apply {
+                isChecked = Prefs.taskDone(c, i)
+                setOnCheckedChangeListener { _, v -> Prefs.setDone(c, i, v) }
+            }
+            val field = EditText(c).apply {
+                hint = "Priority ${i + 1}"; setText(Prefs.taskText(c, i)); textSize = 16f
+                setTextColor(Color.WHITE); setHintTextColor(Ui.MUTED); setSingleLine(true); background = null
+                addTextChangedListener(object : android.text.TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                    override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                    override fun afterTextChanged(s: android.text.Editable?) { Prefs.setTask(c, i, s.toString()) }
+                })
+            }
+            boxes.add(box); fields.add(field)
+            prio.addView(LinearLayout(c).apply {
+                gravity = android.view.Gravity.CENTER_VERTICAL
+                addView(box)
+                addView(field, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            })
+        }
+        fun refreshTasks() { // pick up the daily reset
+            for (i in 0..2) {
+                if (fields[i].text.toString() != Prefs.taskText(c, i)) fields[i].setText(Prefs.taskText(c, i))
+                if (boxes[i].isChecked != Prefs.taskDone(c, i)) boxes[i].isChecked = Prefs.taskDone(c, i)
+            }
+        }
+        root.addView(prio)
+
         // Break reminder settings
         val limit = Ui.number(c, Prefs.limitMin(c))
         val brk = Ui.number(c, Prefs.breakMin(c))
@@ -66,7 +101,7 @@ class MainActivity : Activity() {
             removeBtn.visibility = if (p == null) android.view.View.GONE else android.view.View.VISIBLE
             usageBtn.visibility = if (p != null && !Restriction.usageAccessGranted(c)) android.view.View.VISIBLE else android.view.View.GONE
         }
-        refreshAllowedHook = ::refreshAllowed
+        refreshAllowedHook = { refreshAllowed(); refreshTasks() }
         usageBtn.setOnClickListener { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
         removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed() }
         root.addView(Ui.card(c).apply {

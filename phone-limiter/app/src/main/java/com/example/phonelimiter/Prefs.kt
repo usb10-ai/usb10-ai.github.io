@@ -16,4 +16,20 @@ object Prefs {
         sp(c).edit().putBoolean("nightOn", on).putInt("nightStart", start).putInt("nightEnd", end).apply()
     fun allowedPkg(c: Context): String? = sp(c).getString("allowedPkg", null)
     fun setAllowedPkg(c: Context, pkg: String?) = sp(c).edit().putString("allowedPkg", pkg).apply()
+
+    // ---- Today's 3 priorities (reset automatically each new day) ----
+    private fun today() = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+    private fun rollover(c: Context) {
+        if (sp(c).getString("tasksDate", "") != today()) {
+            val e = sp(c).edit().putString("tasksDate", today())
+            for (i in 0..2) e.remove("task$i").remove("done$i")
+            e.apply()
+        }
+    }
+    fun taskText(c: Context, i: Int): String { rollover(c); return sp(c).getString("task$i", "") ?: "" }
+    fun taskDone(c: Context, i: Int): Boolean { rollover(c); return sp(c).getBoolean("done$i", false) }
+    fun setTask(c: Context, i: Int, text: String) { rollover(c); sp(c).edit().putString("task$i", text).apply() }
+    fun setDone(c: Context, i: Int, done: Boolean) { rollover(c); sp(c).edit().putBoolean("done$i", done).apply() }
+    fun pendingTasks(c: Context): List<String> =
+        (0..2).filter { taskText(c, it).isNotBlank() && !taskDone(c, it) }.map { taskText(c, it).trim() }
 }
