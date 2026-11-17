@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     paths: ["gate-ce-app/**", "gate-ce/index.html", "gate-ce/questions.js", ".github/workflows/gate-ce-apk.yml"]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,3 +23,13 @@ jobs:
         with:
           name: gate-ce-mocktest-apk
           path: gate-ce-app/GATE-CE-MockTest.apk
+      - name: Publish APK next to the web app (download link on the exam home page)
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          cp GATE-CE-MockTest.apk ../gate-ce/GATE-CE-MockTest.apk
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add gate-ce/GATE-CE-MockTest.apk
+          git diff --cached --quiet || git commit -m "Update GATE CE APK [skip ci]"
+          git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"
