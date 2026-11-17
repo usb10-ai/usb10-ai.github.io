@@ -60,6 +60,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
 .hero{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
 @media (max-width:760px){.hero{grid-template-columns:1fr}}
 .pattern td,.pattern th{font-size:.9rem}
+.subjrow{cursor:pointer}
+.subjrow:hover td{background:var(--accent-soft)}
+.subjrow.on td{background:var(--accent-soft);font-weight:600}
 
 /* instructions legend */
 .legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:10px 0}
@@ -159,12 +162,19 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
     <div class="hero">
       <div class="card">
         <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
-        <p class="muted">A full-length computer-based test that follows the GATE CE pattern: a question palette, section tabs, a virtual scientific calculator and automatic evaluation with negative marking.</p>
+        <p class="muted">Computer-based tests that follow the GATE CE pattern: a question palette, section tabs, a virtual scientific calculator and automatic evaluation with negative marking.</p>
+        <h3>Full-length mock test</h3>
         <table class="pattern">
           <tr><th>Section</th><th>Questions</th><th>Marks</th></tr>
           <tbody id="patternBody"></tbody>
         </table>
         <p class="faint" id="patternNote"></p>
+        <h3 style="margin-top:18px">Subject-wise tests</h3>
+        <div class="tablewrap"><table class="pattern">
+          <thead><tr><th>Subject</th><th>Questions</th><th>Marks</th><th>Time</th></tr></thead>
+          <tbody id="subjBody"></tbody>
+        </table></div>
+        <p class="faint">Tap a subject to select it, then sign in.</p>
       </div>
       <div class="card">
         <h2>Candidate login</h2>
@@ -172,6 +182,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
           <div style="margin-bottom:12px"><label class="f" for="cName">Full name</label><input type="text" id="cName" required maxlength="80"></div>
           <div style="margin-bottom:12px"><label class="f" for="cReg">Registration / Roll number</label><input type="text" id="cReg" required maxlength="40"></div>
           <div style="margin-bottom:16px"><label class="f" for="cCode">Exam access code <span class="faint" id="codeHint"></span></label><input type="password" id="cCode"></div>
+          <div style="margin-bottom:16px"><label class="f" for="cTest">Test</label><select id="cTest"></select></div>
           <button class="btn primary" type="submit" style="width:100%">Sign in</button>
           <p class="faint" id="loginErr" style="color:var(--bad)"></p>
         </form>
@@ -189,7 +200,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <h2>Please read the instructions carefully</h2>
       <ol>
         <li>The total duration of the examination is <b id="iDur"></b> minutes. The countdown timer at the top right shows the remaining time. The exam is <b>submitted automatically</b> when the timer reaches zero.</li>
-        <li>The paper has <b id="iQ"></b> questions carrying <b id="iM"></b> marks in two sections: General Aptitude (GA) and Civil Engineering (CE). Use the section tabs to move between them.</li>
+        <li id="iPaper"></li>
         <li><b>Question types:</b>
           <ul>
             <li><b>MCQ</b> &ndash; Multiple Choice: exactly one correct option. <b>Negative marking:</b> &minus;1/3 for a wrong 1-mark answer and &minus;2/3 for a wrong 2-mark answer.</li>
@@ -285,8 +296,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <div class="row" style="justify-content:space-between"><h2 style="margin:0">Submitted attempts</h2>
         <div class="row"><button class="btn" id="btnCsv">Export CSV</button><button class="btn" id="btnJsonRes">Export JSON</button><button class="btn" id="btnImpRes">Import JSON</button><button class="btn danger" id="btnClearRes">Clear all</button></div></div>
       <p class="faint">Results are stored in this browser. When several lab machines are used, export JSON from each machine and import it here to build one merit list.</p>
+      <div class="row" style="margin-top:8px"><label class="f" for="resTest" style="margin:0">Show results for</label><select id="resTest" style="max-width:320px"></select></div>
       <div class="kpis" id="resStats"></div>
-      <div class="tablewrap"><table><thead><tr><th>Rank</th><th>Name</th><th>Reg. no.</th><th>GA</th><th>CE</th><th>Total</th><th>Correct / Wrong / Skipped</th><th>Time</th><th>Submitted</th><th></th></tr></thead><tbody id="resBody"></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>Rank</th><th>Name</th><th>Reg. no.</th><th>Test</th><th>GA</th><th>CE</th><th>Total</th><th>Correct / Wrong / Skipped</th><th>Time</th><th>Submitted</th><th></th></tr></thead><tbody id="resBody"></tbody></table></div>
       <input type="file" id="fileRes" accept=".json,application/json" class="hidden">
     </div>
 
@@ -294,13 +306,14 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <h2>Exam settings</h2>
       <div class="grid2">
         <div><label class="f" for="sTitle">Exam title</label><input type="text" id="sTitle"></div>
-        <div><label class="f" for="sDur">Duration (minutes)</label><input type="number" id="sDur" min="5" max="600"></div>
+        <div><label class="f" for="sDur">Full-length test duration (minutes)</label><input type="number" id="sDur" min="5" max="600"></div>
+        <div><label class="f" for="sSubjDur">Subject-wise test duration (minutes)</label><input type="number" id="sSubjDur" min="5" max="600"></div>
         <div><label class="f" for="sCode">Exam access code (leave blank for none)</label><input type="text" id="sCode"></div>
         <div><label class="f" for="sPass">New instructor password (leave blank to keep)</label><input type="password" id="sPass"></div>
         <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="0">Fixed order</option><option value="1">Shuffle within each section</option></select></div>
         <div><label class="f" for="sShuffleOpt">Option order (MCQ / MSQ)</label><select id="sShuffleOpt"><option value="0">Fixed</option><option value="1">Shuffle options</option></select></div>
         <div><label class="f" for="sReview">After submission, candidates see</label><select id="sReview"><option value="full">Score, analysis, answers &amp; solutions</option><option value="score">Score and analysis only</option><option value="none">Confirmation only</option></select></div>
-        <div><label class="f" for="sOneAttempt">Attempts per registration number</label><select id="sOneAttempt"><option value="0">Unlimited</option><option value="1">One attempt only</option></select></div>
+        <div><label class="f" for="sOneAttempt">Attempts per registration number</label><select id="sOneAttempt"><option value="0">Unlimited</option><option value="1">One attempt per test</option></select></div>
       </div>
       <div class="row" style="margin-top:16px"><button class="btn primary" id="btnSaveSet">Save settings</button><span class="faint" id="setMsg"></span></div>
     </div>
@@ -317,8 +330,13 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
   { "sec":"GA", "type":"NAT", "marks":1, "topic":"...", "q":"...", "ans":[12.4, 12.6], "sol":"..." }
 ]
 sec: "GA" or "CE" · type: MCQ | MSQ | NAT · marks: 1 or 2
-ans: MCQ = option index (0–3), MSQ = array of indices, NAT = [min, max] accepted range</pre></details>
-      <div class="tablewrap"><table><thead><tr><th>#</th><th>Sec</th><th>Type</th><th>Marks</th><th>Topic</th><th>Question</th><th>Key</th></tr></thead><tbody id="bankBody"></tbody></table></div>
+ans: MCQ = option index (0–3), MSQ = array of indices, NAT = [min, max] accepted range
+mock: optional; false = use only in subject-wise tests (not in the full-length paper)
+Subject tests group CE questions by topic: Engineering Mathematics; Solid Mechanics, Structural Analysis,
+Concrete Structures, Steel Structures, Construction Materials (Structural); Geotechnical Engineering;
+Fluid Mechanics, Hydrology, Irrigation Engineering (Water Resources); Environmental Engineering;
+Transportation Engineering; Geomatics Engineering. Or set "subject":"Any name" to define your own.</pre></details>
+      <div class="tablewrap"><table><thead><tr><th>#</th><th>Sec</th><th>Type</th><th>Marks</th><th>Subject / topic</th><th>Used in</th><th>Question</th><th>Key</th></tr></thead><tbody id="bankBody"></tbody></table></div>
       <input type="file" id="fileQ" accept=".json,application/json" class="hidden">
     </div>
   </div>
@@ -350,10 +368,30 @@ function r2(x){ return Math.round(x*100)/100; }
 function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function download(name, text, type){ if(window.AndroidBridge){ window.AndroidBridge.save(name, type, text); return; } var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
-var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0" };
+var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjDuration:45 };
 function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
 function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
 var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
+var FULL = "full";
+var SUBJ_MAP = {}; (window.GATE_SUBJECTS || []).forEach(function(x){ x.topics.forEach(function(t){ SUBJ_MAP[t] = x.name; }); });
+function subjOf(q){ return q.subject || SUBJ_MAP[q.topic] || q.topic || "General"; }
+/* All available tests: the full-length paper plus one test per CE subject. */
+function tests(){
+  var s = settings(), b = bank(), out = [], full = [];
+  b.forEach(function(q,i){ if(q.mock !== false) full.push(i); });
+  if(full.length) out.push({ id:FULL, name:"Full-length mock test", idx:full, dur:s.duration });
+  var names = (window.GATE_SUBJECTS || []).map(function(x){ return x.name; });
+  b.forEach(function(q){ if(q.sec === "CE" && names.indexOf(subjOf(q)) < 0) names.push(subjOf(q)); });
+  names.forEach(function(n){ var idx = [];
+    b.forEach(function(q,i){ if(q.sec === "CE" && subjOf(q) === n) idx.push(i); });
+    if(idx.length) out.push({ id:"subj:"+n, name:n, idx:idx, dur:s.subjDuration }); });
+  return out;
+}
+function findTest(id){ return tests().filter(function(t){ return t.id === id; })[0]; }
+function marksOf(idx, b){ return idx.reduce(function(a,i){ return a + b[i].marks; }, 0); }
+function secLabel(sc){ return (S && S.testName && sc === "CE") ? S.testName : SEC_NAME[sc]; }
+function recTestId(r){ return r.testId || FULL; }
+function recTestName(r){ return r.test || "Full-length mock test"; }
 
 if(window.AndroidBridge){ $("btnPrint").classList.add("hidden"); $("apkLink").classList.add("hidden"); }
 
@@ -377,19 +415,32 @@ function closeModal(){ $("modal").classList.add("hidden"); }
 function renderHome(){
   var s = settings(), b = bank();
   $("homeTitle").textContent = s.title;
+  var T = tests(), full = T.filter(function(t){ return t.id === FULL; })[0];
+  var fb = full ? full.idx.map(function(i){ return b[i]; }) : [];
   var rows = ["GA","CE"].map(function(sec){
-    var qs = b.filter(function(q){ return q.sec === sec; });
+    var qs = fb.filter(function(q){ return q.sec === sec; });
     var m = qs.reduce(function(a,q){ return a + q.marks; }, 0);
     return "<tr><td>"+SEC_NAME[sec]+"</td><td>"+qs.length+"</td><td>"+m+"</td></tr>";
   });
-  var tm = b.reduce(function(a,q){ return a+q.marks; },0);
-  rows.push("<tr><th>Total</th><th>"+b.length+"</th><th>"+tm+"</th></tr>");
+  var tm = fb.reduce(function(a,q){ return a+q.marks; },0);
+  rows.push("<tr><th>Total</th><th>"+fb.length+"</th><th>"+tm+"</th></tr>");
   $("patternBody").innerHTML = rows.join("");
   $("patternNote").textContent = "Duration: " + s.duration + " minutes. MCQ carry negative marks (−1/3 or −2/3); MSQ and NAT do not.";
   $("codeHint").textContent = s.code ? "(provided by your instructor)" : "(not required)";
   $("cCode").parentElement.classList.toggle("hidden", !s.code);
   $("loginErr").textContent = "";
+  var cur = $("cTest").value;
+  $("cTest").innerHTML = T.map(function(t){ return '<option value="'+esc(t.id)+'">'+esc(t.id === FULL ? t.name : "Subject test: " + t.name)+' ('+t.idx.length+' Q, '+marksOf(t.idx, b)+' marks, '+t.dur+' min)</option>'; }).join("");
+  if(cur && findTest(cur)) $("cTest").value = cur;
+  $("subjBody").innerHTML = T.filter(function(t){ return t.id !== FULL; }).map(function(t){
+    return '<tr class="subjrow" data-test="'+esc(t.id)+'"><td>'+esc(t.name)+'</td><td>'+t.idx.length+'</td><td>'+marksOf(t.idx, b)+'</td><td>'+t.dur+' min</td></tr>'; }).join("") ||
+    '<tr><td colspan="4" class="muted">No subject tests available.</td></tr>';
+  markSubj();
 }
+function markSubj(){ document.querySelectorAll("#subjBody .subjrow").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === $("cTest").value); }); }
+$("cTest").onchange = markSubj;
+$("subjBody").onclick = function(e){ var r = e.target.closest("[data-test]"); if(!r) return; $("cTest").value = r.getAttribute("data-test"); markSubj();
+  if(innerWidth < 760) $("cName").focus(); };
 
 var pending = null;
 $("loginForm").onsubmit = function(e){
@@ -397,12 +448,16 @@ $("loginForm").onsubmit = function(e){
   var s = settings(), name = $("cName").value.trim(), reg = $("cReg").value.trim();
   if(!name || !reg){ $("loginErr").textContent = "Enter your name and registration number."; return; }
   if(s.code && $("cCode").value !== s.code){ $("loginErr").textContent = "Incorrect exam access code."; return; }
-  if(s.oneAttempt === "1" && load(K.results, []).some(function(r){ return r.reg.toLowerCase() === reg.toLowerCase(); })){
-    $("loginErr").textContent = "An attempt has already been submitted for this registration number."; return; }
-  pending = { name:name, reg:reg };
+  var t = findTest($("cTest").value); if(!t){ $("loginErr").textContent = "Select a test."; return; }
+  if(s.oneAttempt === "1" && load(K.results, []).some(function(r){ return r.reg.toLowerCase() === reg.toLowerCase() && recTestId(r) === t.id; })){
+    $("loginErr").textContent = "An attempt at this test has already been submitted for this registration number."; return; }
+  pending = { name:name, reg:reg, testId:t.id };
   $("instrCand").textContent = name + " (" + reg + ")";
-  var b = bank();
-  $("iDur").textContent = s.duration; $("iQ").textContent = b.length; $("iM").textContent = b.reduce(function(a,q){return a+q.marks;},0);
+  var b = bank(), nq = t.idx.length, nm = marksOf(t.idx, b);
+  $("iDur").textContent = t.dur;
+  $("iPaper").innerHTML = t.id === FULL
+    ? "The paper has <b>"+nq+"</b> questions carrying <b>"+nm+"</b> marks in two sections: General Aptitude (GA) and Civil Engineering (CE). Use the section tabs to move between them."
+    : "This is a <b>subject-wise test on "+esc(t.name)+"</b> with <b>"+nq+"</b> questions carrying <b>"+nm+"</b> marks (1-mark questions first, then 2-mark questions).";
   $("agree").checked = false; $("btnStart").disabled = true;
   show("instr");
 };
@@ -412,9 +467,11 @@ $("agree").onchange = function(){ $("btnStart").disabled = !this.checked; };
 var S = null, tick = null;
 $("btnStart").onclick = function(){
   if(!pending) return show("home");
-  var s = settings(), b = bank();
+  var s = settings(), b = bank(), t = findTest(pending.testId);
+  if(!t){ pending = null; return show("home"); }
   var idx = { GA:[], CE:[] };
-  b.forEach(function(q,i){ (idx[q.sec] || (idx[q.sec] = [])).push(i); });
+  t.idx.forEach(function(i){ (idx[b[i].sec] || (idx[b[i].sec] = [])).push(i); });
+  if(t.id !== FULL) idx.CE.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
   if(s.shuffle === "1"){ idx.GA = shuffle(idx.GA); idx.CE = shuffle(idx.CE); }
   var order = idx.GA.concat(idx.CE);
   var items = order.map(function(i){
@@ -422,13 +479,13 @@ $("btnStart").onclick = function(){
     if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1") perm = shuffle(perm); }
     return { qi:i, perm:perm, st:"nv", ans:null };   // st: nv | na | an | mr | am
   });
-  S = { cand:pending, title:s.title, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + s.duration*60000, draft:undefined };
+  S = { cand:pending, title:s.title, testId:t.id, testName: t.id === FULL ? null : t.name, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + t.dur*60000, draft:undefined };
   save(K.session, S); pending = null;
   enterExam();
 };
 
 function enterExam(){
-  $("exTitle").textContent = S.title;
+  $("exTitle").textContent = S.testName ? "Subject test · " + S.testName : S.title;
   $("exCand").textContent = S.cand.name + " · " + S.cand.reg;
   show("exam");
   goTo(S.cur, true);
@@ -454,7 +511,7 @@ function renderQ(){
   var i = S.cur, it = S.items[i], q = Q(i), sec = q.sec;
   // section tabs
   var secs = []; S.items.forEach(function(x,k){ var sc = secOf(k); if(secs.indexOf(sc) < 0) secs.push(sc); });
-  $("secTabs").innerHTML = secs.map(function(sc){ return '<button data-sec="'+sc+'" class="'+(sc===sec?"on":"")+'">'+SEC_NAME[sc]+'</button>'; }).join("");
+  $("secTabs").innerHTML = secs.map(function(sc){ return '<button data-sec="'+sc+'" class="'+(sc===sec?"on":"")+'">'+esc(secLabel(sc))+'</button>'; }).join("");
   var neg = q.type === "MCQ" ? (q.marks === 1 ? "−1/3" : "−2/3") : "0";
   $("qmeta").innerHTML = "<b>Question " + (i+1) + "</b><span class='pill'>" + q.type + "</span><span>Marks: <b>+" + q.marks + "</b></span><span>Negative: <b>" + neg + "</b></span>";
   $("qtext").innerHTML = q.q;
@@ -536,7 +593,7 @@ function renderPalette(){
     '<div><span class="q sw an">'+c.an+'</span>Answered</div><div><span class="q sw na">'+c.na+'</span>Not answered</div>'+
     '<div><span class="q sw">'+c.nv+'</span>Not visited</div><div><span class="q sw mr">'+c.mr+'</span>Marked for review</div>'+
     '<div style="grid-column:1/-1"><span class="q sw am">'+c.am+'</span>Answered &amp; marked for review (will be evaluated)</div>';
-  $("palTitle").textContent = SEC_NAME[sec];
+  $("palTitle").textContent = secLabel(sec);
   var h = "";
   S.items.forEach(function(it,k){ if(secOf(k) !== sec) return;
     h += '<button class="q '+(it.st === "nv" ? "" : it.st)+(k === S.cur ? " cur" : "")+'" data-q="'+k+'" title="Question '+(k+1)+'">'+(k+1)+'</button>'; });
@@ -578,7 +635,7 @@ function finish(auto){
     if(e.res === "c") nc++; else if(e.res === "w") nw++; else nu++;
     detail.push({ n:k+1, qi:it.qi, perm:it.perm, ans:ans, res:e.res, m:r2(e.m) });
   });
-  var rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:S.cand.name, reg:S.cand.reg, title:S.title,
+  var rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:S.cand.name, reg:S.cand.reg, title:S.title, testId:S.testId || FULL, test:S.testName || "Full-length mock test",
     score:r2(tot), max:max, ga: r2((sec.GA||{m:0}).m), ce: r2((sec.CE||{m:0}).m), correct:nc, wrong:nw, skipped:nu,
     timeTaken: Math.round((Math.min(Date.now(), S.end) - S.start)/1000), submitted: new Date().toISOString(), auto:!!auto, detail:detail };
   var all = load(K.results, []); all.push(rec); save(K.results, all);
@@ -601,13 +658,14 @@ function keyText(q, perm){
 }
 function renderResult(rec, bk, topic, sec, mode, auto){
   var w = $("resultWrap"), h = "";
-  h += '<div class="card"><h1>'+esc(rec.title)+'</h1><p class="muted">'+esc(rec.name)+' · '+esc(rec.reg)+' · submitted '+new Date(rec.submitted).toLocaleString()+(auto ? ' (auto-submitted at time-out)' : '')+'</p>';
+  var isFull = recTestId(rec) === FULL;
+  h += '<div class="card"><h1>'+esc(isFull ? rec.title : "Subject test: " + rec.test)+'</h1><p class="muted">'+esc(rec.name)+' · '+esc(rec.reg)+' · submitted '+new Date(rec.submitted).toLocaleString()+(auto ? ' (auto-submitted at time-out)' : '')+'</p>';
   if(mode === "none"){ h += '<p>Your responses have been recorded successfully. Results will be announced by your instructor.</p></div>'; w.innerHTML = h; return; }
   var pct = rec.max ? rec.score/rec.max*100 : 0;
   h += '<div class="kpis">'+
     '<div class="kpi"><div class="v">'+rec.score+' / '+rec.max+'</div><div class="l">Total marks ('+r2(pct)+'%)</div></div>'+
-    '<div class="kpi"><div class="v">'+rec.ga+'</div><div class="l">General Aptitude (of '+((sec.GA||{}).max||0)+')</div></div>'+
-    '<div class="kpi"><div class="v">'+rec.ce+'</div><div class="l">Civil Engineering (of '+((sec.CE||{}).max||0)+')</div></div>'+
+    (isFull ? '<div class="kpi"><div class="v">'+rec.ga+'</div><div class="l">General Aptitude (of '+((sec.GA||{}).max||0)+')</div></div>'+
+    '<div class="kpi"><div class="v">'+rec.ce+'</div><div class="l">Civil Engineering (of '+((sec.CE||{}).max||0)+')</div></div>' : '')+
     '<div class="kpi"><div class="v" style="color:var(--ok)">'+rec.correct+'</div><div class="l">Correct</div></div>'+
     '<div class="kpi"><div class="v" style="color:var(--bad)">'+rec.wrong+'</div><div class="l">Wrong</div></div>'+
     '<div class="kpi"><div class="v">'+rec.skipped+'</div><div class="l">Not attempted</div></div>'+
@@ -700,12 +758,20 @@ $("adminTabs").onclick = function(e){ var b = e.target.closest("[data-at]"); if(
 function renderAdmin(){
   var s = settings();
   $("sTitle").value = s.title; $("sDur").value = s.duration; $("sCode").value = s.code; $("sPass").value = "";
+  $("sSubjDur").value = s.subjDuration;
   $("sShuffle").value = s.shuffle; $("sShuffleOpt").value = s.shuffleOpt; $("sReview").value = s.review; $("sOneAttempt").value = s.oneAttempt; $("setMsg").textContent = "";
   renderResults(); renderBank();
 }
 function renderResults(){
-  var rs = load(K.results, []).slice().sort(function(a,b){ return b.score - a.score || a.timeTaken - b.timeTaken; });
-  if(!rs.length){ $("resStats").innerHTML = ""; $("resBody").innerHTML = '<tr><td colspan="10" class="muted">No attempts submitted yet.</td></tr>'; return; }
+  var all = load(K.results, []), seen = {}, opts = [];
+  all.forEach(function(r){ var id = recTestId(r); if(!seen[id]){ seen[id] = 1; opts.push({ id:id, name:recTestName(r) }); } });
+  opts.sort(function(a,b){ return a.id === FULL ? -1 : b.id === FULL ? 1 : a.name.localeCompare(b.name); });
+  var sel = $("resTest").value;
+  if(!sel || (sel !== "*" && !seen[sel])) sel = opts.length ? opts[0].id : "*";
+  $("resTest").innerHTML = opts.map(function(o){ return '<option value="'+esc(o.id)+'">'+esc(o.name)+'</option>'; }).join("") + '<option value="*">All tests</option>';
+  $("resTest").value = sel;
+  var rs = all.filter(function(r){ return sel === "*" || recTestId(r) === sel; }).sort(function(a,b){ return b.score - a.score || a.timeTaken - b.timeTaken; });
+  if(!rs.length){ $("resStats").innerHTML = ""; $("resBody").innerHTML = '<tr><td colspan="11" class="muted">No attempts submitted yet.</td></tr>'; return; }
   var sc = rs.map(function(r){ return r.score; }), avg = sc.reduce(function(a,b){return a+b;},0)/sc.length;
   var sd = Math.sqrt(sc.reduce(function(a,b){ return a + (b-avg)*(b-avg); },0)/sc.length);
   $("resStats").innerHTML = '<div class="kpi"><div class="v">'+rs.length+'</div><div class="l">Attempts</div></div>'+
@@ -713,11 +779,14 @@ function renderResults(){
     '<div class="kpi"><div class="v">'+r2(avg)+'</div><div class="l">Mean</div></div>'+
     '<div class="kpi"><div class="v">'+r2(sd)+'</div><div class="l">Std. deviation</div></div>'+
     '<div class="kpi"><div class="v">'+r2(Math.min.apply(null,sc))+'</div><div class="l">Lowest</div></div>';
+  if(sel === "*") $("resStats").innerHTML = '<div class="kpi"><div class="v">'+rs.length+'</div><div class="l">Attempts (all tests)</div></div>';
   var rank = 0, prev = null;
   $("resBody").innerHTML = rs.map(function(r, i){ if(r.score !== prev){ rank = i+1; prev = r.score; }
-    return '<tr><td>'+rank+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.reg)+'</td><td>'+r.ga+'</td><td>'+r.ce+'</td><td><b>'+r.score+'</b> / '+r.max+'</td><td>'+r.correct+' / '+r.wrong+' / '+r.skipped+'</td><td>'+fmtT(r.timeTaken)+'</td><td class="faint">'+new Date(r.submitted).toLocaleString()+(r.auto?' (auto)':'')+'</td>'+
+    var full = recTestId(r) === FULL;
+    return '<tr><td>'+(sel === "*" ? "—" : rank)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.reg)+'</td><td>'+esc(recTestName(r))+'</td><td>'+(full ? r.ga : "—")+'</td><td>'+(full ? r.ce : "—")+'</td><td><b>'+r.score+'</b> / '+r.max+'</td><td>'+r.correct+' / '+r.wrong+' / '+r.skipped+'</td><td>'+fmtT(r.timeTaken)+'</td><td class="faint">'+new Date(r.submitted).toLocaleString()+(r.auto?' (auto)':'')+'</td>'+
       '<td><button class="btn" data-view="'+r.id+'" style="padding:3px 10px">View</button> <button class="btn danger" data-del="'+r.id+'" style="padding:3px 10px">Delete</button></td></tr>'; }).join("");
 }
+$("resTest").onchange = renderResults;
 $("resBody").onclick = function(e){
   var d = e.target.closest("[data-del]"), v = e.target.closest("[data-view]");
   if(d){ if(!confirm("Delete this attempt?")) return; save(K.results, load(K.results, []).filter(function(r){ return r.id !== d.getAttribute("data-del"); })); renderResults(); }
@@ -730,12 +799,18 @@ $("resBody").onclick = function(e){
 $("btnResHome").addEventListener("click", function(){ var t = this; setTimeout(function(){ t.setAttribute("data-go","home"); }, 0); });
 function csvCell(v){ v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
 $("btnCsv").onclick = function(){
-  var rs = load(K.results, []); if(!rs.length) return alert("No results to export.");
-  var n = rs[0].detail.length, head = ["Name","Reg No","GA","CE","Total","Max","Correct","Wrong","Not attempted","Time (s)","Submitted"];
+  var sel = $("resTest").value || "*";
+  var rs = load(K.results, []).filter(function(r){ return sel === "*" || recTestId(r) === sel; }).sort(function(a,b){ return b.score - a.score || a.timeTaken - b.timeTaken; });
+  if(!rs.length) return alert("No results to export.");
+  var n = sel === "*" ? 0 : rs.reduce(function(a,r){ return Math.max(a, r.detail.length); }, 0);
+  var head = ["Test","Name","Reg No","GA","CE","Total","Max","Correct","Wrong","Not attempted","Time (s)","Submitted"];
   for(var i=1;i<=n;i++) head.push("Q"+i);
   var lines = [head.join(",")].concat(rs.map(function(r){
-    return [r.name, r.reg, r.ga, r.ce, r.score, r.max, r.correct, r.wrong, r.skipped, r.timeTaken, r.submitted].concat(r.detail.map(function(d){ return d.m; })).map(csvCell).join(","); }));
-  download("gate-ce-results.csv", lines.join("\n"), "text/csv");
+    var full = recTestId(r) === FULL;
+    return [recTestName(r), r.name, r.reg, full ? r.ga : "", full ? r.ce : "", r.score, r.max, r.correct, r.wrong, r.skipped, r.timeTaken, r.submitted]
+      .concat(n ? r.detail.map(function(d){ return d.m; }) : []).map(csvCell).join(","); }));
+  var slug = sel === "*" ? "all-tests" : recTestName(rs[0]).toLowerCase().replace(/[^a-z0-9]+/g,"-");
+  download("gate-ce-results-" + slug + ".csv", lines.join("\n"), "text/csv");
 };
 $("btnJsonRes").onclick = function(){ download("gate-ce-results.json", JSON.stringify(load(K.results, []), null, 1), "application/json"); };
 $("btnImpRes").onclick = function(){ $("fileRes").click(); };
@@ -748,8 +823,9 @@ $("fileRes").onchange = function(){ var f = this.files[0]; if(!f) return; var rd
 $("btnClearRes").onclick = function(){ if(confirm("Delete ALL stored results? Export them first if needed.")){ save(K.results, []); renderResults(); } };
 
 $("btnSaveSet").onclick = function(){
-  var s = settings(), d = parseInt($("sDur").value, 10);
-  if(!(d >= 5 && d <= 600)){ $("setMsg").textContent = "Duration must be between 5 and 600 minutes."; return; }
+  var s = settings(), d = parseInt($("sDur").value, 10), sd = parseInt($("sSubjDur").value, 10);
+  if(!(d >= 5 && d <= 600) || !(sd >= 5 && sd <= 600)){ $("setMsg").textContent = "Durations must be between 5 and 600 minutes."; return; }
+  s.subjDuration = sd;
   s.title = $("sTitle").value.trim() || DEF_SETTINGS.title; s.duration = d; s.code = $("sCode").value.trim();
   if($("sPass").value) s.password = $("sPass").value;
   s.shuffle = $("sShuffle").value; s.shuffleOpt = $("sShuffleOpt").value; s.review = $("sReview").value; s.oneAttempt = $("sOneAttempt").value;
@@ -758,8 +834,11 @@ $("btnSaveSet").onclick = function(){
 
 function renderBank(){
   var b = bank(), tm = b.reduce(function(a,q){ return a+q.marks; },0), custom = !!load(K.bank, null);
-  $("bankSummary").textContent = b.length + " questions, " + tm + " marks — " + (custom ? "custom question bank imported by instructor." : "default GATE CE mock paper.");
-  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+esc(q.topic)+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
+  var T = tests(), full = T.filter(function(t){ return t.id === FULL; })[0];
+  $("bankSummary").textContent = b.length + " questions — " + (custom ? "custom question bank imported by instructor. " : "default GATE CE bank. ") +
+    (full ? "Full-length test: " + full.idx.length + " Q / " + marksOf(full.idx, b) + " marks. " : "") +
+    "Subject tests: " + T.filter(function(t){ return t.id !== FULL; }).map(function(t){ return t.name + " (" + t.idx.length + ")"; }).join(", ") + ".";
+  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+(q.sec === "CE" ? esc(subjOf(q)) + '<br><span class="faint">'+esc(q.topic)+'</span>' : esc(q.topic))+'</td><td class="faint">'+(q.mock === false ? "Subject test" : "Full test" + (q.sec === "CE" ? " + subject" : ""))+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
 }
 function validQ(q){
   if(!q || (q.sec !== "GA" && q.sec !== "CE") || [1,2].indexOf(q.marks) < 0 || typeof q.q !== "string") return false;
