@@ -175,6 +175,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
           <button class="btn primary" type="submit" style="width:100%">Sign in</button>
           <p class="faint" id="loginErr" style="color:var(--bad)"></p>
         </form>
+        <p class="faint" id="apkLink" style="margin-top:14px">Android app: <a href="GATE-CE-MockTest.apk" download>download the APK</a> (works offline).</p>
       </div>
     </div>
   </div>
@@ -249,7 +250,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
 <!-- ============ RESULT ============ -->
 <section id="view-result" class="hidden">
   <div class="topbar"><span class="title">Result</span><span class="sp"></span>
-    <button class="btn" onclick="window.print()">Print</button>
+    <button class="btn" id="btnPrint" onclick="window.print()">Print</button>
     <button class="btn" data-go="home" id="btnResHome">Finish</button></div>
   <div class="wrap" id="resultWrap"></div>
 </section>
@@ -347,12 +348,14 @@ function strip(h){ var d = document.createElement("div"); d.innerHTML = h; retur
 function fmtT(s){ s = Math.max(0, Math.round(s)); var h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return [h,m,x].map(function(n){ return n < 10 ? "0"+n : ""+n; }).join(":"); }
 function r2(x){ return Math.round(x*100)/100; }
 function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
-function download(name, text, type){ var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+function download(name, text, type){ if(window.AndroidBridge){ window.AndroidBridge.save(name, type, text); return; } var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
 var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0" };
 function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
 function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
 var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
+
+if(window.AndroidBridge){ $("btnPrint").classList.add("hidden"); $("apkLink").classList.add("hidden"); }
 
 /* ---------------- theme ---------------- */
 var th = load(K.theme, null); if(th) document.documentElement.setAttribute("data-theme", th);
