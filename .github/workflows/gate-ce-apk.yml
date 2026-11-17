@@ -1,0 +1,23 @@
+name: Build GATE CE APK
+on:
+  workflow_dispatch:
+  push:
+    paths: ["gate-ce-app/**", "gate-ce/index.html", "gate-ce/questions.js", ".github/workflows/gate-ce-apk.yml"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: gate-ce-app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.7" }
+      - name: Bundle the web app into assets
+        run: mkdir -p app/src/main/assets/www && cp ../gate-ce/index.html ../gate-ce/questions.js app/src/main/assets/www/
+      - run: gradle assembleDebug
+      - run: cp app/build/outputs/apk/debug/app-debug.apk GATE-CE-MockTest.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gate-ce-mocktest-apk
+          path: gate-ce-app/GATE-CE-MockTest.apk
