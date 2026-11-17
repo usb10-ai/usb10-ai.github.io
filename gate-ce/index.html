@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GATE CE Mock Exam</title>
+<meta name="description" content="Computer-based mock test platform for GATE Civil Engineering: timed exam, question palette, virtual calculator, automatic evaluation and instructor panel.">
+<style>
+:root{
+  --bg:#eef0ee; --surface:#fff; --surface-2:#f6f7f6; --ink:#1b201e; --ink-soft:#4b524e; --ink-faint:#7c837e;
+  --line:#d3d7d2; --accent:#2f5d55; --accent-ink:#fff; --accent-soft:#dbe7e3; --head:#1f3f3a; --head-ink:#fff;
+  --ok:#2e7d32; --bad:#c62828; --warn:#b26a00; --review:#5e35b1; --nv:#cfd4d0;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14181a; --surface:#1c2124; --surface-2:#232a2d; --ink:#eef0ee; --ink-soft:#a9b0ac; --ink-faint:#7c837e;
+    --line:#333a3a; --accent:#7cc9b8; --accent-ink:#0e1513; --accent-soft:#22322e; --head:#0e1211; --head-ink:#eef0ee;
+    --ok:#66bb6a; --bad:#ef5350; --warn:#ffb74d; --review:#9575cd; --nv:#3a4240;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14181a; --surface:#1c2124; --surface-2:#232a2d; --ink:#eef0ee; --ink-soft:#a9b0ac; --ink-faint:#7c837e;
+  --line:#333a3a; --accent:#7cc9b8; --accent-ink:#0e1513; --accent-soft:#22322e; --head:#0e1211; --head-ink:#eef0ee;
+  --ok:#66bb6a; --bad:#ef5350; --warn:#ffb74d; --review:#9575cd; --nv:#3a4240;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+code{font-family:ui-monospace,Consolas,monospace;font-size:.92em;background:var(--surface-2);padding:1px 4px;border-radius:4px}
+.hidden{display:none!important}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px}
+h1,h2,h3{line-height:1.25;margin:0 0 .6em}
+h1{font-size:1.6rem} h2{font-size:1.25rem} h3{font-size:1.05rem}
+.muted{color:var(--ink-soft)} .faint{color:var(--ink-faint);font-size:.88rem}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 16px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+label.f{display:block;font-size:.88rem;color:var(--ink-soft);margin-bottom:4px}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+textarea{min-height:160px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
+table{border-collapse:collapse;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);color:var(--ink-soft)}
+
+/* top bar */
+.topbar{background:var(--head);color:var(--head-ink);padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.topbar .title{font-weight:700;letter-spacing:.02em}
+.topbar .sp{flex:1}
+.topbar .btn{background:transparent;color:var(--head-ink);border-color:rgba(255,255,255,.35);padding:5px 12px}
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.pattern td,.pattern th{font-size:.9rem}
+
+/* instructions legend */
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:10px 0}
+.legend div{display:flex;align-items:center;gap:8px;font-size:.88rem}
+
+/* exam */
+#view-exam{display:flex;flex-direction:column;min-height:100vh}
+.exhead{background:var(--head);color:var(--head-ink);padding:8px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.exhead .cand{font-size:.9rem;opacity:.9}
+.timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem;background:rgba(255,255,255,.1);padding:4px 12px;border-radius:6px}
+.timer.low{background:var(--bad);color:#fff}
+.exbody{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0}
+@media (max-width:860px){.exbody{grid-template-columns:1fr}}
+.qpane{display:flex;flex-direction:column;border-right:1px solid var(--line);background:var(--surface);min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:var(--surface-2);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 16px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs button.on{border-bottom-color:var(--accent);font-weight:600}
+.qmeta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);font-size:.88rem;color:var(--ink-soft)}
+.qmeta b{color:var(--ink)}
+.qbody{padding:18px 16px;flex:1;overflow:auto}
+.qtext{font-size:1.02rem;margin-bottom:16px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt.sel{background:var(--accent-soft);border-color:var(--accent)}
+.opt input{margin-top:4px}
+.opt .lbl{font-weight:600;min-width:1.4em}
+.nat{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nat input{max-width:240px;font-variant-numeric:tabular-nums}
+.keypad{display:grid;grid-template-columns:repeat(4,48px);gap:6px;margin-top:10px}
+.keypad button{padding:8px 0;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);cursor:pointer}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid var(--line);background:var(--surface-2)}
+.actions .sp{flex:1}
+.side{background:var(--surface);padding:14px;overflow:auto}
+.counts{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-size:.82rem;margin-bottom:12px}
+.counts div{display:flex;align-items:center;gap:6px}
+.pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
+.q{position:relative;height:38px;border:1px solid var(--line);background:var(--nv);color:var(--ink);border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem;padding:0}
+.q.na{background:var(--bad);border-color:var(--bad);color:#fff;border-radius:6px 6px 14px 14px}
+.q.an{background:var(--ok);border-color:var(--ok);color:#fff;border-radius:14px 14px 6px 6px}
+.q.mr{background:var(--review);border-color:var(--review);color:#fff;border-radius:50%}
+.q.am{background:var(--review);border-color:var(--review);color:#fff;border-radius:50%}
+.q.am::after{content:"";position:absolute;right:2px;bottom:2px;width:9px;height:9px;border-radius:50%;background:var(--ok);border:1.5px solid #fff}
+.q.cur{outline:3px solid var(--accent);outline-offset:1px}
+.sw{display:inline-block;width:22px;height:20px;font-size:.7rem;padding:0;line-height:20px;text-align:center;cursor:default;flex:none}
+
+/* calculator */
+#calc{position:fixed;right:16px;bottom:16px;width:290px;background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:50}
+#calc .ch{display:flex;align-items:center;padding:8px 10px;background:var(--head);color:var(--head-ink);border-radius:10px 10px 0 0;cursor:move;user-select:none}
+#calc .ch span{flex:1;font-weight:600;font-size:.9rem}
+#calc .ch button{background:none;border:0;color:var(--head-ink);cursor:pointer;font-size:1.1rem}
+#calc .disp{margin:10px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--surface-2);text-align:right;font-family:ui-monospace,Consolas,monospace;min-height:58px;word-break:break-all}
+#calc .disp .ex{font-size:.82rem;color:var(--ink-soft);min-height:1.2em}
+#calc .disp .rs{font-size:1.25rem}
+#calc .keys{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:0 10px 10px}
+#calc .keys button{padding:7px 0;border:1px solid var(--line);border-radius:5px;background:var(--surface-2);cursor:pointer;font-size:.85rem}
+#calc .keys button.op{background:var(--accent-soft)}
+#calc .keys button.eq{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (max-width:520px){#calc{left:16px;right:16px;width:auto}}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal .card{max-width:520px;width:100%}
+
+/* results */
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin:14px 0}
+.kpi{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.kpi .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:.82rem;color:var(--ink-soft)}
+.bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--accent)}
+.rv{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:10px;background:var(--surface)}
+.rv .h{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.88rem}
+.tag{padding:1px 8px;border-radius:4px;font-size:.78rem;font-weight:600;color:#fff}
+.tag.c{background:var(--ok)} .tag.w{background:var(--bad)} .tag.u{background:var(--ink-faint)}
+.rv .ok{color:var(--ok);font-weight:600} .rv .bad{color:var(--bad);font-weight:600}
+.sol{margin-top:8px;padding:8px 10px;background:var(--accent-soft);border-radius:6px;font-size:.92rem}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.filters button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media print{
+  .topbar,.noprint,.filters{display:none!important}
+  body{background:#fff;color:#000}
+  .card,.rv{border-color:#bbb}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HOME / CANDIDATE LOGIN ============ -->
+<section id="view-home">
+  <div class="topbar">
+    <span class="title">GATE CE &middot; Computer Based Mock Test</span>
+    <span class="sp"></span>
+    <button class="btn" id="btnTheme" title="Toggle theme">Theme</button>
+    <button class="btn" data-go="admin-login">Instructor</button>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <div class="card">
+        <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
+        <p class="muted">A full-length computer-based test that follows the GATE CE pattern: a question palette, section tabs, a virtual scientific calculator and automatic evaluation with negative marking.</p>
+        <table class="pattern">
+          <tr><th>Section</th><th>Questions</th><th>Marks</th></tr>
+          <tbody id="patternBody"></tbody>
+        </table>
+        <p class="faint" id="patternNote"></p>
+      </div>
+      <div class="card">
+        <h2>Candidate login</h2>
+        <form id="loginForm" autocomplete="off">
+          <div style="margin-bottom:12px"><label class="f" for="cName">Full name</label><input type="text" id="cName" required maxlength="80"></div>
+          <div style="margin-bottom:12px"><label class="f" for="cReg">Registration / Roll number</label><input type="text" id="cReg" required maxlength="40"></div>
+          <div style="margin-bottom:16px"><label class="f" for="cCode">Exam access code <span class="faint" id="codeHint"></span></label><input type="password" id="cCode"></div>
+          <button class="btn primary" type="submit" style="width:100%">Sign in</button>
+          <p class="faint" id="loginErr" style="color:var(--bad)"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTRUCTIONS ============ -->
+<section id="view-instr" class="hidden">
+  <div class="topbar"><span class="title">Instructions</span><span class="sp"></span><span id="instrCand"></span></div>
+  <div class="wrap">
+    <div class="card">
+      <h2>Please read the instructions carefully</h2>
+      <ol>
+        <li>The total duration of the examination is <b id="iDur"></b> minutes. The countdown timer at the top right shows the remaining time. The exam is <b>submitted automatically</b> when the timer reaches zero.</li>
+        <li>The paper has <b id="iQ"></b> questions carrying <b id="iM"></b> marks in two sections: General Aptitude (GA) and Civil Engineering (CE). Use the section tabs to move between them.</li>
+        <li><b>Question types:</b>
+          <ul>
+            <li><b>MCQ</b> &ndash; Multiple Choice: exactly one correct option. <b>Negative marking:</b> &minus;1/3 for a wrong 1-mark answer and &minus;2/3 for a wrong 2-mark answer.</li>
+            <li><b>MSQ</b> &ndash; Multiple Select: one or more options are correct. Full marks only if <i>all</i> correct options and no wrong option are chosen. No negative marking; no partial credit.</li>
+            <li><b>NAT</b> &ndash; Numerical Answer Type: type a number using the keyboard or on-screen keypad. No negative marking.</li>
+          </ul>
+        </li>
+        <li>An answer is recorded only when you click <b>Save &amp; Next</b> or <b>Mark for Review &amp; Next</b>. Moving to another question through the palette without saving <b>will not</b> save your selection.</li>
+        <li>Questions that are <b>answered and marked for review</b> are evaluated. Questions only marked for review (no answer) are not.</li>
+        <li>A virtual scientific calculator is available from the top bar. Personal calculators are not allowed.</li>
+      </ol>
+      <h3>Question palette symbols</h3>
+      <div class="legend">
+        <div><span class="q sw"> </span> Not visited</div>
+        <div><span class="q sw na"> </span> Not answered</div>
+        <div><span class="q sw an"> </span> Answered</div>
+        <div><span class="q sw mr"> </span> Marked for review</div>
+        <div><span class="q sw am"> </span> Answered &amp; marked for review</div>
+      </div>
+      <label class="row" style="margin:16px 0;gap:8px;align-items:flex-start"><input type="checkbox" id="agree" style="margin-top:4px">
+        <span>I have read and understood the instructions. I agree that I will not use any unfair means during this examination.</span></label>
+      <div class="row"><button class="btn" data-go="home" id="btnInstrBack">Back</button><button class="btn primary" id="btnStart" disabled>I am ready to begin</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EXAM ============ -->
+<section id="view-exam" class="hidden">
+  <div class="exhead">
+    <b id="exTitle">GATE CE</b>
+    <span class="cand" id="exCand"></span>
+    <span style="flex:1"></span>
+    <button class="btn" id="btnCalc" style="background:transparent;color:var(--head-ink);border-color:rgba(255,255,255,.35);padding:4px 12px">Calculator</button>
+    <span>Time left <span class="timer" id="timer">--:--:--</span></span>
+  </div>
+  <div class="exbody">
+    <div class="qpane">
+      <div class="tabs" id="secTabs"></div>
+      <div class="qmeta" id="qmeta"></div>
+      <div class="qbody"><div class="qtext" id="qtext"></div><div id="qresp"></div></div>
+      <div class="actions">
+        <button class="btn" id="btnMark">Mark for Review &amp; Next</button>
+        <button class="btn" id="btnClear">Clear Response</button>
+        <span class="sp"></span>
+        <button class="btn" id="btnPrev">Back</button>
+        <button class="btn primary" id="btnSave">Save &amp; Next</button>
+      </div>
+    </div>
+    <aside class="side">
+      <div class="counts" id="counts"></div>
+      <h3 id="palTitle" style="margin-bottom:8px"></h3>
+      <div class="pal" id="palette"></div>
+      <button class="btn primary" id="btnSubmit" style="width:100%;margin-top:16px">Submit</button>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ RESULT ============ -->
+<section id="view-result" class="hidden">
+  <div class="topbar"><span class="title">Result</span><span class="sp"></span>
+    <button class="btn" onclick="window.print()">Print</button>
+    <button class="btn" data-go="home" id="btnResHome">Finish</button></div>
+  <div class="wrap" id="resultWrap"></div>
+</section>
+
+<!-- ============ INSTRUCTOR LOGIN ============ -->
+<section id="view-admin-login" class="hidden">
+  <div class="topbar"><span class="title">Instructor sign-in</span><span class="sp"></span><button class="btn" data-go="home">Home</button></div>
+  <div class="wrap" style="max-width:440px">
+    <div class="card">
+      <form id="adminForm">
+        <label class="f" for="aPass">Instructor password</label>
+        <input type="password" id="aPass" required>
+        <p class="faint">Default password on first use: <code>admin123</code>. Change it in Settings.</p>
+        <button class="btn primary" type="submit">Sign in</button>
+        <p class="faint" id="adminErr" style="color:var(--bad)"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTRUCTOR PANEL ============ -->
+<section id="view-admin" class="hidden">
+  <div class="topbar"><span class="title">Instructor panel</span><span class="sp"></span><button class="btn" data-go="home">Sign out</button></div>
+  <div class="wrap">
+    <div class="tabs card" style="padding:0;margin-bottom:14px" id="adminTabs">
+      <button class="on" data-at="results">Results</button>
+      <button data-at="settings">Exam settings</button>
+      <button data-at="bank">Question bank</button>
+    </div>
+
+    <div class="card" data-ap="results">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Submitted attempts</h2>
+        <div class="row"><button class="btn" id="btnCsv">Export CSV</button><button class="btn" id="btnJsonRes">Export JSON</button><button class="btn" id="btnImpRes">Import JSON</button><button class="btn danger" id="btnClearRes">Clear all</button></div></div>
+      <p class="faint">Results are stored in this browser. When several lab machines are used, export JSON from each machine and import it here to build one merit list.</p>
+      <div class="kpis" id="resStats"></div>
+      <div class="tablewrap"><table><thead><tr><th>Rank</th><th>Name</th><th>Reg. no.</th><th>GA</th><th>CE</th><th>Total</th><th>Correct / Wrong / Skipped</th><th>Time</th><th>Submitted</th><th></th></tr></thead><tbody id="resBody"></tbody></table></div>
+      <input type="file" id="fileRes" accept=".json,application/json" class="hidden">
+    </div>
+
+    <div class="card hidden" data-ap="settings">
+      <h2>Exam settings</h2>
+      <div class="grid2">
+        <div><label class="f" for="sTitle">Exam title</label><input type="text" id="sTitle"></div>
+        <div><label class="f" for="sDur">Duration (minutes)</label><input type="number" id="sDur" min="5" max="600"></div>
+        <div><label class="f" for="sCode">Exam access code (leave blank for none)</label><input type="text" id="sCode"></div>
+        <div><label class="f" for="sPass">New instructor password (leave blank to keep)</label><input type="password" id="sPass"></div>
+        <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="0">Fixed order</option><option value="1">Shuffle within each section</option></select></div>
+        <div><label class="f" for="sShuffleOpt">Option order (MCQ / MSQ)</label><select id="sShuffleOpt"><option value="0">Fixed</option><option value="1">Shuffle options</option></select></div>
+        <div><label class="f" for="sReview">After submission, candidates see</label><select id="sReview"><option value="full">Score, analysis, answers &amp; solutions</option><option value="score">Score and analysis only</option><option value="none">Confirmation only</option></select></div>
+        <div><label class="f" for="sOneAttempt">Attempts per registration number</label><select id="sOneAttempt"><option value="0">Unlimited</option><option value="1">One attempt only</option></select></div>
+      </div>
+      <div class="row" style="margin-top:16px"><button class="btn primary" id="btnSaveSet">Save settings</button><span class="faint" id="setMsg"></span></div>
+    </div>
+
+    <div class="card hidden" data-ap="bank">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Question bank</h2>
+        <div class="row"><button class="btn" id="btnExpQ">Export JSON</button><button class="btn" id="btnImpQ">Import JSON</button><button class="btn danger" id="btnResetQ">Restore default paper</button></div></div>
+      <p class="faint" id="bankSummary"></p>
+      <details style="margin:10px 0"><summary>JSON format for importing questions</summary>
+<pre style="white-space:pre-wrap;font-size:.82rem">[
+  { "sec":"CE", "type":"MCQ", "marks":1, "topic":"Fluid Mechanics",
+    "q":"Question text (HTML allowed)", "opts":["A","B","C","D"], "ans":1, "sol":"Explanation" },
+  { "sec":"CE", "type":"MSQ", "marks":2, "topic":"...", "q":"...", "opts":["A","B","C","D"], "ans":[0,2], "sol":"..." },
+  { "sec":"GA", "type":"NAT", "marks":1, "topic":"...", "q":"...", "ans":[12.4, 12.6], "sol":"..." }
+]
+sec: "GA" or "CE" · type: MCQ | MSQ | NAT · marks: 1 or 2
+ans: MCQ = option index (0–3), MSQ = array of indices, NAT = [min, max] accepted range</pre></details>
+      <div class="tablewrap"><table><thead><tr><th>#</th><th>Sec</th><th>Type</th><th>Marks</th><th>Topic</th><th>Question</th><th>Key</th></tr></thead><tbody id="bankBody"></tbody></table></div>
+      <input type="file" id="fileQ" accept=".json,application/json" class="hidden">
+    </div>
+  </div>
+</section>
+
+<!-- ============ CALCULATOR ============ -->
+<div id="calc" class="hidden" role="dialog" aria-label="Scientific calculator">
+  <div class="ch" id="calcHead"><span>Scientific Calculator</span><button id="calcMode" title="Angle mode" style="font-size:.8rem;border:1px solid rgba(255,255,255,.4);border-radius:4px;padding:1px 6px;margin-right:8px">DEG</button><button id="calcClose" aria-label="Close">&times;</button></div>
+  <div class="disp"><div class="ex" id="calcEx"></div><div class="rs" id="calcRs">0</div></div>
+  <div class="keys" id="calcKeys"></div>
+</div>
+
+<div id="modal" class="modal hidden"><div class="card" id="modalCard"></div></div>
+
+<script src="questions.js"></script>
+<script>
+(function(){
+"use strict";
+/* ---------------- storage helpers ---------------- */
+var K = { settings:"gatece_settings", bank:"gatece_bank", results:"gatece_results", session:"gatece_session", theme:"gatece_theme" };
+function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function strip(h){ var d = document.createElement("div"); d.innerHTML = h; return d.textContent || ""; }
+function fmtT(s){ s = Math.max(0, Math.round(s)); var h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return [h,m,x].map(function(n){ return n < 10 ? "0"+n : ""+n; }).join(":"); }
+function r2(x){ return Math.round(x*100)/100; }
+function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function download(name, text, type){ var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+
+var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0" };
+function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
+function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
+var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
+
+/* ---------------- theme ---------------- */
+var th = load(K.theme, null); if(th) document.documentElement.setAttribute("data-theme", th);
+$("btnTheme").onclick = function(){
+  var cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  var nx = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", nx); save(K.theme, nx);
+};
+
+/* ---------------- view routing ---------------- */
+var VIEWS = ["home","instr","exam","result","admin-login","admin"];
+function show(v){ VIEWS.forEach(function(x){ $("view-"+x).classList.toggle("hidden", x !== v); }); window.scrollTo(0,0);
+  if(v === "home") renderHome(); if(v === "admin") renderAdmin(); }
+document.addEventListener("click", function(e){ var g = e.target.closest("[data-go]"); if(g){ if(g.id === "btnInstrBack") pending = null; show(g.getAttribute("data-go")); } });
+
+function modal(html){ $("modalCard").innerHTML = html; $("modal").classList.remove("hidden"); }
+function closeModal(){ $("modal").classList.add("hidden"); }
+
+/* ---------------- home ---------------- */
+function renderHome(){
+  var s = settings(), b = bank();
+  $("homeTitle").textContent = s.title;
+  var rows = ["GA","CE"].map(function(sec){
+    var qs = b.filter(function(q){ return q.sec === sec; });
+    var m = qs.reduce(function(a,q){ return a + q.marks; }, 0);
+    return "<tr><td>"+SEC_NAME[sec]+"</td><td>"+qs.length+"</td><td>"+m+"</td></tr>";
+  });
+  var tm = b.reduce(function(a,q){ return a+q.marks; },0);
+  rows.push("<tr><th>Total</th><th>"+b.length+"</th><th>"+tm+"</th></tr>");
+  $("patternBody").innerHTML = rows.join("");
+  $("patternNote").textContent = "Duration: " + s.duration + " minutes. MCQ carry negative marks (−1/3 or −2/3); MSQ and NAT do not.";
+  $("codeHint").textContent = s.code ? "(provided by your instructor)" : "(not required)";
+  $("cCode").parentElement.classList.toggle("hidden", !s.code);
+  $("loginErr").textContent = "";
+}
+
+var pending = null;
+$("loginForm").onsubmit = function(e){
+  e.preventDefault();
+  var s = settings(), name = $("cName").value.trim(), reg = $("cReg").value.trim();
+  if(!name || !reg){ $("loginErr").textContent = "Enter your name and registration number."; return; }
+  if(s.code && $("cCode").value !== s.code){ $("loginErr").textContent = "Incorrect exam access code."; return; }
+  if(s.oneAttempt === "1" && load(K.results, []).some(function(r){ return r.reg.toLowerCase() === reg.toLowerCase(); })){
+    $("loginErr").textContent = "An attempt has already been submitted for this registration number."; return; }
+  pending = { name:name, reg:reg };
+  $("instrCand").textContent = name + " (" + reg + ")";
+  var b = bank();
+  $("iDur").textContent = s.duration; $("iQ").textContent = b.length; $("iM").textContent = b.reduce(function(a,q){return a+q.marks;},0);
+  $("agree").checked = false; $("btnStart").disabled = true;
+  show("instr");
+};
+$("agree").onchange = function(){ $("btnStart").disabled = !this.checked; };
+
+/* ---------------- exam session ---------------- */
+var S = null, tick = null;
+$("btnStart").onclick = function(){
+  if(!pending) return show("home");
+  var s = settings(), b = bank();
+  var idx = { GA:[], CE:[] };
+  b.forEach(function(q,i){ (idx[q.sec] || (idx[q.sec] = [])).push(i); });
+  if(s.shuffle === "1"){ idx.GA = shuffle(idx.GA); idx.CE = shuffle(idx.CE); }
+  var order = idx.GA.concat(idx.CE);
+  var items = order.map(function(i){
+    var q = b[i], perm = null;
+    if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1") perm = shuffle(perm); }
+    return { qi:i, perm:perm, st:"nv", ans:null };   // st: nv | na | an | mr | am
+  });
+  S = { cand:pending, title:s.title, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + s.duration*60000, draft:undefined };
+  save(K.session, S); pending = null;
+  enterExam();
+};
+
+function enterExam(){
+  $("exTitle").textContent = S.title;
+  $("exCand").textContent = S.cand.name + " · " + S.cand.reg;
+  show("exam");
+  goTo(S.cur, true);
+  clearInterval(tick); tick = setInterval(updTimer, 500); updTimer();
+}
+function updTimer(){
+  var left = (S.end - Date.now())/1000;
+  $("timer").textContent = fmtT(left);
+  $("timer").classList.toggle("low", left <= 300);
+  if(left <= 0){ clearInterval(tick); finish(true); }
+}
+function Q(i){ return S.bank[S.items[i].qi]; }
+function secOf(i){ return Q(i).sec; }
+
+function goTo(i, initial){
+  S.cur = i; S.draft = undefined;
+  var it = S.items[i]; if(it.st === "nv") it.st = "na";
+  save(K.session, S);
+  renderQ(); renderPalette();
+}
+
+function renderQ(){
+  var i = S.cur, it = S.items[i], q = Q(i), sec = q.sec;
+  // section tabs
+  var secs = []; S.items.forEach(function(x,k){ var sc = secOf(k); if(secs.indexOf(sc) < 0) secs.push(sc); });
+  $("secTabs").innerHTML = secs.map(function(sc){ return '<button data-sec="'+sc+'" class="'+(sc===sec?"on":"")+'">'+SEC_NAME[sc]+'</button>'; }).join("");
+  var neg = q.type === "MCQ" ? (q.marks === 1 ? "−1/3" : "−2/3") : "0";
+  $("qmeta").innerHTML = "<b>Question " + (i+1) + "</b><span class='pill'>" + q.type + "</span><span>Marks: <b>+" + q.marks + "</b></span><span>Negative: <b>" + neg + "</b></span>";
+  $("qtext").innerHTML = q.q;
+  var val = S.draft !== undefined ? S.draft : it.ans;
+  var h = "";
+  if(q.type === "NAT"){
+    h = '<div class="nat"><input type="text" id="natIn" inputmode="decimal" autocomplete="off" placeholder="Enter numerical answer" value="'+esc(val == null ? "" : val)+'"></div>'+
+        '<div class="keypad">' + ["7","8","9","⌫","4","5","6","−","1","2","3","C","0",".","",""].map(function(k){ return k ? '<button type="button" data-k="'+k+'">'+k+'</button>' : "<span></span>"; }).join("") + "</div>";
+  } else {
+    var multi = q.type === "MSQ", sel = val == null ? [] : (multi ? val : [val]);
+    h = it.perm.map(function(orig, pos){
+      var on = sel.indexOf(orig) >= 0;
+      return '<label class="opt'+(on?" sel":"")+'"><input type="'+(multi?"checkbox":"radio")+'" name="opt" value="'+orig+'"'+(on?" checked":"")+'><span class="lbl">'+"ABCD"[pos]+'.</span><span>'+q.opts[orig]+'</span></label>';
+    }).join("");
+    if(multi) h = '<p class="faint">Select one or more options.</p>' + h;
+  }
+  $("qresp").innerHTML = h;
+  $("btnPrev").disabled = i === 0;
+}
+
+function readDraft(){
+  var q = Q(S.cur);
+  if(q.type === "NAT"){ var v = ($("natIn") || {}).value; v = (v || "").trim(); return v === "" ? null : v; }
+  var ch = Array.prototype.slice.call(document.querySelectorAll('#qresp input[name=opt]:checked')).map(function(x){ return +x.value; });
+  if(!ch.length) return null;
+  return q.type === "MSQ" ? ch.sort(function(a,b){return a-b;}) : ch[0];
+}
+
+$("qresp").addEventListener("change", function(e){
+  if(e.target.name === "opt"){ document.querySelectorAll("#qresp .opt").forEach(function(l){ l.classList.toggle("sel", l.querySelector("input").checked); }); S.draft = readDraft(); }
+});
+$("qresp").addEventListener("input", function(e){
+  if(e.target.id === "natIn"){
+    var v = e.target.value.replace(/[^0-9.\-]/g,"").replace(/(?!^)-/g,"");
+    var p = v.split("."); if(p.length > 2) v = p[0] + "." + p.slice(1).join("");
+    e.target.value = v; S.draft = readDraft();
+  }
+});
+$("qresp").addEventListener("click", function(e){
+  var k = e.target.getAttribute && e.target.getAttribute("data-k"); if(!k) return;
+  var inp = $("natIn"), v = inp.value;
+  if(k === "⌫") v = v.slice(0,-1); else if(k === "C") v = "";
+  else if(k === "−") v = v.charAt(0) === "-" ? v.slice(1) : "-" + v;
+  else if(k === "."){ if(v.indexOf(".") < 0) v += "."; } else v += k;
+  inp.value = v; S.draft = readDraft();
+});
+$("secTabs").addEventListener("click", function(e){
+  var sc = e.target.getAttribute("data-sec"); if(!sc) return;
+  for(var k=0;k<S.items.length;k++) if(secOf(k) === sc){ goTo(k); break; }
+});
+
+function validNat(v){ return v != null && /^-?\d*\.?\d+$|^-?\d+\.?$/.test(v); }
+function next(){ goTo(Math.min(S.cur+1, S.items.length-1)); }
+$("btnSave").onclick = function(){
+  var it = S.items[S.cur], v = readDraft(), q = Q(S.cur);
+  if(q.type === "NAT" && v != null && !validNat(v)){ alert("Please enter a valid number."); return; }
+  it.ans = v; it.st = v == null ? "na" : "an";
+  if(S.cur === S.items.length-1){ save(K.session, S); renderPalette(); renderQ(); return; }
+  next();
+};
+$("btnMark").onclick = function(){
+  var it = S.items[S.cur], v = readDraft(), q = Q(S.cur);
+  if(q.type === "NAT" && v != null && !validNat(v)){ alert("Please enter a valid number."); return; }
+  it.ans = v; it.st = v == null ? "mr" : "am";
+  if(S.cur === S.items.length-1){ save(K.session, S); renderPalette(); renderQ(); return; }
+  next();
+};
+$("btnClear").onclick = function(){ var it = S.items[S.cur]; it.ans = null; S.draft = undefined; if(it.st === "an") it.st = "na"; else if(it.st === "am") it.st = "mr"; save(K.session, S); renderQ(); renderPalette(); };
+$("btnPrev").onclick = function(){ if(S.cur > 0) goTo(S.cur-1); };
+
+function counts(filterSec){
+  var c = { nv:0, na:0, an:0, mr:0, am:0 };
+  S.items.forEach(function(it,k){ if(!filterSec || secOf(k) === filterSec) c[it.st]++; });
+  return c;
+}
+function renderPalette(){
+  var sec = secOf(S.cur), c = counts(sec);
+  $("counts").innerHTML =
+    '<div><span class="q sw an">'+c.an+'</span>Answered</div><div><span class="q sw na">'+c.na+'</span>Not answered</div>'+
+    '<div><span class="q sw">'+c.nv+'</span>Not visited</div><div><span class="q sw mr">'+c.mr+'</span>Marked for review</div>'+
+    '<div style="grid-column:1/-1"><span class="q sw am">'+c.am+'</span>Answered &amp; marked for review (will be evaluated)</div>';
+  $("palTitle").textContent = SEC_NAME[sec];
+  var h = "";
+  S.items.forEach(function(it,k){ if(secOf(k) !== sec) return;
+    h += '<button class="q '+(it.st === "nv" ? "" : it.st)+(k === S.cur ? " cur" : "")+'" data-q="'+k+'" title="Question '+(k+1)+'">'+(k+1)+'</button>'; });
+  $("palette").innerHTML = h;
+}
+$("palette").addEventListener("click", function(e){ var b = e.target.closest("[data-q]"); if(b) goTo(+b.getAttribute("data-q")); });
+
+$("btnSubmit").onclick = function(){
+  var c = counts(null);
+  modal('<h2>Submit examination?</h2><div class="tablewrap"><table>'+
+    '<tr><td>Answered</td><td><b>'+c.an+'</b></td></tr><tr><td>Answered &amp; marked for review</td><td><b>'+c.am+'</b></td></tr>'+
+    '<tr><td>Marked for review (unanswered)</td><td><b>'+c.mr+'</b></td></tr><tr><td>Not answered</td><td><b>'+c.na+'</b></td></tr>'+
+    '<tr><td>Not visited</td><td><b>'+c.nv+'</b></td></tr><tr><td>Time remaining</td><td><b>'+fmtT((S.end-Date.now())/1000)+'</b></td></tr></table></div>'+
+    '<p class="muted">Once submitted, you cannot change your answers.</p>'+
+    '<div class="row"><button class="btn" id="mNo">Return to exam</button><button class="btn primary" id="mYes">Yes, submit</button></div>');
+  $("mNo").onclick = closeModal;
+  $("mYes").onclick = function(){ closeModal(); finish(false); };
+};
+
+/* ---------------- evaluation ---------------- */
+function evaluate(q, ans){
+  if(ans == null) return { res:"u", m:0 };
+  if(q.type === "MCQ") return ans === q.ans ? { res:"c", m:q.marks } : { res:"w", m: -q.marks/3 };
+  if(q.type === "MSQ"){ var a = ans.slice().sort(), k = q.ans.slice().sort(); return (a.length === k.length && a.every(function(x,i){ return x === k[i]; })) ? { res:"c", m:q.marks } : { res:"w", m:0 }; }
+  var v = parseFloat(ans); var lo = Math.min(q.ans[0], q.ans[1]), hi = Math.max(q.ans[0], q.ans[1]);
+  return (!isNaN(v) && v >= lo - 1e-9 && v <= hi + 1e-9) ? { res:"c", m:q.marks } : { res:"w", m:0 };
+}
+function finish(auto){
+  clearInterval(tick); $("calc").classList.add("hidden");
+  var tot = 0, max = 0, sec = {}, topic = {}, nc = 0, nw = 0, nu = 0, detail = [];
+  S.items.forEach(function(it, k){
+    var q = S.bank[it.qi];
+    var ans = (it.st === "an" || it.st === "am") ? it.ans : null;
+    var e = evaluate(q, ans);
+    tot += e.m; max += q.marks;
+    sec[q.sec] = sec[q.sec] || { m:0, max:0 }; sec[q.sec].m += e.m; sec[q.sec].max += q.marks;
+    var tp = topic[q.topic] = topic[q.topic] || { n:0, c:0, w:0, m:0, max:0 };
+    tp.n++; tp.max += q.marks; tp.m += e.m; if(e.res === "c") tp.c++; if(e.res === "w") tp.w++;
+    if(e.res === "c") nc++; else if(e.res === "w") nw++; else nu++;
+    detail.push({ n:k+1, qi:it.qi, perm:it.perm, ans:ans, res:e.res, m:r2(e.m) });
+  });
+  var rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:S.cand.name, reg:S.cand.reg, title:S.title,
+    score:r2(tot), max:max, ga: r2((sec.GA||{m:0}).m), ce: r2((sec.CE||{m:0}).m), correct:nc, wrong:nw, skipped:nu,
+    timeTaken: Math.round((Math.min(Date.now(), S.end) - S.start)/1000), submitted: new Date().toISOString(), auto:!!auto, detail:detail };
+  var all = load(K.results, []); all.push(rec); save(K.results, all);
+  var bankSnap = S.bank; del(K.session); S = null;
+  renderResult(rec, bankSnap, topic, sec, settings().review, auto);
+  show("result");
+}
+
+/* ---------------- result screen ---------------- */
+function ansText(q, ans, perm){
+  if(ans == null) return "—";
+  if(q.type === "NAT") return esc(ans);
+  var arr = Array.isArray(ans) ? ans : [ans];
+  return arr.map(function(o){ return "ABCD"[perm ? perm.indexOf(o) : o]; }).sort().join(", ");
+}
+function keyText(q, perm){
+  if(q.type === "NAT") return q.ans[0] === q.ans[1] ? String(q.ans[0]) : q.ans[0] + " to " + q.ans[1];
+  var arr = Array.isArray(q.ans) ? q.ans : [q.ans];
+  return arr.map(function(o){ return "ABCD"[perm ? perm.indexOf(o) : o]; }).sort().join(", ");
+}
+function renderResult(rec, bk, topic, sec, mode, auto){
+  var w = $("resultWrap"), h = "";
+  h += '<div class="card"><h1>'+esc(rec.title)+'</h1><p class="muted">'+esc(rec.name)+' · '+esc(rec.reg)+' · submitted '+new Date(rec.submitted).toLocaleString()+(auto ? ' (auto-submitted at time-out)' : '')+'</p>';
+  if(mode === "none"){ h += '<p>Your responses have been recorded successfully. Results will be announced by your instructor.</p></div>'; w.innerHTML = h; return; }
+  var pct = rec.max ? rec.score/rec.max*100 : 0;
+  h += '<div class="kpis">'+
+    '<div class="kpi"><div class="v">'+rec.score+' / '+rec.max+'</div><div class="l">Total marks ('+r2(pct)+'%)</div></div>'+
+    '<div class="kpi"><div class="v">'+rec.ga+'</div><div class="l">General Aptitude (of '+((sec.GA||{}).max||0)+')</div></div>'+
+    '<div class="kpi"><div class="v">'+rec.ce+'</div><div class="l">Civil Engineering (of '+((sec.CE||{}).max||0)+')</div></div>'+
+    '<div class="kpi"><div class="v" style="color:var(--ok)">'+rec.correct+'</div><div class="l">Correct</div></div>'+
+    '<div class="kpi"><div class="v" style="color:var(--bad)">'+rec.wrong+'</div><div class="l">Wrong</div></div>'+
+    '<div class="kpi"><div class="v">'+rec.skipped+'</div><div class="l">Not attempted</div></div>'+
+    '<div class="kpi"><div class="v">'+fmtT(rec.timeTaken)+'</div><div class="l">Time taken</div></div></div>';
+  h += '<h3>Subject-wise analysis</h3><div class="tablewrap"><table><thead><tr><th>Subject</th><th>Qs</th><th>Correct</th><th>Wrong</th><th>Marks</th><th>Score %</th></tr></thead><tbody>';
+  Object.keys(topic).sort(function(a,b){ return topic[b].max - topic[a].max; }).forEach(function(t){
+    var x = topic[t], p = x.max ? Math.max(0, x.m/x.max*100) : 0;
+    h += '<tr><td>'+esc(t)+'</td><td>'+x.n+'</td><td>'+x.c+'</td><td>'+x.w+'</td><td>'+r2(x.m)+' / '+x.max+'</td><td><div class="row" style="gap:8px;flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:'+p.toFixed(0)+'%"></i></div><span class="faint">'+p.toFixed(0)+'%</span></div></td></tr>';
+  });
+  h += '</tbody></table></div></div>';
+  if(mode === "full"){
+    h += '<h2 style="margin-top:22px">Answer review</h2><div class="filters noprint" id="rvF"><button class="btn on" data-f="all">All</button><button class="btn" data-f="c">Correct</button><button class="btn" data-f="w">Wrong</button><button class="btn" data-f="u">Not attempted</button></div><div id="rvList">';
+    rec.detail.forEach(function(d){
+      var q = bk[d.qi]; if(!q) return;
+      var tag = { c:'<span class="tag c">Correct</span>', w:'<span class="tag w">Wrong</span>', u:'<span class="tag u">Not attempted</span>' }[d.res];
+      h += '<div class="rv" data-r="'+d.res+'"><div class="h"><b>Q'+d.n+'</b>'+tag+'<span class="pill">'+q.type+'</span><span class="pill">'+esc(q.topic)+'</span><span class="faint">Marks: '+(d.m > 0 ? "+" : "")+d.m+'</span></div><div>'+q.q+'</div>';
+      if(q.type !== "NAT") h += '<ol type="A" style="margin:8px 0">' + d.perm.map(function(o){ return '<li>'+q.opts[o]+'</li>'; }).join("") + '</ol>';
+      h += '<div style="margin-top:6px">Your answer: <span class="'+(d.res === "c" ? "ok" : d.res === "w" ? "bad" : "")+'">'+ansText(q, d.ans, d.perm)+'</span> &nbsp;·&nbsp; Correct answer: <span class="ok">'+keyText(q, d.perm)+'</span></div>';
+      if(q.sol) h += '<div class="sol"><b>Solution:</b> '+q.sol+'</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  w.innerHTML = h;
+  var f = $("rvF");
+  if(f) f.onclick = function(e){ var b = e.target.closest("[data-f]"); if(!b) return; f.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
+    var v = b.getAttribute("data-f"); document.querySelectorAll("#rvList .rv").forEach(function(r){ r.classList.toggle("hidden", v !== "all" && r.getAttribute("data-r") !== v); }); };
+}
+
+/* ---------------- calculator ---------------- */
+var calc = { expr:"", deg:true, last:"0" };
+var CK = [["sin","sin("],["cos","cos("],["tan","tan("],["(","("],[")",")"],
+          ["asin","asin("],["acos","acos("],["atan","atan("],["x²","^2"],["xʸ","^"],
+          ["√","sqrt("],["log","log("],["ln","ln("],["eˣ","exp("],["π","pi"],
+          ["7","7"],["8","8"],["9","9"],["÷","/"],["⌫","BS"],
+          ["4","4"],["5","5"],["6","6"],["×","*"],["C","CLR"],
+          ["1","1"],["2","2"],["3","3"],["−","-"],["Ans","ans"],
+          ["0","0"],[".","."],["EXP","E"],["+","+"],["=","EQ"]];
+$("calcKeys").innerHTML = CK.map(function(k){ var cls = "/*-+^".indexOf(k[1]) >= 0 ? "op" : k[1] === "EQ" ? "eq" : ""; return '<button type="button" class="'+cls+'" data-c="'+esc(k[1])+'">'+k[0]+'</button>'; }).join("");
+function calcShow(rs){ $("calcEx").textContent = calc.expr; if(rs != null) $("calcRs").textContent = rs; }
+function calcEval(src){
+  var s = src.replace(/\s+/g,""), p = 0;
+  function peek(){ return s.charAt(p); }
+  function num(){ var m = /^(\d+\.?\d*|\.\d+)(E[+-]?\d+)?/i.exec(s.slice(p)); if(!m) throw 0; p += m[0].length; return parseFloat(m[0]); }
+  var F = { sin:function(x){ return Math.sin(calc.deg ? x*Math.PI/180 : x); }, cos:function(x){ return Math.cos(calc.deg ? x*Math.PI/180 : x); },
+    tan:function(x){ return Math.tan(calc.deg ? x*Math.PI/180 : x); }, asin:function(x){ var r = Math.asin(x); return calc.deg ? r*180/Math.PI : r; },
+    acos:function(x){ var r = Math.acos(x); return calc.deg ? r*180/Math.PI : r; }, atan:function(x){ var r = Math.atan(x); return calc.deg ? r*180/Math.PI : r; },
+    sqrt:Math.sqrt, log:function(x){ return Math.log(x)/Math.LN10; }, ln:Math.log, exp:Math.exp };
+  function prim(){
+    var c = peek();
+    if(c === "("){ p++; var v = expr(); if(peek() === ")") p++; return v; }
+    if(/[\d.]/.test(c)) return num();
+    var m = /^[a-z]+/.exec(s.slice(p)); if(!m) throw 0;
+    var id = m[0]; p += id.length;
+    if(id === "pi") return Math.PI; if(id === "e") return Math.E; if(id === "ans") return parseFloat(calc.last) || 0;
+    if(!F[id] || peek() !== "(") throw 0; p++; var a = expr(); if(peek() === ")") p++; return F[id](a);
+  }
+  function pow(){ var b = prim(); if(peek() === "^"){ p++; return Math.pow(b, unary()); } return b; }
+  function unary(){ if(peek() === "-"){ p++; return -unary(); } if(peek() === "+"){ p++; return unary(); } return pow(); }
+  function term(){ var v = unary(); while(peek() === "*" || peek() === "/" || /[\d(a-z]/.test(peek()) && p > 0){ var o = peek(); if(o === "*" || o === "/"){ p++; var r = unary(); v = o === "*" ? v*r : v/r; } else v *= unary(); } return v; }
+  function expr(){ var v = term(); while(peek() === "+" || peek() === "-"){ var o = s.charAt(p++); var r = term(); v = o === "+" ? v+r : v-r; } return v; }
+  var out = expr(); if(p < s.length) throw 0; return out;
+}
+$("calcKeys").onclick = function(e){
+  var b = e.target.closest("[data-c]"); if(!b) return; var c = b.getAttribute("data-c");
+  if(c === "CLR"){ calc.expr = ""; calcShow("0"); return; }
+  if(c === "BS"){ calc.expr = calc.expr.replace(/(asin\(|acos\(|atan\(|sin\(|cos\(|tan\(|sqrt\(|log\(|exp\(|ln\(|ans|pi|.)$/, ""); calcShow(); return; }
+  if(c === "EQ"){ try{ var v = calcEval(calc.expr); if(!isFinite(v)) throw 0; var t = String(+v.toPrecision(12)); calc.last = t; calcShow(t); }catch(err){ calcShow("Error"); } return; }
+  calc.expr += c; calcShow();
+};
+$("calcMode").onclick = function(){ calc.deg = !calc.deg; this.textContent = calc.deg ? "DEG" : "RAD"; };
+$("btnCalc").onclick = function(){ $("calc").classList.toggle("hidden"); };
+$("calcClose").onclick = function(){ $("calc").classList.add("hidden"); };
+(function drag(){ var el = $("calc"), hd = $("calcHead"), sx, sy, ox, oy, on = false;
+  hd.addEventListener("pointerdown", function(e){ if(e.target.tagName === "BUTTON") return; on = true; var r = el.getBoundingClientRect(); sx = e.clientX; sy = e.clientY; ox = r.left; oy = r.top; hd.setPointerCapture(e.pointerId); });
+  hd.addEventListener("pointermove", function(e){ if(!on) return; el.style.left = Math.max(0, ox + e.clientX - sx) + "px"; el.style.top = Math.max(0, oy + e.clientY - sy) + "px"; el.style.right = "auto"; el.style.bottom = "auto"; });
+  hd.addEventListener("pointerup", function(){ on = false; });
+})();
+
+/* ---------------- instructor ---------------- */
+$("adminForm").onsubmit = function(e){
+  e.preventDefault();
+  if($("aPass").value === settings().password){ $("aPass").value = ""; $("adminErr").textContent = ""; show("admin"); }
+  else $("adminErr").textContent = "Incorrect password.";
+};
+$("adminTabs").onclick = function(e){ var b = e.target.closest("[data-at]"); if(!b) return; var t = b.getAttribute("data-at");
+  this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
+  document.querySelectorAll("[data-ap]").forEach(function(p){ p.classList.toggle("hidden", p.getAttribute("data-ap") !== t); }); };
+
+function renderAdmin(){
+  var s = settings();
+  $("sTitle").value = s.title; $("sDur").value = s.duration; $("sCode").value = s.code; $("sPass").value = "";
+  $("sShuffle").value = s.shuffle; $("sShuffleOpt").value = s.shuffleOpt; $("sReview").value = s.review; $("sOneAttempt").value = s.oneAttempt; $("setMsg").textContent = "";
+  renderResults(); renderBank();
+}
+function renderResults(){
+  var rs = load(K.results, []).slice().sort(function(a,b){ return b.score - a.score || a.timeTaken - b.timeTaken; });
+  if(!rs.length){ $("resStats").innerHTML = ""; $("resBody").innerHTML = '<tr><td colspan="10" class="muted">No attempts submitted yet.</td></tr>'; return; }
+  var sc = rs.map(function(r){ return r.score; }), avg = sc.reduce(function(a,b){return a+b;},0)/sc.length;
+  var sd = Math.sqrt(sc.reduce(function(a,b){ return a + (b-avg)*(b-avg); },0)/sc.length);
+  $("resStats").innerHTML = '<div class="kpi"><div class="v">'+rs.length+'</div><div class="l">Attempts</div></div>'+
+    '<div class="kpi"><div class="v">'+r2(Math.max.apply(null,sc))+'</div><div class="l">Highest</div></div>'+
+    '<div class="kpi"><div class="v">'+r2(avg)+'</div><div class="l">Mean</div></div>'+
+    '<div class="kpi"><div class="v">'+r2(sd)+'</div><div class="l">Std. deviation</div></div>'+
+    '<div class="kpi"><div class="v">'+r2(Math.min.apply(null,sc))+'</div><div class="l">Lowest</div></div>';
+  var rank = 0, prev = null;
+  $("resBody").innerHTML = rs.map(function(r, i){ if(r.score !== prev){ rank = i+1; prev = r.score; }
+    return '<tr><td>'+rank+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.reg)+'</td><td>'+r.ga+'</td><td>'+r.ce+'</td><td><b>'+r.score+'</b> / '+r.max+'</td><td>'+r.correct+' / '+r.wrong+' / '+r.skipped+'</td><td>'+fmtT(r.timeTaken)+'</td><td class="faint">'+new Date(r.submitted).toLocaleString()+(r.auto?' (auto)':'')+'</td>'+
+      '<td><button class="btn" data-view="'+r.id+'" style="padding:3px 10px">View</button> <button class="btn danger" data-del="'+r.id+'" style="padding:3px 10px">Delete</button></td></tr>'; }).join("");
+}
+$("resBody").onclick = function(e){
+  var d = e.target.closest("[data-del]"), v = e.target.closest("[data-view]");
+  if(d){ if(!confirm("Delete this attempt?")) return; save(K.results, load(K.results, []).filter(function(r){ return r.id !== d.getAttribute("data-del"); })); renderResults(); }
+  if(v){ var r = load(K.results, []).filter(function(x){ return x.id === v.getAttribute("data-view"); })[0]; if(!r) return;
+    var bk = bank(), topic = {}, sec = {};
+    r.detail.forEach(function(d){ var q = bk[d.qi]; if(!q) return; var t = topic[q.topic] = topic[q.topic] || { n:0,c:0,w:0,m:0,max:0 }; t.n++; t.max += q.marks; t.m += d.m; if(d.res==="c") t.c++; if(d.res==="w") t.w++;
+      sec[q.sec] = sec[q.sec] || { m:0, max:0 }; sec[q.sec].max += q.marks; });
+    renderResult(r, bk, topic, sec, "full", r.auto); $("btnResHome").setAttribute("data-go","admin"); show("result"); }
+};
+$("btnResHome").addEventListener("click", function(){ var t = this; setTimeout(function(){ t.setAttribute("data-go","home"); }, 0); });
+function csvCell(v){ v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+$("btnCsv").onclick = function(){
+  var rs = load(K.results, []); if(!rs.length) return alert("No results to export.");
+  var n = rs[0].detail.length, head = ["Name","Reg No","GA","CE","Total","Max","Correct","Wrong","Not attempted","Time (s)","Submitted"];
+  for(var i=1;i<=n;i++) head.push("Q"+i);
+  var lines = [head.join(",")].concat(rs.map(function(r){
+    return [r.name, r.reg, r.ga, r.ce, r.score, r.max, r.correct, r.wrong, r.skipped, r.timeTaken, r.submitted].concat(r.detail.map(function(d){ return d.m; })).map(csvCell).join(","); }));
+  download("gate-ce-results.csv", lines.join("\n"), "text/csv");
+};
+$("btnJsonRes").onclick = function(){ download("gate-ce-results.json", JSON.stringify(load(K.results, []), null, 1), "application/json"); };
+$("btnImpRes").onclick = function(){ $("fileRes").click(); };
+$("fileRes").onchange = function(){ var f = this.files[0]; if(!f) return; var rd = new FileReader();
+  rd.onload = function(){ try{ var arr = JSON.parse(rd.result); if(!Array.isArray(arr)) throw 0;
+    var cur = load(K.results, []), ids = {}; cur.forEach(function(r){ ids[r.id] = 1; });
+    var add = arr.filter(function(r){ return r && r.id && r.reg != null && typeof r.score === "number" && !ids[r.id]; });
+    save(K.results, cur.concat(add)); renderResults(); alert(add.length + " attempt(s) imported."); }catch(e){ alert("Invalid results file."); } };
+  rd.readAsText(f); this.value = ""; };
+$("btnClearRes").onclick = function(){ if(confirm("Delete ALL stored results? Export them first if needed.")){ save(K.results, []); renderResults(); } };
+
+$("btnSaveSet").onclick = function(){
+  var s = settings(), d = parseInt($("sDur").value, 10);
+  if(!(d >= 5 && d <= 600)){ $("setMsg").textContent = "Duration must be between 5 and 600 minutes."; return; }
+  s.title = $("sTitle").value.trim() || DEF_SETTINGS.title; s.duration = d; s.code = $("sCode").value.trim();
+  if($("sPass").value) s.password = $("sPass").value;
+  s.shuffle = $("sShuffle").value; s.shuffleOpt = $("sShuffleOpt").value; s.review = $("sReview").value; s.oneAttempt = $("sOneAttempt").value;
+  save(K.settings, s); $("sPass").value = ""; $("setMsg").textContent = "Saved.";
+};
+
+function renderBank(){
+  var b = bank(), tm = b.reduce(function(a,q){ return a+q.marks; },0), custom = !!load(K.bank, null);
+  $("bankSummary").textContent = b.length + " questions, " + tm + " marks — " + (custom ? "custom question bank imported by instructor." : "default GATE CE mock paper.");
+  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+esc(q.topic)+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
+}
+function validQ(q){
+  if(!q || (q.sec !== "GA" && q.sec !== "CE") || [1,2].indexOf(q.marks) < 0 || typeof q.q !== "string") return false;
+  if(q.type === "NAT") return Array.isArray(q.ans) && q.ans.length === 2 && q.ans.every(function(x){ return typeof x === "number"; });
+  if(!Array.isArray(q.opts) || q.opts.length < 2 || q.opts.length > 4) return false;
+  if(q.type === "MCQ") return Number.isInteger(q.ans) && q.ans >= 0 && q.ans < q.opts.length;
+  if(q.type === "MSQ") return Array.isArray(q.ans) && q.ans.length > 0 && q.ans.every(function(x){ return Number.isInteger(x) && x >= 0 && x < q.opts.length; });
+  return false;
+}
+$("btnExpQ").onclick = function(){ download("gate-ce-questions.json", JSON.stringify(bank(), null, 1), "application/json"); };
+$("btnImpQ").onclick = function(){ $("fileQ").click(); };
+$("fileQ").onchange = function(){ var f = this.files[0]; if(!f) return; var rd = new FileReader();
+  rd.onload = function(){ try{ var arr = JSON.parse(rd.result); if(!Array.isArray(arr) || !arr.length) throw "The file must contain a non-empty JSON array.";
+    var bad = []; arr.forEach(function(q,i){ if(!q.topic) q.topic = "General"; if(!validQ(q)) bad.push(i+1); });
+    if(bad.length) throw "Invalid question(s) at position: " + bad.slice(0,15).join(", ");
+    arr.sort(function(a,b){ return (a.sec === b.sec ? 0 : a.sec === "GA" ? -1 : 1); });
+    save(K.bank, arr); renderBank(); alert(arr.length + " questions imported. They will be used for new exam sessions."); }catch(e){ alert(typeof e === "string" ? e : "Could not read the JSON file."); } };
+  rd.readAsText(f); this.value = ""; };
+$("btnResetQ").onclick = function(){ if(confirm("Replace the current question bank with the default GATE CE paper?")){ del(K.bank); renderBank(); } };
+
+/* ---------------- boot: resume an in-progress exam ---------------- */
+var saved = load(K.session, null);
+if(saved && saved.items && saved.end){
+  S = saved;
+  if(Date.now() >= S.end) finish(true); else enterExam();
+} else show("home");
+window.addEventListener("beforeunload", function(e){ if(S){ e.preventDefault(); e.returnValue = ""; } });
+})();
+</script>
+</body>
+</html>
