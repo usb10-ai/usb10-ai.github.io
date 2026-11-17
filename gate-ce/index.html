@@ -63,6 +63,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
 .subjrow{cursor:pointer}
 .subjrow:hover td{background:var(--accent-soft)}
 .subjrow.on td{background:var(--accent-soft);font-weight:600}
+.chip{display:inline-block;padding:3px 10px;margin:2px 4px 2px 0;border:1px solid var(--line);border-radius:999px;font-size:.85rem;cursor:pointer;background:var(--surface);white-space:nowrap}
+.chip:hover{border-color:var(--accent)}
+.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 
 /* instructions legend */
 .legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin:10px 0}
@@ -163,18 +166,18 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <div class="card">
         <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
         <p class="muted">Computer-based tests that follow the GATE CE pattern: a question palette, section tabs, a virtual scientific calculator and automatic evaluation with negative marking.</p>
-        <h3>Full-length mock test</h3>
-        <table class="pattern">
-          <tr><th>Section</th><th>Questions</th><th>Marks</th></tr>
-          <tbody id="patternBody"></tbody>
-        </table>
+        <h3>Full-length mock tests</h3>
+        <div class="tablewrap"><table class="pattern">
+          <thead><tr><th>Test</th><th>Questions</th><th>Marks</th><th>Time</th></tr></thead>
+          <tbody id="fullBody"></tbody>
+        </table></div>
         <p class="faint" id="patternNote"></p>
         <h3 style="margin-top:18px">Subject-wise tests</h3>
         <div class="tablewrap"><table class="pattern">
-          <thead><tr><th>Subject</th><th>Questions</th><th>Marks</th><th>Time</th></tr></thead>
+          <thead><tr><th>Subject</th><th>Tests</th></tr></thead>
           <tbody id="subjBody"></tbody>
         </table></div>
-        <p class="faint">Tap a subject to select it, then sign in.</p>
+        <p class="faint">Tap a test to select it, then sign in. All questions are original practice questions in the GATE CE pattern.</p>
       </div>
       <div class="card">
         <h2>Candidate login</h2>
@@ -307,7 +310,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <div class="grid2">
         <div><label class="f" for="sTitle">Exam title</label><input type="text" id="sTitle"></div>
         <div><label class="f" for="sDur">Full-length test duration (minutes)</label><input type="number" id="sDur" min="5" max="600"></div>
-        <div><label class="f" for="sSubjDur">Subject-wise test duration (minutes)</label><input type="number" id="sSubjDur" min="5" max="600"></div>
+        <div><label class="f" for="sSubjDur">Subject-wise test time (minutes per mark; GATE = 1.8)</label><input type="number" id="sSubjDur" min="0.5" max="10" step="0.1"></div>
         <div><label class="f" for="sCode">Exam access code (leave blank for none)</label><input type="text" id="sCode"></div>
         <div><label class="f" for="sPass">New instructor password (leave blank to keep)</label><input type="password" id="sPass"></div>
         <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="0">Fixed order</option><option value="1">Shuffle within each section</option></select></div>
@@ -331,7 +334,8 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
 ]
 sec: "GA" or "CE" · type: MCQ | MSQ | NAT · marks: 1 or 2
 ans: MCQ = option index (0–3), MSQ = array of indices, NAT = [min, max] accepted range
-mock: optional; false = use only in subject-wise tests (not in the full-length paper)
+paper: optional full-length paper number (1, 2, 3 …); default 1. Each paper should have 65 Q / 100 marks.
+mock: optional; false = use only in subject-wise tests (not in any full-length paper)
 Subject tests group CE questions by topic: Engineering Mathematics; Solid Mechanics, Structural Analysis,
 Concrete Structures, Steel Structures, Construction Materials (Structural); Geotechnical Engineering;
 Fluid Mechanics, Hydrology, Irrigation Engineering (Water Resources); Environmental Engineering;
@@ -352,6 +356,8 @@ Transportation Engineering; Geomatics Engineering. Or set "subject":"Any name" t
 <div id="modal" class="modal hidden"><div class="card" id="modalCard"></div></div>
 
 <script src="questions.js"></script>
+<script src="questions-mock2.js"></script>
+<script src="questions-mock3.js"></script>
 <script>
 (function(){
 "use strict";
@@ -368,30 +374,41 @@ function r2(x){ return Math.round(x*100)/100; }
 function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function download(name, text, type){ if(window.AndroidBridge){ window.AndroidBridge.save(name, type, text); return; } var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
-var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjDuration:45 };
+var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjPerMark:1.8 };
 function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
 function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
 var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
 var FULL = "full";
 var SUBJ_MAP = {}; (window.GATE_SUBJECTS || []).forEach(function(x){ x.topics.forEach(function(t){ SUBJ_MAP[t] = x.name; }); });
 function subjOf(q){ return q.subject || SUBJ_MAP[q.topic] || q.topic || "General"; }
-/* All available tests: the full-length paper plus one test per CE subject. */
+/* All available tests: one full-length test per paper number, plus two tests per CE subject
+   (a subject's questions are split alternately, 1-mark then 2-mark, so both tests are balanced). */
 function tests(){
-  var s = settings(), b = bank(), out = [], full = [];
-  b.forEach(function(q,i){ if(q.mock !== false) full.push(i); });
-  if(full.length) out.push({ id:FULL, name:"Full-length mock test", idx:full, dur:s.duration });
+  var s = settings(), b = bank(), out = [], papers = {};
+  b.forEach(function(q,i){ if(q.mock !== false){ var p = q.paper || 1; (papers[p] = papers[p] || []).push(i); } });
+  Object.keys(papers).sort(function(a,c){ return a - c; }).forEach(function(p){
+    out.push({ id:"full:"+p, kind:"full", group:"Full-length", name:"Full-length Mock Test "+p, idx:papers[p], dur:s.duration }); });
   var names = (window.GATE_SUBJECTS || []).map(function(x){ return x.name; });
   b.forEach(function(q){ if(q.sec === "CE" && names.indexOf(subjOf(q)) < 0) names.push(subjOf(q)); });
+  var per = parseFloat(s.subjPerMark) || 1.8;
   names.forEach(function(n){ var idx = [];
     b.forEach(function(q,i){ if(q.sec === "CE" && subjOf(q) === n) idx.push(i); });
-    if(idx.length) out.push({ id:"subj:"+n, name:n, idx:idx, dur:s.subjDuration }); });
+    if(!idx.length) return;
+    idx.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
+    var parts = idx.length >= 12 ? [[],[]] : [[]];
+    idx.forEach(function(i,k){ parts[k % parts.length].push(i); });
+    parts.forEach(function(part, k){
+      var m = marksOf(part, b);
+      out.push({ id:"subj:"+n+":"+(k+1), kind:"subj", group:n, part:k+1, name: parts.length > 1 ? n+" — Test "+(k+1) : n,
+        idx:part, dur: Math.max(10, Math.ceil(m*per/5)*5) }); }); });
   return out;
 }
 function findTest(id){ return tests().filter(function(t){ return t.id === id; })[0]; }
 function marksOf(idx, b){ return idx.reduce(function(a,i){ return a + b[i].marks; }, 0); }
-function secLabel(sc){ return (S && S.testName && sc === "CE") ? S.testName : SEC_NAME[sc]; }
-function recTestId(r){ return r.testId || FULL; }
-function recTestName(r){ return r.test || "Full-length mock test"; }
+function secLabel(sc){ return (S && S.kind === "subj" && sc === "CE") ? S.testName : SEC_NAME[sc]; }
+function isFullId(id){ return String(id).indexOf("full") === 0; }
+function recTestId(r){ return (!r.testId || r.testId === FULL) ? "full:1" : r.testId; }
+function recTestName(r){ return (!r.test || r.test === "Full-length mock test") && isFullId(recTestId(r)) ? "Full-length Mock Test 1" : r.test; }
 
 if(window.AndroidBridge){ $("btnPrint").classList.add("hidden"); $("apkLink").classList.add("hidden"); }
 
@@ -415,31 +432,33 @@ function closeModal(){ $("modal").classList.add("hidden"); }
 function renderHome(){
   var s = settings(), b = bank();
   $("homeTitle").textContent = s.title;
-  var T = tests(), full = T.filter(function(t){ return t.id === FULL; })[0];
-  var fb = full ? full.idx.map(function(i){ return b[i]; }) : [];
-  var rows = ["GA","CE"].map(function(sec){
-    var qs = fb.filter(function(q){ return q.sec === sec; });
-    var m = qs.reduce(function(a,q){ return a + q.marks; }, 0);
-    return "<tr><td>"+SEC_NAME[sec]+"</td><td>"+qs.length+"</td><td>"+m+"</td></tr>";
-  });
-  var tm = fb.reduce(function(a,q){ return a+q.marks; },0);
-  rows.push("<tr><th>Total</th><th>"+fb.length+"</th><th>"+tm+"</th></tr>");
-  $("patternBody").innerHTML = rows.join("");
-  $("patternNote").textContent = "Duration: " + s.duration + " minutes. MCQ carry negative marks (−1/3 or −2/3); MSQ and NAT do not.";
+  var T = tests(), fulls = T.filter(function(t){ return t.kind === "full"; });
+  $("fullBody").innerHTML = fulls.map(function(t){
+    return '<tr class="subjrow" data-test="'+esc(t.id)+'"><td>'+esc(t.name)+'</td><td>'+t.idx.length+'</td><td>'+marksOf(t.idx, b)+'</td><td>'+t.dur+' min</td></tr>'; }).join("") ||
+    '<tr><td colspan="4" class="muted">No full-length tests available.</td></tr>';
+  var f0 = fulls[0] ? fulls[0].idx.map(function(i){ return b[i]; }) : [];
+  var ga = f0.filter(function(q){ return q.sec === "GA"; }), ce = f0.filter(function(q){ return q.sec === "CE"; });
+  $("patternNote").textContent = "Each paper: General Aptitude " + ga.length + " Q (" + ga.reduce(function(a,q){ return a+q.marks; },0) + " marks) + Civil Engineering " +
+    ce.length + " Q (" + ce.reduce(function(a,q){ return a+q.marks; },0) + " marks). MCQ carry negative marks (−1/3 or −2/3); MSQ and NAT do not.";
   $("codeHint").textContent = s.code ? "(provided by your instructor)" : "(not required)";
   $("cCode").parentElement.classList.toggle("hidden", !s.code);
   $("loginErr").textContent = "";
   var cur = $("cTest").value;
-  $("cTest").innerHTML = T.map(function(t){ return '<option value="'+esc(t.id)+'">'+esc(t.id === FULL ? t.name : "Subject test: " + t.name)+' ('+t.idx.length+' Q, '+marksOf(t.idx, b)+' marks, '+t.dur+' min)</option>'; }).join("");
+  $("cTest").innerHTML = T.map(function(t){ return '<option value="'+esc(t.id)+'">'+esc(t.kind === "full" ? t.name : "Subject: " + t.name)+' ('+t.idx.length+' Q, '+marksOf(t.idx, b)+' marks, '+t.dur+' min)</option>'; }).join("");
   if(cur && findTest(cur)) $("cTest").value = cur;
-  $("subjBody").innerHTML = T.filter(function(t){ return t.id !== FULL; }).map(function(t){
-    return '<tr class="subjrow" data-test="'+esc(t.id)+'"><td>'+esc(t.name)+'</td><td>'+t.idx.length+'</td><td>'+marksOf(t.idx, b)+'</td><td>'+t.dur+' min</td></tr>'; }).join("") ||
-    '<tr><td colspan="4" class="muted">No subject tests available.</td></tr>';
+  var groups = [];
+  T.forEach(function(t){ if(t.kind === "subj" && groups.indexOf(t.group) < 0) groups.push(t.group); });
+  $("subjBody").innerHTML = groups.map(function(g){
+    return '<tr><td>'+esc(g)+'</td><td>' + T.filter(function(t){ return t.kind === "subj" && t.group === g; }).map(function(t){
+      return '<span class="chip" data-test="'+esc(t.id)+'" title="'+t.idx.length+' questions, '+marksOf(t.idx, b)+' marks, '+t.dur+' min">Test '+(t.part||1)+' · '+t.idx.length+' Q · '+t.dur+' min</span>'; }).join("") + '</td></tr>'; }).join("") ||
+    '<tr><td colspan="2" class="muted">No subject tests available.</td></tr>';
   markSubj();
 }
-function markSubj(){ document.querySelectorAll("#subjBody .subjrow").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === $("cTest").value); }); }
+function markSubj(){ var v = $("cTest").value;
+  document.querySelectorAll("#fullBody .subjrow").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === v); });
+  document.querySelectorAll("#subjBody .chip").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === v); }); }
 $("cTest").onchange = markSubj;
-$("subjBody").onclick = function(e){ var r = e.target.closest("[data-test]"); if(!r) return; $("cTest").value = r.getAttribute("data-test"); markSubj();
+$("fullBody").onclick = $("subjBody").onclick = function(e){ var r = e.target.closest("[data-test]"); if(!r) return; $("cTest").value = r.getAttribute("data-test"); markSubj();
   if(innerWidth < 760) $("cName").focus(); };
 
 var pending = null;
@@ -455,9 +474,9 @@ $("loginForm").onsubmit = function(e){
   $("instrCand").textContent = name + " (" + reg + ")";
   var b = bank(), nq = t.idx.length, nm = marksOf(t.idx, b);
   $("iDur").textContent = t.dur;
-  $("iPaper").innerHTML = t.id === FULL
+  $("iPaper").innerHTML = t.kind === "full"
     ? "The paper has <b>"+nq+"</b> questions carrying <b>"+nm+"</b> marks in two sections: General Aptitude (GA) and Civil Engineering (CE). Use the section tabs to move between them."
-    : "This is a <b>subject-wise test on "+esc(t.name)+"</b> with <b>"+nq+"</b> questions carrying <b>"+nm+"</b> marks (1-mark questions first, then 2-mark questions).";
+    : "This is a <b>subject-wise test: "+esc(t.name)+"</b> with <b>"+nq+"</b> questions carrying <b>"+nm+"</b> marks (1-mark questions first, then 2-mark questions).";
   $("agree").checked = false; $("btnStart").disabled = true;
   show("instr");
 };
@@ -471,7 +490,7 @@ $("btnStart").onclick = function(){
   if(!t){ pending = null; return show("home"); }
   var idx = { GA:[], CE:[] };
   t.idx.forEach(function(i){ (idx[b[i].sec] || (idx[b[i].sec] = [])).push(i); });
-  if(t.id !== FULL) idx.CE.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
+  if(t.kind !== "full") idx.CE.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
   if(s.shuffle === "1"){ idx.GA = shuffle(idx.GA); idx.CE = shuffle(idx.CE); }
   var order = idx.GA.concat(idx.CE);
   var items = order.map(function(i){
@@ -479,13 +498,13 @@ $("btnStart").onclick = function(){
     if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1") perm = shuffle(perm); }
     return { qi:i, perm:perm, st:"nv", ans:null };   // st: nv | na | an | mr | am
   });
-  S = { cand:pending, title:s.title, testId:t.id, testName: t.id === FULL ? null : t.name, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + t.dur*60000, draft:undefined };
+  S = { cand:pending, title:s.title, testId:t.id, kind:t.kind, testName:t.name, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + t.dur*60000, draft:undefined };
   save(K.session, S); pending = null;
   enterExam();
 };
 
 function enterExam(){
-  $("exTitle").textContent = S.testName ? "Subject test · " + S.testName : S.title;
+  $("exTitle").textContent = S.kind === "subj" ? "Subject test · " + S.testName : (S.testName || S.title);
   $("exCand").textContent = S.cand.name + " · " + S.cand.reg;
   show("exam");
   goTo(S.cur, true);
@@ -635,7 +654,7 @@ function finish(auto){
     if(e.res === "c") nc++; else if(e.res === "w") nw++; else nu++;
     detail.push({ n:k+1, qi:it.qi, perm:it.perm, ans:ans, res:e.res, m:r2(e.m) });
   });
-  var rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:S.cand.name, reg:S.cand.reg, title:S.title, testId:S.testId || FULL, test:S.testName || "Full-length mock test",
+  var rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), name:S.cand.name, reg:S.cand.reg, title:S.title, testId:S.testId || "full:1", test:S.testName || "Full-length Mock Test 1",
     score:r2(tot), max:max, ga: r2((sec.GA||{m:0}).m), ce: r2((sec.CE||{m:0}).m), correct:nc, wrong:nw, skipped:nu,
     timeTaken: Math.round((Math.min(Date.now(), S.end) - S.start)/1000), submitted: new Date().toISOString(), auto:!!auto, detail:detail };
   var all = load(K.results, []); all.push(rec); save(K.results, all);
@@ -658,8 +677,8 @@ function keyText(q, perm){
 }
 function renderResult(rec, bk, topic, sec, mode, auto){
   var w = $("resultWrap"), h = "";
-  var isFull = recTestId(rec) === FULL;
-  h += '<div class="card"><h1>'+esc(isFull ? rec.title : "Subject test: " + rec.test)+'</h1><p class="muted">'+esc(rec.name)+' · '+esc(rec.reg)+' · submitted '+new Date(rec.submitted).toLocaleString()+(auto ? ' (auto-submitted at time-out)' : '')+'</p>';
+  var isFull = isFullId(recTestId(rec));
+  h += '<div class="card"><h1>'+esc(isFull ? recTestName(rec) : "Subject test: " + rec.test)+'</h1><p class="muted">'+esc(rec.name)+' · '+esc(rec.reg)+' · submitted '+new Date(rec.submitted).toLocaleString()+(auto ? ' (auto-submitted at time-out)' : '')+'</p>';
   if(mode === "none"){ h += '<p>Your responses have been recorded successfully. Results will be announced by your instructor.</p></div>'; w.innerHTML = h; return; }
   var pct = rec.max ? rec.score/rec.max*100 : 0;
   h += '<div class="kpis">'+
@@ -758,14 +777,14 @@ $("adminTabs").onclick = function(e){ var b = e.target.closest("[data-at]"); if(
 function renderAdmin(){
   var s = settings();
   $("sTitle").value = s.title; $("sDur").value = s.duration; $("sCode").value = s.code; $("sPass").value = "";
-  $("sSubjDur").value = s.subjDuration;
+  $("sSubjDur").value = s.subjPerMark;
   $("sShuffle").value = s.shuffle; $("sShuffleOpt").value = s.shuffleOpt; $("sReview").value = s.review; $("sOneAttempt").value = s.oneAttempt; $("setMsg").textContent = "";
   renderResults(); renderBank();
 }
 function renderResults(){
   var all = load(K.results, []), seen = {}, opts = [];
   all.forEach(function(r){ var id = recTestId(r); if(!seen[id]){ seen[id] = 1; opts.push({ id:id, name:recTestName(r) }); } });
-  opts.sort(function(a,b){ return a.id === FULL ? -1 : b.id === FULL ? 1 : a.name.localeCompare(b.name); });
+  opts.sort(function(a,b){ var fa = isFullId(a.id), fb = isFullId(b.id); return fa !== fb ? (fa ? -1 : 1) : a.name.localeCompare(b.name); });
   var sel = $("resTest").value;
   if(!sel || (sel !== "*" && !seen[sel])) sel = opts.length ? opts[0].id : "*";
   $("resTest").innerHTML = opts.map(function(o){ return '<option value="'+esc(o.id)+'">'+esc(o.name)+'</option>'; }).join("") + '<option value="*">All tests</option>';
@@ -782,7 +801,7 @@ function renderResults(){
   if(sel === "*") $("resStats").innerHTML = '<div class="kpi"><div class="v">'+rs.length+'</div><div class="l">Attempts (all tests)</div></div>';
   var rank = 0, prev = null;
   $("resBody").innerHTML = rs.map(function(r, i){ if(r.score !== prev){ rank = i+1; prev = r.score; }
-    var full = recTestId(r) === FULL;
+    var full = isFullId(recTestId(r));
     return '<tr><td>'+(sel === "*" ? "—" : rank)+'</td><td>'+esc(r.name)+'</td><td>'+esc(r.reg)+'</td><td>'+esc(recTestName(r))+'</td><td>'+(full ? r.ga : "—")+'</td><td>'+(full ? r.ce : "—")+'</td><td><b>'+r.score+'</b> / '+r.max+'</td><td>'+r.correct+' / '+r.wrong+' / '+r.skipped+'</td><td>'+fmtT(r.timeTaken)+'</td><td class="faint">'+new Date(r.submitted).toLocaleString()+(r.auto?' (auto)':'')+'</td>'+
       '<td><button class="btn" data-view="'+r.id+'" style="padding:3px 10px">View</button> <button class="btn danger" data-del="'+r.id+'" style="padding:3px 10px">Delete</button></td></tr>'; }).join("");
 }
@@ -806,7 +825,7 @@ $("btnCsv").onclick = function(){
   var head = ["Test","Name","Reg No","GA","CE","Total","Max","Correct","Wrong","Not attempted","Time (s)","Submitted"];
   for(var i=1;i<=n;i++) head.push("Q"+i);
   var lines = [head.join(",")].concat(rs.map(function(r){
-    var full = recTestId(r) === FULL;
+    var full = isFullId(recTestId(r));
     return [recTestName(r), r.name, r.reg, full ? r.ga : "", full ? r.ce : "", r.score, r.max, r.correct, r.wrong, r.skipped, r.timeTaken, r.submitted]
       .concat(n ? r.detail.map(function(d){ return d.m; }) : []).map(csvCell).join(","); }));
   var slug = sel === "*" ? "all-tests" : recTestName(rs[0]).toLowerCase().replace(/[^a-z0-9]+/g,"-");
@@ -823,9 +842,10 @@ $("fileRes").onchange = function(){ var f = this.files[0]; if(!f) return; var rd
 $("btnClearRes").onclick = function(){ if(confirm("Delete ALL stored results? Export them first if needed.")){ save(K.results, []); renderResults(); } };
 
 $("btnSaveSet").onclick = function(){
-  var s = settings(), d = parseInt($("sDur").value, 10), sd = parseInt($("sSubjDur").value, 10);
-  if(!(d >= 5 && d <= 600) || !(sd >= 5 && sd <= 600)){ $("setMsg").textContent = "Durations must be between 5 and 600 minutes."; return; }
-  s.subjDuration = sd;
+  var s = settings(), d = parseInt($("sDur").value, 10), sd = parseFloat($("sSubjDur").value);
+  if(!(d >= 5 && d <= 600)){ $("setMsg").textContent = "Full-length duration must be between 5 and 600 minutes."; return; }
+  if(!(sd >= 0.5 && sd <= 10)){ $("setMsg").textContent = "Subject test time must be 0.5–10 minutes per mark."; return; }
+  s.subjPerMark = sd;
   s.title = $("sTitle").value.trim() || DEF_SETTINGS.title; s.duration = d; s.code = $("sCode").value.trim();
   if($("sPass").value) s.password = $("sPass").value;
   s.shuffle = $("sShuffle").value; s.shuffleOpt = $("sShuffleOpt").value; s.review = $("sReview").value; s.oneAttempt = $("sOneAttempt").value;
@@ -834,11 +854,11 @@ $("btnSaveSet").onclick = function(){
 
 function renderBank(){
   var b = bank(), tm = b.reduce(function(a,q){ return a+q.marks; },0), custom = !!load(K.bank, null);
-  var T = tests(), full = T.filter(function(t){ return t.id === FULL; })[0];
-  $("bankSummary").textContent = b.length + " questions — " + (custom ? "custom question bank imported by instructor. " : "default GATE CE bank. ") +
-    (full ? "Full-length test: " + full.idx.length + " Q / " + marksOf(full.idx, b) + " marks. " : "") +
-    "Subject tests: " + T.filter(function(t){ return t.id !== FULL; }).map(function(t){ return t.name + " (" + t.idx.length + ")"; }).join(", ") + ".";
-  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+(q.sec === "CE" ? esc(subjOf(q)) + '<br><span class="faint">'+esc(q.topic)+'</span>' : esc(q.topic))+'</td><td class="faint">'+(q.mock === false ? "Subject test" : "Full test" + (q.sec === "CE" ? " + subject" : ""))+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
+  var T = tests();
+  $("bankSummary").textContent = b.length + " questions — " + (custom ? "custom question bank imported by instructor. " : "default bank of original GATE-pattern practice questions. ") +
+    T.filter(function(t){ return t.kind === "full"; }).map(function(t){ return t.name + ": " + t.idx.length + " Q / " + marksOf(t.idx, b) + " marks"; }).join("; ") + ". " +
+    "Subject tests: " + T.filter(function(t){ return t.kind === "subj"; }).map(function(t){ return t.name + " (" + t.idx.length + ")"; }).join(", ") + ".";
+  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+(q.sec === "CE" ? esc(subjOf(q)) + '<br><span class="faint">'+esc(q.topic)+'</span>' : esc(q.topic))+'</td><td class="faint">'+(q.mock === false ? "Subject test" : "Mock " + (q.paper || 1) + (q.sec === "CE" ? " + subject" : ""))+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
 }
 function validQ(q){
   if(!q || (q.sec !== "GA" && q.sec !== "CE") || [1,2].indexOf(q.marks) < 0 || typeof q.q !== "string") return false;

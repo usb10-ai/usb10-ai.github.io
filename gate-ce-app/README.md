@@ -1,7 +1,7 @@
 # GATE CE Mock Test (Android)
 
 Offline Android app for the GATE Civil Engineering mock exam in `../gate-ce/`.
-The web app (`index.html`, `questions.js`) is copied into the APK's assets at build time,
+The web app (`index.html`, `questions*.js`) is copied into the APK's assets at build time,
 so editing questions in `gate-ce/questions.js` and pushing produces an updated APK.
 
 ## Get the APK (no Android Studio needed)
@@ -10,7 +10,7 @@ Push to GitHub → Actions → "Build GATE CE APK" → open the latest run → d
 
 ## Build locally
 ```
-mkdir -p app/src/main/assets/www && cp ../gate-ce/index.html ../gate-ce/questions.js app/src/main/assets/www/
+mkdir -p app/src/main/assets/www && cp ../gate-ce/index.html ../gate-ce/questions*.js app/src/main/assets/www/
 gradle assembleDebug        # JDK 17, Android SDK 34
 ```
 
