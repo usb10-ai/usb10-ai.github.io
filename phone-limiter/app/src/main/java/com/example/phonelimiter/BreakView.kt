@@ -15,9 +15,10 @@ object BreakView {
         if (pending.isEmpty()) return
         root.addView(Ui.text(c, "Instead, do your priorities:", 14f, Ui.MUTED)
             .apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(c, 6)) })
-        pending.forEach {
+        pending.take(5).forEach {
             root.addView(Ui.text(c, "• $it", 17f).apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(c, 4)) })
         }
+        if (pending.size > 5) root.addView(Ui.text(c, "+ ${pending.size - 5} more", 14f, Ui.MUTED).apply { gravity = Gravity.CENTER })
         root.addView(android.view.View(c).apply { minimumHeight = Ui.dp(c, 12) })
     }
 

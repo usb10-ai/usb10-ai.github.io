@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Paint
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -32,39 +33,55 @@ class MainActivity : Activity() {
         val hero = Ui.card(c).apply { addView(status); addView(toggle) }
         root.addView(hero)
 
-        // Today's 3 priorities
-        val boxes = ArrayList<CheckBox>(); val fields = ArrayList<EditText>()
-        val prio = Ui.card(c).apply {
-            addView(Ui.text(c, "Today's 3 priorities", 18f, bold = true))
-            addView(Ui.text(c, "Shown on the break screen. Resets every day.", 14f, Ui.MUTED))
+        // Today's priorities: add as many as needed; ticked ones are struck out
+        val prio = Ui.card(c)
+        prio.addView(Ui.text(c, "Today's priorities", 18f, bold = true))
+        prio.addView(Ui.text(c, "Shown on the break screen. Resets every day.", 14f, Ui.MUTED))
+        val list = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
+        prio.addView(list)
+        fun strike(field: EditText, done: Boolean) {
+            field.paintFlags = if (done) field.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                               else field.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            field.setTextColor(if (done) Ui.MUTED else Color.WHITE)
         }
-        for (i in 0..2) {
-            val box = CheckBox(c).apply {
-                isChecked = Prefs.taskDone(c, i)
-                setOnCheckedChangeListener { _, v -> Prefs.setDone(c, i, v) }
-            }
-            val field = EditText(c).apply {
-                hint = "Priority ${i + 1}"; setText(Prefs.taskText(c, i)); textSize = 16f
-                setTextColor(Color.WHITE); setHintTextColor(Ui.MUTED); setSingleLine(true); background = null
-                addTextChangedListener(object : android.text.TextWatcher {
-                    override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
-                    override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
-                    override fun afterTextChanged(s: android.text.Editable?) { Prefs.setTask(c, i, s.toString()) }
+        lateinit var refreshTasks: () -> Unit
+        refreshTasks = {
+            list.removeAllViews()
+            for (i in 0 until Prefs.taskCount(c)) {
+                val field = EditText(c).apply {
+                    hint = "Priority ${i + 1}"; setText(Prefs.taskText(c, i)); textSize = 16f
+                    setHintTextColor(Ui.MUTED); setSingleLine(true); background = null
+                    addTextChangedListener(object : android.text.TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                        override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                        override fun afterTextChanged(s: android.text.Editable?) { Prefs.setTask(c, i, s.toString()) }
+                    })
+                }
+                val box = CheckBox(c).apply {
+                    isChecked = Prefs.taskDone(c, i)
+                    setOnCheckedChangeListener { _, v -> Prefs.setDone(c, i, v); strike(field, v) }
+                }
+                strike(field, box.isChecked)
+                val del = TextView(c).apply {
+                    text = "✕"; textSize = 18f; setTextColor(Ui.MUTED)
+                    setPadding(Ui.dp(c, 12), Ui.dp(c, 8), Ui.dp(c, 4), Ui.dp(c, 8))
+                    setOnClickListener { Prefs.removeTask(c, i); refreshTasks() }
+                }
+                list.addView(LinearLayout(c).apply {
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    addView(box)
+                    addView(field, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    addView(del)
                 })
             }
-            boxes.add(box); fields.add(field)
-            prio.addView(LinearLayout(c).apply {
-                gravity = android.view.Gravity.CENTER_VERTICAL
-                addView(box)
-                addView(field, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-            })
         }
-        fun refreshTasks() { // pick up the daily reset
-            for (i in 0..2) {
-                if (fields[i].text.toString() != Prefs.taskText(c, i)) fields[i].setText(Prefs.taskText(c, i))
-                if (boxes[i].isChecked != Prefs.taskDone(c, i)) boxes[i].isChecked = Prefs.taskDone(c, i)
+        refreshTasks()
+        prio.addView(Ui.button(c, "+ Add priority", Color.parseColor("#263449")).apply {
+            setOnClickListener {
+                if (Prefs.taskCount(c) < Prefs.MAX_TASKS) { Prefs.setTaskCount(c, Prefs.taskCount(c) + 1); refreshTasks() }
+                else Toast.makeText(c, "Maximum ${Prefs.MAX_TASKS} priorities", Toast.LENGTH_SHORT).show()
             }
-        }
+        })
         root.addView(prio)
 
         // Break reminder settings
