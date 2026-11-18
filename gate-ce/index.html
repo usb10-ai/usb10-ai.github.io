@@ -517,7 +517,7 @@ $("btnStart").onclick = function(){
   var order = idx.GA.concat(idx.CE);
   var items = order.map(function(i){
     var q = b[i], perm = null;
-    if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1" && !q.img) perm = shuffle(perm); }
+    if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1" && !q.img && !q.fixOpts) perm = shuffle(perm); }
     return { qi:i, perm:perm, st:"nv", ans:null };   // st: nv | na | an | mr | am
   });
   S = { cand:pending, title:s.title, testId:t.id, kind:t.kind, testName:t.name, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + t.dur*60000, draft:undefined };
