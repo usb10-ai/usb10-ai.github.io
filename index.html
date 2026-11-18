@@ -608,6 +608,39 @@
     .reel-grid{grid-template-columns:1fr;}
   }
 
+  .resource-card{
+    margin-top:2rem;
+    padding:1.3rem 1.5rem;
+    border:1px solid var(--line);
+    border-left:3px solid var(--accent);
+    background:var(--surface);
+    max-width:64ch;
+  }
+  .resource-card .impact-tag{
+    font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;
+    font-size:0.68rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:0.4rem;
+  }
+  .resource-card h3{margin:0 0 0.4rem;font-size:1.05rem;color:var(--ink);}
+  .resource-card p{margin:0 0 0.9rem;font-size:0.9rem;color:var(--ink-soft);line-height:1.5;}
+  .resource-links{display:flex;flex-wrap:wrap;gap:0.6rem;align-items:center;}
+  .resource-links a{font-size:0.88rem;text-decoration:none;}
+  .resource-links a.primary{
+    background:var(--accent);
+    color:var(--accent-ink);
+    padding:0.5rem 0.95rem;
+    font-weight:600;
+  }
+  .resource-links a.secondary{
+    color:var(--accent);
+    border:1px solid var(--line-strong);
+    padding:0.45rem 0.85rem;
+  }
+  .resource-links a:hover{opacity:0.88;}
+
   .philosophy{
     margin-top:2rem;
     padding:1.5rem 1.7rem;
@@ -924,6 +957,15 @@
             <span class="chip">Design of RC Structures</span>
             <span class="chip">Transport Infrastructure</span>
           </div>
+        </div>
+      </div>
+      <div class="resource-card">
+        <div class="impact-tag">Student Resource</div>
+        <h3>GATE Civil Engineering Mock Test</h3>
+        <p>A computer-based practice platform in the GATE CE pattern: the official GATE CE papers of 2022&ndash;2026 with worked solutions, practice mocks and subject-wise tests, with a timer, virtual calculator and automatic scoring. Free to use in the browser or offline on Android.</p>
+        <div class="resource-links">
+          <a class="primary" href="gate-ce/">Open the exam app &rarr;</a>
+          <a class="secondary" href="gate-ce/GATE-CE-MockTest.apk" download>Download Android app</a>
         </div>
       </div>
       <div class="philosophy">
