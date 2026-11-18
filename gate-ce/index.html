@@ -43,6 +43,19 @@ h1{font-size:1.6rem} h2{font-size:1.25rem} h3{font-size:1.05rem}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.motiv{background:linear-gradient(135deg,var(--accent-soft),var(--surface));border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.motiv .kicker{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700;margin:0 0 6px}
+.motiv blockquote{margin:0;font-size:1.15rem;line-height:1.45;font-weight:600}
+.motiv .sub{margin:8px 0 0;color:var(--ink-soft);font-size:.92rem}
+.formats{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.fmt{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.fmt h3{margin:0;display:flex;align-items:center;gap:10px}
+.fmt .ic{width:34px;height:34px;flex:none;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.fmt p{margin:0}
+.fmt .btn{align-self:flex-start;text-decoration:none;margin-top:auto}
+.credit{text-align:center;color:var(--ink-soft);font-size:.92rem;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
+.credit b{color:var(--ink)}
+@media (max-width:640px){.formats{grid-template-columns:1fr}.motiv blockquote{font-size:1.02rem}}
 label.f{display:block;font-size:.88rem;color:var(--ink-soft);margin-bottom:4px}
 input[type=text],input[type=password],input[type=number],select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 textarea{min-height:160px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
@@ -165,6 +178,24 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
     <button class="btn" data-go="admin">Instructor</button>
   </div>
   <div class="wrap">
+    <div class="motiv" role="note">
+      <p class="kicker">Today's motivation</p>
+      <blockquote id="motivQuote">Every question you solve today is one less surprise on exam day.</blockquote>
+      <p class="sub">Practise like it's the real GATE: timed, honest, and with a review of every mistake.</p>
+    </div>
+    <div class="formats" id="formats">
+      <div class="fmt">
+        <h3><span class="ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>Desktop</h3>
+        <p class="muted">Take tests in your browser on a laptop or PC, in the real GATE screen layout. Nothing to install.</p>
+        <a class="btn primary" href="#loginForm" id="btnDesk">Start a test below</a>
+      </div>
+      <div class="fmt">
+        <h3><span class="ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span>Mobile (Android)</h3>
+        <p class="muted">Install the app and practise anywhere, even offline. Same tests, solutions and results.</p>
+        <a class="btn primary" href="GATE-CE-MockTest.apk" download>Download the Android app (APK)</a>
+        <p class="faint">After downloading, open the file and allow "Install unknown apps" if your phone asks.</p>
+      </div>
+    </div>
     <div class="hero">
       <div class="card">
         <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
@@ -192,9 +223,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
           <button class="btn primary" type="submit" style="width:100%">Sign in</button>
           <p class="faint" id="loginErr" style="color:var(--bad)"></p>
         </form>
-        <p class="faint" id="apkLink" style="margin-top:14px">Android app: <a href="GATE-CE-MockTest.apk" download>download the APK</a> (works offline).</p>
       </div>
     </div>
+    <p class="credit">Developed by <b>Dr. Uma Shankar Biswal</b> (VJIT, Hyderabad)</p>
   </div>
 </section>
 
@@ -411,7 +442,7 @@ function isFullId(id){ return String(id).indexOf("full") === 0; }
 function recTestId(r){ return (!r.testId || r.testId === FULL) ? "full:1" : r.testId; }
 function recTestName(r){ return (!r.test || r.test === "Full-length mock test") && isFullId(recTestId(r)) ? "Full-length Mock Test 1" : r.test; }
 
-if(window.AndroidBridge){ $("btnPrint").classList.add("hidden"); $("apkLink").classList.add("hidden"); }
+if(window.AndroidBridge){ $("btnPrint").classList.add("hidden"); $("formats").classList.add("hidden"); }
 
 /* ---------------- theme ---------------- */
 var th = load(K.theme, null); if(th) document.documentElement.setAttribute("data-theme", th);
@@ -431,6 +462,19 @@ function closeModal(){ $("modal").classList.add("hidden"); }
 
 /* ---------------- home ---------------- */
 function renderHome(){
+  var MOTIV = [
+    "Every question you solve today is one less surprise on exam day.",
+    "Consistency beats intensity. One honest mock a week can change your rank.",
+    "Your mistakes in practice are the marks you will not lose in GATE.",
+    "Don't count the hours you study; make the hours you study count.",
+    "Strong fundamentals solve tricky questions. Revise the basics, then the shortcuts.",
+    "A calm mind reads the question twice and loses no marks to haste.",
+    "Today's effort is tomorrow's IIT, PSU or dream job. Keep going.",
+    "Analyse every mock: the review teaches more than the test.",
+    "Small daily progress adds up to a big score in February.",
+    "You don't have to be great to start, but you have to start to be great."
+  ];
+  var day = Math.floor(Date.now() / 86400000); $("motivQuote").textContent = MOTIV[day % MOTIV.length];
   var s = settings(), b = bank();
   $("homeTitle").textContent = s.title;
   var T = tests(), fulls = T.filter(function(t){ return t.kind === "full"; });
