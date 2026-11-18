@@ -8,8 +8,8 @@ android {
         applicationId = "in.gatece.mocktest"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "2.0"
     }
     signingConfigs {
         // Fixed debug key committed to the repo so every build is signed identically

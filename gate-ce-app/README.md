@@ -10,7 +10,7 @@ Push to GitHub → Actions → "Build GATE CE APK" → open the latest run → d
 
 ## Build locally
 ```
-mkdir -p app/src/main/assets/www && cp ../gate-ce/index.html ../gate-ce/questions*.js app/src/main/assets/www/
+mkdir -p app/src/main/assets/www && cp -r ../gate-ce/index.html ../gate-ce/questions*.js ../gate-ce/pyq app/src/main/assets/www/
 gradle assembleDebug        # JDK 17, Android SDK 34
 ```
 

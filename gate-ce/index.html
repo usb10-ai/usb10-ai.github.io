@@ -65,6 +65,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
 .subjrow.on td{background:var(--accent-soft);font-weight:600}
 .chip{display:inline-block;padding:3px 10px;margin:2px 4px 2px 0;border:1px solid var(--line);border-radius:999px;font-size:.85rem;cursor:pointer;background:var(--surface);white-space:nowrap}
 .chip:hover{border-color:var(--accent)}
+.qimg{display:block;max-width:100%;height:auto;background:#fff;padding:6px;border-radius:6px;border:1px solid var(--line)}
+.rv .qimg{max-width:720px}
+.src{font-size:.8rem;color:var(--ink-faint);margin:-8px 0 12px}
 .chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 
 /* instructions legend */
@@ -166,7 +169,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <div class="card">
         <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
         <p class="muted">Computer-based tests that follow the GATE CE pattern: a question palette, section tabs, a virtual scientific calculator and automatic evaluation with negative marking.</p>
-        <h3>Full-length mock tests</h3>
+        <h3>Full-length tests</h3>
         <div class="tablewrap"><table class="pattern">
           <thead><tr><th>Test</th><th>Questions</th><th>Marks</th><th>Time</th></tr></thead>
           <tbody id="fullBody"></tbody>
@@ -177,7 +180,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
           <thead><tr><th>Subject</th><th>Tests</th></tr></thead>
           <tbody id="subjBody"></tbody>
         </table></div>
-        <p class="faint">Tap a test to select it, then sign in. All questions are original practice questions in the GATE CE pattern.</p>
+        <p class="faint">Tap a test to select it, then sign in. <b>GATE papers / PYQ tests</b> use the official GATE CE question papers and final answer keys of 2022–2026 (CE-1 and CE-2), reproduced from the official GATE website (gate2026.iitg.ac.in); question copyright rests with the organising institutes. <b>Practice</b> tests use original questions written in the GATE pattern.</p>
       </div>
       <div class="card">
         <h2>Candidate login</h2>
@@ -358,6 +361,7 @@ Transportation Engineering; Geomatics Engineering. Or set "subject":"Any name" t
 <script src="questions.js"></script>
 <script src="questions-mock2.js"></script>
 <script src="questions-mock3.js"></script>
+<script src="questions-pyq.js"></script>
 <script>
 (function(){
 "use strict";
@@ -383,24 +387,38 @@ var SUBJ_MAP = {}; (window.GATE_SUBJECTS || []).forEach(function(x){ x.topics.fo
 function subjOf(q){ return q.subject || SUBJ_MAP[q.topic] || q.topic || "General"; }
 /* All available tests: one full-length test per paper number, plus two tests per CE subject
    (a subject's questions are split alternately, 1-mark then 2-mark, so both tests are balanced). */
+function isPyq(q){ return typeof q.paper === "string"; }
+/* All tests:
+   - one full-length test per paper: official GATE papers (paper = "GATE 2026 CE-1", newest first), then practice mocks (paper = 1, 2, 3)
+   - subject-wise tests: official GATE questions of each CE subject split into tests of ~25 questions (at least 2),
+     plus two practice tests per subject from the practice questions. */
 function tests(){
   var s = settings(), b = bank(), out = [], papers = {};
   b.forEach(function(q,i){ if(q.mock !== false){ var p = q.paper || 1; (papers[p] = papers[p] || []).push(i); } });
-  Object.keys(papers).sort(function(a,c){ return a - c; }).forEach(function(p){
-    out.push({ id:"full:"+p, kind:"full", group:"Full-length", name:"Full-length Mock Test "+p, idx:papers[p], dur:s.duration }); });
+  var keys = Object.keys(papers);
+  var pyqKeys = keys.filter(function(k){ return isNaN(+k); }).sort(function(a,c){ return a < c ? 1 : a > c ? -1 : 0; })
+    .sort(function(a,c){ var ya = +(a.match(/\d{4}/)||[0])[0], yc = +(c.match(/\d{4}/)||[0])[0]; return yc - ya || (a < c ? -1 : 1); });
+  var practice = keys.filter(function(k){ return !isNaN(+k); }).sort(function(a,c){ return a - c; });
+  pyqKeys.forEach(function(p){ out.push({ id:"full:"+p, kind:"full", pyq:true, group:"Full-length", name:p, idx:papers[p], dur:s.duration }); });
+  practice.forEach(function(p){ out.push({ id:"full:"+p, kind:"full", group:"Full-length", name:"Practice Mock Test "+p, idx:papers[p], dur:s.duration }); });
   var names = (window.GATE_SUBJECTS || []).map(function(x){ return x.name; });
   b.forEach(function(q){ if(q.sec === "CE" && names.indexOf(subjOf(q)) < 0) names.push(subjOf(q)); });
   var per = parseFloat(s.subjPerMark) || 1.8;
-  names.forEach(function(n){ var idx = [];
-    b.forEach(function(q,i){ if(q.sec === "CE" && subjOf(q) === n) idx.push(i); });
+  function split(n, idx, pyq){
     if(!idx.length) return;
-    idx.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
-    var parts = idx.length >= 12 ? [[],[]] : [[]];
-    idx.forEach(function(i,k){ parts[k % parts.length].push(i); });
-    parts.forEach(function(part, k){
-      var m = marksOf(part, b);
-      out.push({ id:"subj:"+n+":"+(k+1), kind:"subj", group:n, part:k+1, name: parts.length > 1 ? n+" — Test "+(k+1) : n,
-        idx:part, dur: Math.max(10, Math.ceil(m*per/5)*5) }); }); });
+    idx.sort(function(x,y){ return b[x].marks - b[y].marks || (pyq ? (b[x].paper < b[y].paper ? 1 : b[x].paper > b[y].paper ? -1 : 0) : 0) || x - y; });
+    var k = pyq ? Math.max(2, Math.round(idx.length / 25)) : (idx.length >= 12 ? 2 : 1);
+    var parts = []; for(var j=0;j<k;j++) parts.push([]);
+    idx.forEach(function(i,j){ parts[j % k].push(i); });
+    parts.forEach(function(part, j){
+      var m = marksOf(part, b), label = (pyq ? "GATE PYQ Test " : "Practice Test ") + (j+1);
+      out.push({ id:"subj:"+n+":"+(pyq ? "pyq" : "prac")+":"+(j+1), kind:"subj", pyq:pyq, group:n, part:j+1, label:label,
+        name: n+" — "+label, idx:part, dur: Math.max(10, Math.ceil(m*per/5)*5) }); });
+  }
+  names.forEach(function(n){
+    var pq = [], pr = [];
+    b.forEach(function(q,i){ if(q.sec === "CE" && subjOf(q) === n) (isPyq(q) ? pq : pr).push(i); });
+    split(n, pq, true); split(n, pr, false); });
   return out;
 }
 function findTest(id){ return tests().filter(function(t){ return t.id === id; })[0]; }
@@ -433,8 +451,12 @@ function renderHome(){
   var s = settings(), b = bank();
   $("homeTitle").textContent = s.title;
   var T = tests(), fulls = T.filter(function(t){ return t.kind === "full"; });
+  var lastPyq = null;
   $("fullBody").innerHTML = fulls.map(function(t){
-    return '<tr class="subjrow" data-test="'+esc(t.id)+'"><td>'+esc(t.name)+'</td><td>'+t.idx.length+'</td><td>'+marksOf(t.idx, b)+'</td><td>'+t.dur+' min</td></tr>'; }).join("") ||
+    var head = (lastPyq !== !!t.pyq) ? '<tr><td colspan="4" class="faint" style="padding-top:12px"><b>'+(t.pyq ? "Official GATE CE papers (2022–2026)" : "Practice mocks (original questions)")+'</b></td></tr>' : "";
+    lastPyq = !!t.pyq;
+    return head + (function(){
+    return '<tr class="subjrow" data-test="'+esc(t.id)+'"><td>'+esc(t.name)+'</td><td>'+t.idx.length+'</td><td>'+marksOf(t.idx, b)+'</td><td>'+t.dur+' min</td></tr>'; })(); }).join("") ||
     '<tr><td colspan="4" class="muted">No full-length tests available.</td></tr>';
   var f0 = fulls[0] ? fulls[0].idx.map(function(i){ return b[i]; }) : [];
   var ga = f0.filter(function(q){ return q.sec === "GA"; }), ce = f0.filter(function(q){ return q.sec === "CE"; });
@@ -450,7 +472,7 @@ function renderHome(){
   T.forEach(function(t){ if(t.kind === "subj" && groups.indexOf(t.group) < 0) groups.push(t.group); });
   $("subjBody").innerHTML = groups.map(function(g){
     return '<tr><td>'+esc(g)+'</td><td>' + T.filter(function(t){ return t.kind === "subj" && t.group === g; }).map(function(t){
-      return '<span class="chip" data-test="'+esc(t.id)+'" title="'+t.idx.length+' questions, '+marksOf(t.idx, b)+' marks, '+t.dur+' min">Test '+(t.part||1)+' · '+t.idx.length+' Q · '+t.dur+' min</span>'; }).join("") + '</td></tr>'; }).join("") ||
+      return '<span class="chip" data-test="'+esc(t.id)+'" title="'+t.idx.length+' questions, '+marksOf(t.idx, b)+' marks, '+t.dur+' min"><span class="chip-l">'+esc(t.label || ("Test " + (t.part||1)))+'</span> · '+t.idx.length+' Q · '+t.dur+' min</span>'; }).join("") + '</td></tr>'; }).join("") ||
     '<tr><td colspan="2" class="muted">No subject tests available.</td></tr>';
   markSubj();
 }
@@ -495,7 +517,7 @@ $("btnStart").onclick = function(){
   var order = idx.GA.concat(idx.CE);
   var items = order.map(function(i){
     var q = b[i], perm = null;
-    if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1") perm = shuffle(perm); }
+    if(q.type !== "NAT"){ perm = q.opts.map(function(_,k){ return k; }); if(s.shuffleOpt === "1" && !q.img) perm = shuffle(perm); }
     return { qi:i, perm:perm, st:"nv", ans:null };   // st: nv | na | an | mr | am
   });
   S = { cand:pending, title:s.title, testId:t.id, kind:t.kind, testName:t.name, bank:b, items:items, cur:0, start:Date.now(), end:Date.now() + t.dur*60000, draft:undefined };
@@ -533,7 +555,7 @@ function renderQ(){
   $("secTabs").innerHTML = secs.map(function(sc){ return '<button data-sec="'+sc+'" class="'+(sc===sec?"on":"")+'">'+esc(secLabel(sc))+'</button>'; }).join("");
   var neg = q.type === "MCQ" ? (q.marks === 1 ? "−1/3" : "−2/3") : "0";
   $("qmeta").innerHTML = "<b>Question " + (i+1) + "</b><span class='pill'>" + q.type + "</span><span>Marks: <b>+" + q.marks + "</b></span><span>Negative: <b>" + neg + "</b></span>";
-  $("qtext").innerHTML = q.q;
+  $("qtext").innerHTML = q.img ? '<img class="qimg" src="'+esc(q.img)+'" alt="Question '+(i+1)+'">' + (q.src ? '<div class="src" style="margin-top:6px">'+esc(q.src)+'</div>' : '') : q.q;
   var val = S.draft !== undefined ? S.draft : it.ans;
   var h = "";
   if(q.type === "NAT"){
@@ -543,7 +565,7 @@ function renderQ(){
     var multi = q.type === "MSQ", sel = val == null ? [] : (multi ? val : [val]);
     h = it.perm.map(function(orig, pos){
       var on = sel.indexOf(orig) >= 0;
-      return '<label class="opt'+(on?" sel":"")+'"><input type="'+(multi?"checkbox":"radio")+'" name="opt" value="'+orig+'"'+(on?" checked":"")+'><span class="lbl">'+"ABCD"[pos]+'.</span><span>'+q.opts[orig]+'</span></label>';
+      return '<label class="opt'+(on?" sel":"")+'"><input type="'+(multi?"checkbox":"radio")+'" name="opt" value="'+orig+'"'+(on?" checked":"")+'><span class="lbl">'+"ABCD"[pos]+'.</span><span>'+(q.img ? "Option (" + "ABCD"[orig] + ")" : q.opts[orig])+'</span></label>';
     }).join("");
     if(multi) h = '<p class="faint">Select one or more options.</p>' + h;
   }
@@ -634,11 +656,15 @@ $("btnSubmit").onclick = function(){
 
 /* ---------------- evaluation ---------------- */
 function evaluate(q, ans){
+  if(q.mta) return { res:"c", m:q.marks };            // GATE "marks to all": everyone gets the marks
   if(ans == null) return { res:"u", m:0 };
-  if(q.type === "MCQ") return ans === q.ans ? { res:"c", m:q.marks } : { res:"w", m: -q.marks/3 };
-  if(q.type === "MSQ"){ var a = ans.slice().sort(), k = q.ans.slice().sort(); return (a.length === k.length && a.every(function(x,i){ return x === k[i]; })) ? { res:"c", m:q.marks } : { res:"w", m:0 }; }
-  var v = parseFloat(ans); var lo = Math.min(q.ans[0], q.ans[1]), hi = Math.max(q.ans[0], q.ans[1]);
-  return (!isNaN(v) && v >= lo - 1e-9 && v <= hi + 1e-9) ? { res:"c", m:q.marks } : { res:"w", m:0 };
+  var keys = [q.ans].concat(q.alt || []);
+  var ok;
+  if(q.type === "MCQ") ok = keys.indexOf(ans) >= 0;
+  else if(q.type === "MSQ"){ var a = ans.slice().sort(); ok = keys.some(function(k){ k = k.slice().sort(); return a.length === k.length && a.every(function(x,i){ return x === k[i]; }); }); }
+  else { var v = parseFloat(ans); ok = !isNaN(v) && keys.some(function(k){ return v >= Math.min(k[0],k[1]) - 1e-9 && v <= Math.max(k[0],k[1]) + 1e-9; }); }
+  if(ok) return { res:"c", m:q.marks };
+  return { res:"w", m: q.type === "MCQ" ? -q.marks/3 : 0 };
 }
 function finish(auto){
   clearInterval(tick); $("calc").classList.add("hidden");
@@ -671,9 +697,13 @@ function ansText(q, ans, perm){
   return arr.map(function(o){ return "ABCD"[perm ? perm.indexOf(o) : o]; }).sort().join(", ");
 }
 function keyText(q, perm){
-  if(q.type === "NAT") return q.ans[0] === q.ans[1] ? String(q.ans[0]) : q.ans[0] + " to " + q.ans[1];
-  var arr = Array.isArray(q.ans) ? q.ans : [q.ans];
-  return arr.map(function(o){ return "ABCD"[perm ? perm.indexOf(o) : o]; }).sort().join(", ");
+  if(q.mta) return "Marks to all (question dropped by GATE)";
+  function one(k){
+    if(q.type === "NAT") return k[0] === k[1] ? String(k[0]) : k[0] + " to " + k[1];
+    var arr = Array.isArray(k) ? k : [k];
+    return arr.map(function(o){ return "ABCD"[perm ? perm.indexOf(o) : o]; }).sort().join(", ");
+  }
+  return [q.ans].concat(q.alt || []).map(one).join("  or  ");
 }
 function renderResult(rec, bk, topic, sec, mode, auto){
   var w = $("resultWrap"), h = "";
@@ -700,8 +730,9 @@ function renderResult(rec, bk, topic, sec, mode, auto){
     rec.detail.forEach(function(d){
       var q = bk[d.qi]; if(!q) return;
       var tag = { c:'<span class="tag c">Correct</span>', w:'<span class="tag w">Wrong</span>', u:'<span class="tag u">Not attempted</span>' }[d.res];
-      h += '<div class="rv" data-r="'+d.res+'"><div class="h"><b>Q'+d.n+'</b>'+tag+'<span class="pill">'+q.type+'</span><span class="pill">'+esc(q.topic)+'</span><span class="faint">Marks: '+(d.m > 0 ? "+" : "")+d.m+'</span></div><div>'+q.q+'</div>';
-      if(q.type !== "NAT") h += '<ol type="A" style="margin:8px 0">' + d.perm.map(function(o){ return '<li>'+q.opts[o]+'</li>'; }).join("") + '</ol>';
+      h += '<div class="rv" data-r="'+d.res+'"><div class="h"><b>Q'+d.n+'</b>'+tag+'<span class="pill">'+q.type+'</span><span class="pill">'+esc(q.topic)+'</span><span class="faint">Marks: '+(d.m > 0 ? "+" : "")+d.m+'</span>'+(q.src ? '<span class="faint">· '+esc(q.src)+'</span>' : '')+'</div>'+
+        (q.img ? '<img class="qimg" loading="lazy" src="'+esc(q.img)+'" alt="'+esc(q.src || "")+'">' : '<div>'+q.q+'</div>');
+      if(q.type !== "NAT" && !q.img) h += '<ol type="A" style="margin:8px 0">' + d.perm.map(function(o){ return '<li>'+q.opts[o]+'</li>'; }).join("") + '</ol>';
       h += '<div style="margin-top:6px">Your answer: <span class="'+(d.res === "c" ? "ok" : d.res === "w" ? "bad" : "")+'">'+ansText(q, d.ans, d.perm)+'</span> &nbsp;·&nbsp; Correct answer: <span class="ok">'+keyText(q, d.perm)+'</span></div>';
       if(q.sol) h += '<div class="sol"><b>Solution:</b> '+q.sol+'</div>';
       h += '</div>';
@@ -858,10 +889,11 @@ function renderBank(){
   $("bankSummary").textContent = b.length + " questions — " + (custom ? "custom question bank imported by instructor. " : "default bank of original GATE-pattern practice questions. ") +
     T.filter(function(t){ return t.kind === "full"; }).map(function(t){ return t.name + ": " + t.idx.length + " Q / " + marksOf(t.idx, b) + " marks"; }).join("; ") + ". " +
     "Subject tests: " + T.filter(function(t){ return t.kind === "subj"; }).map(function(t){ return t.name + " (" + t.idx.length + ")"; }).join(", ") + ".";
-  $("bankBody").innerHTML = b.map(function(q,i){ var t = strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+(q.sec === "CE" ? esc(subjOf(q)) + '<br><span class="faint">'+esc(q.topic)+'</span>' : esc(q.topic))+'</td><td class="faint">'+(q.mock === false ? "Subject test" : "Mock " + (q.paper || 1) + (q.sec === "CE" ? " + subject" : ""))+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
+  $("bankBody").innerHTML = b.map(function(q,i){ var t = q.img ? "[image] " + (q.src || q.img) : strip(q.q); return '<tr><td>'+(i+1)+'</td><td>'+q.sec+'</td><td>'+q.type+'</td><td>'+q.marks+'</td><td>'+(q.sec === "CE" ? esc(subjOf(q)) + '<br><span class="faint">'+esc(q.topic)+'</span>' : esc(q.topic))+'</td><td class="faint">'+(q.mock === false ? "Subject test" : (isPyq(q) ? q.paper : "Practice Mock " + (q.paper || 1)) + (q.sec === "CE" ? " + subject" : ""))+'</td><td>'+esc(t.length > 110 ? t.slice(0,110)+"…" : t)+'</td><td>'+esc(keyText(q, null))+'</td></tr>'; }).join("");
 }
 function validQ(q){
-  if(!q || (q.sec !== "GA" && q.sec !== "CE") || [1,2].indexOf(q.marks) < 0 || typeof q.q !== "string") return false;
+  if(!q || (q.sec !== "GA" && q.sec !== "CE") || [1,2].indexOf(q.marks) < 0 || (typeof q.q !== "string" && typeof q.img !== "string")) return false;
+  if(q.mta) return true;
   if(q.type === "NAT") return Array.isArray(q.ans) && q.ans.length === 2 && q.ans.every(function(x){ return typeof x === "number"; });
   if(!Array.isArray(q.opts) || q.opts.length < 2 || q.opts.length > 4) return false;
   if(q.type === "MCQ") return Number.isInteger(q.ans) && q.ans >= 0 && q.ans < q.opts.length;
