@@ -822,7 +822,7 @@
         <div class="tl-item">
           <div class="tl-role">Assistant Professor</div>
           <div class="tl-org">Department of Civil Engineering, Vidya Jyothi Institute of Technology, Hyderabad</div>
-          <div class="tl-date">November 2025 &ndash; Present <span class="tl-duration">(10 mos)</span></div>
+          <div class="tl-date">November 2025 &ndash; Present <span class="tl-duration" data-start="2025-11">(1 yr 1 mo)</span></div>
           <div class="tl-desc">Initiating and developing new research projects focused on sustainable construction materials.</div>
         </div>
         <div class="tl-item">
@@ -1142,6 +1142,20 @@
       }
     })
     .catch(function () { /* keep static fallback numbers already in the page */ });
+
+  // "Present" roles: duration runs from the start month through the current month, inclusive.
+  document.querySelectorAll('.tl-duration[data-start]').forEach(function (el) {
+    var parts = el.getAttribute('data-start').split('-');
+    var now = new Date();
+    var total = (now.getFullYear() - parseInt(parts[0], 10)) * 12 + (now.getMonth() + 1 - parseInt(parts[1], 10)) + 1;
+    if (total < 1) return;
+    var yrs = Math.floor(total / 12);
+    var mos = total % 12;
+    var out = [];
+    if (yrs) out.push(yrs + (yrs === 1 ? ' yr' : ' yrs'));
+    if (mos) out.push(mos + (mos === 1 ? ' mo' : ' mos'));
+    el.textContent = '(' + out.join(' ') + ')';
+  });
 
   document.querySelectorAll('.reel-thumb').forEach(function (thumb) {
     var playBtn = thumb.querySelector('.reel-play');
