@@ -346,8 +346,8 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
         <div><label class="f" for="sSubjDur">Subject-wise test time (minutes per mark; GATE = 1.8)</label><input type="number" id="sSubjDur" min="0.5" max="10" step="0.1"></div>
         <div><label class="f" for="sCode">Exam access code (leave blank for none)</label><input type="text" id="sCode"></div>
         <div><label class="f" for="sPass">New instructor password (leave blank to keep)</label><input type="password" id="sPass" autocomplete="new-password"></div>
-        <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="0">Fixed order</option><option value="1">Shuffle within each section</option></select></div>
-        <div><label class="f" for="sShuffleOpt">Option order (MCQ / MSQ)</label><select id="sShuffleOpt"><option value="0">Fixed</option><option value="1">Shuffle options</option></select></div>
+        <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="1">Different order for each candidate (within each section; 1-mark questions first)</option><option value="0">Same order for everyone (paper order)</option></select></div>
+        <div><label class="f" for="sShuffleOpt">Option order (MCQ / MSQ)</label><select id="sShuffleOpt"><option value="1">Shuffle options for each candidate</option><option value="0">Fixed</option></select></div>
         <div><label class="f" for="sReview">After submission, candidates see</label><select id="sReview"><option value="full">Score, analysis, answers &amp; solutions</option><option value="score">Score and analysis only</option><option value="none">Confirmation only</option></select></div>
         <div><label class="f" for="sOneAttempt">Attempts per registration number</label><select id="sOneAttempt"><option value="0">Unlimited</option><option value="1">One attempt per test</option></select></div>
       </div>
@@ -408,8 +408,8 @@ function r2(x){ return Math.round(x*100)/100; }
 function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function download(name, text, type){ if(window.AndroidBridge){ window.AndroidBridge.save(name, type, text); return; } var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
-var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjPerMark:1.8, password:"admin123" };
-function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
+var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", shuffle:"1", shuffleOpt:"1", review:"full", oneAttempt:"0", subjPerMark:1.8, password:"admin123" };
+function settings(){ var s = load(K.settings, {}); if(!s.v2){ s.shuffle = "1"; s.shuffleOpt = "1"; s.v2 = 1; } for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
 function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
 var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
 var FULL = "full";
@@ -556,7 +556,9 @@ $("btnStart").onclick = function(){
   var idx = { GA:[], CE:[] };
   t.idx.forEach(function(i){ (idx[b[i].sec] || (idx[b[i].sec] = [])).push(i); });
   if(t.kind !== "full") idx.CE.sort(function(x,y){ return b[x].marks - b[y].marks || x - y; });
-  if(s.shuffle === "1"){ idx.GA = shuffle(idx.GA); idx.CE = shuffle(idx.CE); }
+  // Shuffle per candidate within each section, keeping the 1-mark block before the 2-mark block (GATE layout)
+  function shuffleBlocks(a){ var m1 = a.filter(function(i){ return b[i].marks === 1; }), m2 = a.filter(function(i){ return b[i].marks !== 1; }); return shuffle(m1).concat(shuffle(m2)); }
+  if(s.shuffle === "1"){ idx.GA = shuffleBlocks(idx.GA); idx.CE = shuffleBlocks(idx.CE); }
   var order = idx.GA.concat(idx.CE);
   var items = order.map(function(i){
     var q = b[i], perm = null;
