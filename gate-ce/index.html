@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GATE CE Mock Exam</title>
-<meta name="description" content="Computer-based mock test platform for GATE Civil Engineering: timed exam, question palette, virtual calculator, automatic evaluation and instructor panel.">
+<meta name="description" content="Computer-based mock test platform for GATE Civil Engineering: timed exam, question palette, virtual calculator, automatic evaluation and instructor panel (no sign-in needed).">
 <style>
 :root{
   --bg:#eef0ee; --surface:#fff; --surface-2:#f6f7f6; --ink:#1b201e; --ink-soft:#4b524e; --ink-faint:#7c837e;
@@ -162,7 +162,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
     <span class="title">GATE CE &middot; Computer Based Mock Test</span>
     <span class="sp"></span>
     <button class="btn" id="btnTheme" title="Toggle theme">Theme</button>
-    <button class="btn" data-go="admin-login">Instructor</button>
+    <button class="btn" data-go="admin">Instructor</button>
   </div>
   <div class="wrap">
     <div class="hero">
@@ -272,25 +272,9 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
   <div class="wrap" id="resultWrap"></div>
 </section>
 
-<!-- ============ INSTRUCTOR LOGIN ============ -->
-<section id="view-admin-login" class="hidden">
-  <div class="topbar"><span class="title">Instructor sign-in</span><span class="sp"></span><button class="btn" data-go="home">Home</button></div>
-  <div class="wrap" style="max-width:440px">
-    <div class="card">
-      <form id="adminForm">
-        <label class="f" for="aPass">Instructor password</label>
-        <input type="password" id="aPass" required>
-        <p class="faint">Default password on first use: <code>admin123</code>. Change it in Settings.</p>
-        <button class="btn primary" type="submit">Sign in</button>
-        <p class="faint" id="adminErr" style="color:var(--bad)"></p>
-      </form>
-    </div>
-  </div>
-</section>
-
 <!-- ============ INSTRUCTOR PANEL ============ -->
 <section id="view-admin" class="hidden">
-  <div class="topbar"><span class="title">Instructor panel</span><span class="sp"></span><button class="btn" data-go="home">Sign out</button></div>
+  <div class="topbar"><span class="title">Instructor panel</span><span class="sp"></span><button class="btn" data-go="home">Home</button></div>
   <div class="wrap">
     <div class="tabs card" style="padding:0;margin-bottom:14px" id="adminTabs">
       <button class="on" data-at="results">Results</button>
@@ -315,7 +299,6 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
         <div><label class="f" for="sDur">Full-length test duration (minutes)</label><input type="number" id="sDur" min="5" max="600"></div>
         <div><label class="f" for="sSubjDur">Subject-wise test time (minutes per mark; GATE = 1.8)</label><input type="number" id="sSubjDur" min="0.5" max="10" step="0.1"></div>
         <div><label class="f" for="sCode">Exam access code (leave blank for none)</label><input type="text" id="sCode"></div>
-        <div><label class="f" for="sPass">New instructor password (leave blank to keep)</label><input type="password" id="sPass"></div>
         <div><label class="f" for="sShuffle">Question order</label><select id="sShuffle"><option value="0">Fixed order</option><option value="1">Shuffle within each section</option></select></div>
         <div><label class="f" for="sShuffleOpt">Option order (MCQ / MSQ)</label><select id="sShuffleOpt"><option value="0">Fixed</option><option value="1">Shuffle options</option></select></div>
         <div><label class="f" for="sReview">After submission, candidates see</label><select id="sReview"><option value="full">Score, analysis, answers &amp; solutions</option><option value="score">Score and analysis only</option><option value="none">Confirmation only</option></select></div>
@@ -378,7 +361,7 @@ function r2(x){ return Math.round(x*100)/100; }
 function shuffle(a){ a = a.slice(); for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
 function download(name, text, type){ if(window.AndroidBridge){ window.AndroidBridge.save(name, type, text); return; } var b = new Blob([text], {type:type}); var a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
-var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", password:"admin123", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjPerMark:1.8 };
+var DEF_SETTINGS = { title:"GATE Civil Engineering Mock Test", duration:180, code:"", shuffle:"0", shuffleOpt:"0", review:"full", oneAttempt:"0", subjPerMark:1.8 };
 function settings(){ var s = load(K.settings, {}); for(var k in DEF_SETTINGS) if(!(k in s)) s[k] = DEF_SETTINGS[k]; return s; }
 function bank(){ var b = load(K.bank, null); return (b && b.length) ? b : window.GATE_DEFAULT_QUESTIONS; }
 var SEC_NAME = { GA:"General Aptitude", CE:"Civil Engineering" };
@@ -438,7 +421,7 @@ $("btnTheme").onclick = function(){
 };
 
 /* ---------------- view routing ---------------- */
-var VIEWS = ["home","instr","exam","result","admin-login","admin"];
+var VIEWS = ["home","instr","exam","result","admin"];
 function show(v){ VIEWS.forEach(function(x){ $("view-"+x).classList.toggle("hidden", x !== v); }); window.scrollTo(0,0);
   if(v === "home") renderHome(); if(v === "admin") renderAdmin(); }
 document.addEventListener("click", function(e){ var g = e.target.closest("[data-go]"); if(g){ if(g.id === "btnInstrBack") pending = null; show(g.getAttribute("data-go")); } });
@@ -796,18 +779,13 @@ $("calcClose").onclick = function(){ $("calc").classList.add("hidden"); };
 })();
 
 /* ---------------- instructor ---------------- */
-$("adminForm").onsubmit = function(e){
-  e.preventDefault();
-  if($("aPass").value === settings().password){ $("aPass").value = ""; $("adminErr").textContent = ""; show("admin"); }
-  else $("adminErr").textContent = "Incorrect password.";
-};
 $("adminTabs").onclick = function(e){ var b = e.target.closest("[data-at]"); if(!b) return; var t = b.getAttribute("data-at");
   this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x === b); });
   document.querySelectorAll("[data-ap]").forEach(function(p){ p.classList.toggle("hidden", p.getAttribute("data-ap") !== t); }); };
 
 function renderAdmin(){
   var s = settings();
-  $("sTitle").value = s.title; $("sDur").value = s.duration; $("sCode").value = s.code; $("sPass").value = "";
+  $("sTitle").value = s.title; $("sDur").value = s.duration; $("sCode").value = s.code;
   $("sSubjDur").value = s.subjPerMark;
   $("sShuffle").value = s.shuffle; $("sShuffleOpt").value = s.shuffleOpt; $("sReview").value = s.review; $("sOneAttempt").value = s.oneAttempt; $("setMsg").textContent = "";
   renderResults(); renderBank();
@@ -878,9 +856,8 @@ $("btnSaveSet").onclick = function(){
   if(!(sd >= 0.5 && sd <= 10)){ $("setMsg").textContent = "Subject test time must be 0.5–10 minutes per mark."; return; }
   s.subjPerMark = sd;
   s.title = $("sTitle").value.trim() || DEF_SETTINGS.title; s.duration = d; s.code = $("sCode").value.trim();
-  if($("sPass").value) s.password = $("sPass").value;
   s.shuffle = $("sShuffle").value; s.shuffleOpt = $("sShuffleOpt").value; s.review = $("sReview").value; s.oneAttempt = $("sOneAttempt").value;
-  save(K.settings, s); $("sPass").value = ""; $("setMsg").textContent = "Saved.";
+  save(K.settings, s); $("setMsg").textContent = "Saved.";
 };
 
 function renderBank(){
