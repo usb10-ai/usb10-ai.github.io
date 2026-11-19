@@ -53,6 +53,29 @@ h1{font-size:1.6rem} h2{font-size:1.25rem} h3{font-size:1.05rem}
 .fmt .ic{width:34px;height:34px;flex:none;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
 .fmt p{margin:0}
 .fmt .btn{align-self:flex-start;text-decoration:none;margin-top:auto}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 16px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.step .n{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:.85rem;margin-right:6px}
+.step b{font-size:.98rem}
+.step p{margin:6px 0 0;color:var(--ink-soft);font-size:.9rem}
+.prog{margin-bottom:16px}
+.prog .kpis{margin:10px 0}
+.weak{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.weak span{border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:.86rem;background:var(--surface-2)}
+.weak span b{color:var(--bad)}
+.attempts{width:100%;border-collapse:collapse;font-size:.9rem}
+.attempts td,.attempts th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}
+.attempts th{font-weight:600;color:var(--ink-soft);font-size:.82rem}
+.done{display:inline-block;margin-left:6px;font-size:.75rem;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:700;white-space:nowrap}
+.chip .done{margin-left:4px}
+.chip.on .done{background:var(--accent-ink);color:var(--accent)}
+details.tips{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+details.tips summary{cursor:pointer;font-weight:600}
+details.tips ul{margin:10px 0 2px;padding-left:20px}
+details.tips li{margin:4px 0}
+.hero > .card:last-child{position:sticky;top:12px;align-self:start}
+.hero > *{min-width:0}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:1fr;gap:8px}.step{padding:10px 14px}.step p{display:none}.hero > .card:last-child{order:-1;position:static}}
 .credit{text-align:center;color:var(--ink-soft);font-size:.92rem;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .credit b{color:var(--ink)}
 @media (max-width:640px){.formats{grid-template-columns:1fr}.motiv blockquote{font-size:1.02rem}}
@@ -187,7 +210,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
       <div class="fmt">
         <h3><span class="ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>Desktop</h3>
         <p class="muted">Take tests in your browser on a laptop or PC, in the real GATE screen layout. Nothing to install.</p>
-        <a class="btn primary" href="#loginForm" id="btnDesk">Start a test below</a>
+        <a class="btn primary" href="#loginForm" id="btnDesk">Choose a test and start</a>
       </div>
       <div class="fmt">
         <h3><span class="ic" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span>Mobile (Android)</h3>
@@ -196,6 +219,24 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
         <p class="faint">After downloading, open the file and allow "Install unknown apps" if your phone asks.</p>
       </div>
     </div>
+    <div class="steps" id="steps">
+      <div class="step"><span class="n">1</span><b>Find your weak areas</b><p>Start with short <b>subject-wise tests</b> (20–90 min). Your weakest topics appear in "My progress".</p></div>
+      <div class="step"><span class="n">2</span><b>Solve real GATE papers</b><p>Attempt the <b>official 2022–2026 papers</b>. Read every worked solution, especially for the questions you got right by guessing.</p></div>
+      <div class="step"><span class="n">3</span><b>Simulate exam day</b><p>Take the <b>full-length practice mocks</b> in one 3-hour sitting, with no breaks and no phone. Track your score from mock to mock.</p></div>
+    </div>
+    <div class="card prog hidden" id="progCard"></div>
+    <details class="tips">
+      <summary>Exam-day tips: marking scheme and time strategy</summary>
+      <ul>
+        <li><b>Negative marking applies only to MCQs:</b> −1/3 for a wrong 1-mark answer and −2/3 for a wrong 2-mark answer. MSQ and NAT have <b>no</b> negative marks, so never leave them blank if you have a reasonable answer.</li>
+        <li><b>Guess an MCQ only</b> if you can eliminate at least two options.</li>
+        <li><b>MSQ:</b> marks are awarded only if you choose <i>all</i> correct options and no wrong one. There is no partial credit.</li>
+        <li><b>NAT:</b> type the number in the requested precision (e.g. "round off to two decimal places"). Answers are accepted within a small range.</li>
+        <li><b>Time plan (180 min):</b> General Aptitude ≈ 20–25 min, then 1-mark CE questions ≈ 45 min, then 2-mark CE questions. Keep the last 10 min for marked questions.</li>
+        <li>Use <b>Mark for Review</b> instead of getting stuck. A question you answered <i>and</i> marked is still evaluated.</li>
+        <li>Use the on-screen calculator in every practice test. In the real exam you can't use your own calculator.</li>
+      </ul>
+    </details>
     <div class="hero">
       <div class="card">
         <h1 id="homeTitle">GATE Civil Engineering Mock Test</h1>
@@ -221,6 +262,7 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
           <div style="margin-bottom:16px"><label class="f" for="cCode">Exam access code <span class="faint" id="codeHint"></span></label><input type="password" id="cCode"></div>
           <div style="margin-bottom:16px"><label class="f" for="cTest">Test</label><select id="cTest"></select></div>
           <button class="btn primary" type="submit" style="width:100%">Sign in</button>
+          <p class="faint" style="margin:8px 0 0">Tip: tap any test in the list to select it. Your name and roll number are remembered on this device.</p>
           <p class="faint" id="loginErr" style="color:var(--bad)"></p>
         </form>
       </div>
@@ -396,7 +438,7 @@ Transportation Engineering; Geomatics Engineering. Or set "subject":"Any name" t
 (function(){
 "use strict";
 /* ---------------- storage helpers ---------------- */
-var K = { settings:"gatece_settings", bank:"gatece_bank", results:"gatece_results", session:"gatece_session", theme:"gatece_theme" };
+var K = { settings:"gatece_settings", bank:"gatece_bank", results:"gatece_results", session:"gatece_session", theme:"gatece_theme", me:"gatece_me" };
 function load(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } }
 function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 function del(k){ try{ localStorage.removeItem(k); }catch(e){} }
@@ -517,14 +559,61 @@ function renderHome(){
     return '<tr><td>'+esc(g)+'</td><td>' + T.filter(function(t){ return t.kind === "subj" && t.group === g; }).map(function(t){
       return '<span class="chip" data-test="'+esc(t.id)+'" title="'+t.idx.length+' questions, '+marksOf(t.idx, b)+' marks, '+t.dur+' min"><span class="chip-l">'+esc(t.label || ("Test " + (t.part||1)))+'</span> · '+t.idx.length+' Q · '+t.dur+' min</span>'; }).join("") + '</td></tr>'; }).join("") ||
     '<tr><td colspan="2" class="muted">No subject tests available.</td></tr>';
+  var me = load(K.me, null);
+  if(me && !$("cName").value && !$("cReg").value){ $("cName").value = me.name || ""; $("cReg").value = me.reg || ""; }
+  renderProgress(me, T, b);
   markSubj();
 }
+function myAttempts(me){ if(!me || !me.reg) return []; var r = String(me.reg).toLowerCase();
+  return load(K.results, []).filter(function(x){ return String(x.reg).toLowerCase() === r; }); }
+function renderProgress(me, T, b){
+  var mine = myAttempts(me), best = {}, review = settings().review;
+  mine.forEach(function(r){ var id = recTestId(r), p = r.max ? r.score/r.max*100 : 0; if(!(id in best) || p > best[id]) best[id] = p; });
+  // "done" badges on attempted tests (score shown unless the instructor hides results)
+  document.querySelectorAll("#fullBody .subjrow, #subjBody .chip").forEach(function(el){
+    var id = el.getAttribute("data-test"), old = el.querySelector(".done"); if(old) old.remove();
+    if(id in best){ var sp = document.createElement("span"); sp.className = "done"; sp.textContent = review === "none" ? "✓ done" : "✓ " + Math.round(best[id]) + "%";
+      (el.tagName === "TR" ? el.cells[0] : el).appendChild(sp); } });
+  var c = $("progCard");
+  if(!mine.length){ c.classList.add("hidden"); return; }
+  c.classList.remove("hidden");
+  var h = '<h2 style="margin-bottom:2px">My progress</h2><p class="faint" style="margin:0">'+esc(me.name)+' · '+esc(me.reg)+' · attempts saved on this device</p>';
+  if(review === "none"){ c.innerHTML = h + '<p>You have submitted <b>'+mine.length+'</b> test(s). Your instructor will announce the results.</p>'; return; }
+  var pcts = mine.map(function(r){ return r.max ? r.score/r.max*100 : 0; });
+  var fullP = mine.filter(function(r){ return isFullId(recTestId(r)); }).map(function(r){ return r.max ? r.score/r.max*100 : 0; });
+  var acc = mine.reduce(function(a,r){ a.c += r.correct||0; a.w += r.wrong||0; return a; }, {c:0,w:0});
+  h += '<div class="kpis">'+
+    '<div class="kpi"><div class="v">'+mine.length+'</div><div class="l">Tests attempted ('+Object.keys(best).length+' different)</div></div>'+
+    '<div class="kpi"><div class="v">'+Math.round(Math.max.apply(null, pcts))+'%</div><div class="l">Best score</div></div>'+
+    (fullP.length ? '<div class="kpi"><div class="v">'+Math.round(fullP.reduce(function(a,x){return a+x;},0)/fullP.length)+'%</div><div class="l">Average in full-length tests</div></div>' : '')+
+    '<div class="kpi"><div class="v">'+(acc.c+acc.w ? Math.round(acc.c/(acc.c+acc.w)*100) : 0)+'%</div><div class="l">Accuracy of attempted questions</div></div></div>';
+  // weakest topics (at least 3 questions attempted or seen)
+  var tp = {};
+  mine.forEach(function(r){ (r.detail||[]).forEach(function(d){ var q = b[d.qi]; if(!q || q.sec !== "CE") return;
+    var t = tp[q.topic] = tp[q.topic] || { n:0, m:0, max:0 }; t.n++; t.m += d.m; t.max += q.marks; }); });
+  var weak = Object.keys(tp).filter(function(k){ return tp[k].n >= 3; }).map(function(k){ return { k:k, p: tp[k].max ? Math.max(0, tp[k].m)/tp[k].max*100 : 0 }; })
+    .sort(function(x,y){ return x.p - y.p; }).slice(0, 4);
+  if(weak.length) h += '<p style="margin:4px 0 0"><b>Focus next on</b> <span class="faint">(lowest score per mark in Civil Engineering topics)</span></p><div class="weak">' +
+    weak.map(function(w){ return '<span>'+esc(w.k)+' · <b>'+Math.round(w.p)+'%</b></span>'; }).join("") + '</div>';
+  var last = mine.slice().sort(function(x,y){ return x.submitted < y.submitted ? 1 : -1; }).slice(0, 5);
+  h += '<div class="tablewrap"><table class="attempts"><thead><tr><th>Recent test</th><th>Score</th><th>Date</th><th></th></tr></thead><tbody>' +
+    last.map(function(r){ return '<tr><td>'+esc(isFullId(recTestId(r)) ? recTestName(r) : r.test)+'</td><td><b>'+r.score+'</b> / '+r.max+'</td><td>'+new Date(r.submitted).toLocaleDateString()+'</td><td><button class="btn" data-myview="'+esc(r.id)+'">Review</button></td></tr>'; }).join("") +
+    '</tbody></table></div>';
+  c.innerHTML = h;
+}
+$("progCard").onclick = function(e){ var v = e.target.closest("[data-myview]"); if(!v) return;
+  var r = load(K.results, []).filter(function(x){ return x.id === v.getAttribute("data-myview"); })[0]; if(r) openAttempt(r, settings().review); };
+function openAttempt(r, mode){
+  var bk = bank(), topic = {}, sec = {};
+  r.detail.forEach(function(d){ var q = bk[d.qi]; if(!q) return; var t = topic[q.topic] = topic[q.topic] || { n:0,c:0,w:0,m:0,max:0 }; t.n++; t.max += q.marks; t.m += d.m; if(d.res==="c") t.c++; if(d.res==="w") t.w++;
+    sec[q.sec] = sec[q.sec] || { m:0, max:0 }; sec[q.sec].max += q.marks; });
+  renderResult(r, bk, topic, sec, mode, r.auto); show("result"); }
 function markSubj(){ var v = $("cTest").value;
   document.querySelectorAll("#fullBody .subjrow").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === v); });
   document.querySelectorAll("#subjBody .chip").forEach(function(r){ r.classList.toggle("on", r.getAttribute("data-test") === v); }); }
 $("cTest").onchange = markSubj;
 $("fullBody").onclick = $("subjBody").onclick = function(e){ var r = e.target.closest("[data-test]"); if(!r) return; $("cTest").value = r.getAttribute("data-test"); markSubj();
-  if(innerWidth < 760) $("cName").focus(); };
+  if(innerWidth < 760){ $("loginForm").scrollIntoView({ behavior:"smooth", block:"center" }); } };
 
 var pending = null;
 $("loginForm").onsubmit = function(e){
@@ -536,6 +625,7 @@ $("loginForm").onsubmit = function(e){
   if(s.oneAttempt === "1" && load(K.results, []).some(function(r){ return r.reg.toLowerCase() === reg.toLowerCase() && recTestId(r) === t.id; })){
     $("loginErr").textContent = "An attempt at this test has already been submitted for this registration number."; return; }
   pending = { name:name, reg:reg, testId:t.id };
+  save(K.me, { name:name, reg:reg });
   $("instrCand").textContent = name + " (" + reg + ")";
   var b = bank(), nq = t.idx.length, nm = marksOf(t.idx, b);
   $("iDur").textContent = t.dur;
@@ -886,10 +976,7 @@ $("resBody").onclick = function(e){
   var d = e.target.closest("[data-del]"), v = e.target.closest("[data-view]");
   if(d){ if(!confirm("Delete this attempt?")) return; save(K.results, load(K.results, []).filter(function(r){ return r.id !== d.getAttribute("data-del"); })); renderResults(); }
   if(v){ var r = load(K.results, []).filter(function(x){ return x.id === v.getAttribute("data-view"); })[0]; if(!r) return;
-    var bk = bank(), topic = {}, sec = {};
-    r.detail.forEach(function(d){ var q = bk[d.qi]; if(!q) return; var t = topic[q.topic] = topic[q.topic] || { n:0,c:0,w:0,m:0,max:0 }; t.n++; t.max += q.marks; t.m += d.m; if(d.res==="c") t.c++; if(d.res==="w") t.w++;
-      sec[q.sec] = sec[q.sec] || { m:0, max:0 }; sec[q.sec].max += q.marks; });
-    renderResult(r, bk, topic, sec, "full", r.auto); $("btnResHome").setAttribute("data-go","admin"); show("result"); }
+    openAttempt(r, "full"); $("btnResHome").setAttribute("data-go","admin"); }
 };
 $("btnResHome").addEventListener("click", function(){ var t = this; setTimeout(function(){ t.setAttribute("data-go","home"); }, 0); });
 function csvCell(v){ v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
