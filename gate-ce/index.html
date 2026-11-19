@@ -76,6 +76,11 @@ details.tips li{margin:4px 0}
 .hero > .card:last-child{position:sticky;top:12px;align-self:start}
 .hero > *{min-width:0}
 @media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:1fr;gap:8px}.step{padding:10px 14px}.step p{display:none}.hero > .card:last-child{order:-1;position:static}}
+.upd{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--surface);border:2px solid var(--accent);border-radius:10px;padding:12px 16px;margin-bottom:16px}
+.upd .t{flex:1 1 260px}
+.upd .t b{display:block}
+.upd .t span{color:var(--ink-soft);font-size:.9rem}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;cursor:pointer;font:inherit}
 .credit{text-align:center;color:var(--ink-soft);font-size:.92rem;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}
 .credit b{color:var(--ink)}
 @media (max-width:640px){.formats{grid-template-columns:1fr}.motiv blockquote{font-size:1.02rem}}
@@ -201,6 +206,11 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
     <button class="btn" data-go="admin-login">Instructor</button>
   </div>
   <div class="wrap">
+    <div class="upd hidden" id="updBar" role="status">
+      <div class="t"><b id="updTitle">A new version is available</b><span id="updNotes"></span></div>
+      <button class="btn primary" id="updGo">Update now</button>
+      <button class="btn" id="updLater">Later</button>
+    </div>
     <div class="motiv" role="note">
       <p class="kicker">Today's motivation</p>
       <blockquote id="motivQuote">Every question you solve today is one less surprise on exam day.</blockquote>
@@ -267,7 +277,8 @@ th{font-size:.85rem;color:var(--ink-soft);font-weight:600}
         </form>
       </div>
     </div>
-    <p class="credit">Developed by <b>Dr. Uma Shankar Biswal</b> (VJIT, Hyderabad)</p>
+    <p class="credit">Developed by <b>Dr. Uma Shankar Biswal</b> (VJIT, Hyderabad)<br>
+      <span class="faint">Version <span id="verName"></span> · <button class="linkbtn" id="updCheck">Check for updates</button> <span id="updMsg"></span></span></p>
   </div>
 </section>
 
@@ -430,6 +441,7 @@ Transportation Engineering; Geomatics Engineering. Or set "subject":"Any name" t
 
 <div id="modal" class="modal hidden"><div class="card" id="modalCard"></div></div>
 
+<script src="version.js"></script>
 <script src="questions.js"></script>
 <script src="questions-mock2.js"></script>
 <script src="questions-mock3.js"></script>
@@ -1044,6 +1056,43 @@ $("fileQ").onchange = function(){ var f = this.files[0]; if(!f) return; var rd =
 $("btnResetQ").onclick = function(){ if(confirm("Replace the current question bank with the default GATE CE paper?")){ del(K.bank); renderBank(); } };
 
 /* ---------------- boot: resume an in-progress exam ---------------- */
+
+/* ---------------- update check (website and Android app) ---------------- */
+var SITE_URL = "https://usb10-ai.github.io/gate-ce/";
+var LOCAL_VER = window.GATE_VERSION || { code:0, name:"?" };
+var IS_APP = !!window.AndroidBridge;
+var remoteVer = null;
+$("verName").textContent = LOCAL_VER.name + (IS_APP ? " (Android app)" : "");
+function checkUpdate(manual){
+  var online = location.protocol.indexOf("http") === 0 && !IS_APP;
+  var url = (online ? "" : SITE_URL) + "version.js?t=" + Date.now();
+  if(manual) $("updMsg").textContent = "Checking…";
+  fetch(url, { cache:"no-store" }).then(function(r){ if(!r.ok) throw 0; return r.text(); }).then(function(t){
+    var c = /code:\s*(\d+)/.exec(t), n = /name:\s*"([^"]+)"/.exec(t), no = /notes:\s*"([^"]*)"/.exec(t);
+    if(!c) throw 0;
+    remoteVer = { code:+c[1], name: n ? n[1] : "", notes: no ? no[1] : "" };
+    if(remoteVer.code > LOCAL_VER.code){
+      var later = null; try{ later = sessionStorage.getItem("gatece_updlater"); }catch(e){}
+      if(manual || later !== String(remoteVer.code)) showUpdate();
+      if(manual) $("updMsg").textContent = "";
+    } else if(manual) $("updMsg").textContent = "✓ You have the latest version.";
+  }).catch(function(){ if(manual) $("updMsg").textContent = "Could not check. Are you connected to the internet?"; });
+}
+function showUpdate(){
+  $("updTitle").textContent = "New version " + remoteVer.name + " is available (you have " + LOCAL_VER.name + ")";
+  $("updNotes").textContent = (remoteVer.notes ? remoteVer.notes + ". " : "") +
+    (IS_APP ? "Download and install it over this app. Your saved results are kept." : "Reload the page to get the latest tests and features.");
+  $("updGo").textContent = IS_APP ? "Download update" : "Reload now";
+  $("updBar").classList.remove("hidden");
+}
+$("updGo").onclick = function(){
+  if(IS_APP){ location.href = SITE_URL + "GATE-CE-MockTest.apk"; return; }   // opens in the phone's browser, which downloads the APK
+  location.replace(location.pathname + "?v=" + (remoteVer ? remoteVer.code : Date.now()));
+};
+$("updLater").onclick = function(){ $("updBar").classList.add("hidden"); try{ sessionStorage.setItem("gatece_updlater", String(remoteVer && remoteVer.code)); }catch(e){} };
+$("updCheck").onclick = function(){ checkUpdate(true); };
+setTimeout(function(){ checkUpdate(false); }, 1500);
+
 var saved = load(K.session, null);
 if(saved && saved.items && saved.end){
   S = saved;

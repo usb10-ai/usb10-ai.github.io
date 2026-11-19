@@ -2,7 +2,7 @@ name: Build GATE CE APK
 on:
   workflow_dispatch:
   push:
-    paths: ["gate-ce-app/**", "gate-ce/index.html", "gate-ce/questions*.js", "gate-ce/pyq/**", ".github/workflows/gate-ce-apk.yml"]
+    paths: ["gate-ce-app/**", "gate-ce/index.html", "gate-ce/questions*.js", "gate-ce/version.js", "gate-ce/pyq/**", ".github/workflows/gate-ce-apk.yml"]
 permissions:
   contents: write
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with: { gradle-version: "8.7" }
       - name: Bundle the web app into assets
-        run: mkdir -p app/src/main/assets/www && cp -r ../gate-ce/index.html ../gate-ce/questions*.js ../gate-ce/pyq app/src/main/assets/www/
+        run: mkdir -p app/src/main/assets/www && cp -r ../gate-ce/index.html ../gate-ce/questions*.js ../gate-ce/version.js ../gate-ce/pyq app/src/main/assets/www/
       - run: gradle assembleDebug
       - run: cp app/build/outputs/apk/debug/app-debug.apk GATE-CE-MockTest.apk
       - uses: actions/upload-artifact@v4

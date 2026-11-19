@@ -1,6 +1,10 @@
 plugins {
     id("com.android.application")
 }
+// Version comes from gate-ce/version.js (shared with the web app's update check)
+val gateVersion = rootProject.file("../gate-ce/version.js").readText()
+val gateCode = Regex("code:\\s*(\\d+)").find(gateVersion)!!.groupValues[1].toInt()
+val gateName = Regex("name:\\s*\"([^\"]+)\"").find(gateVersion)!!.groupValues[1]
 android {
     namespace = "in.gatece.mocktest"
     compileSdk = 34
@@ -8,8 +12,8 @@ android {
         applicationId = "in.gatece.mocktest"
         minSdk = 24
         targetSdk = 34
-        versionCode = 12
-        versionName = "2.7"
+        versionCode = gateCode
+        versionName = gateName
     }
     signingConfigs {
         // Fixed debug key committed to the repo so every build is signed identically
