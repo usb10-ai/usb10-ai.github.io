@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b579a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Office Editor</title>
 <meta name="description" content="Open, edit and save Word (.docx) and PowerPoint (.pptx) files right in your browser. Files never leave your computer.">
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
 <header class="appbar">
-  <div class="brand"><span class="logo">✎</span> Office Editor</div>
+  <div class="brand"><span class="logo">✎</span><span class="txt"> Office Editor</span></div>
   <nav class="tabs" role="tablist">
     <button class="tab active" data-mode="word" role="tab">📄 Word</button>
     <button class="tab" data-mode="ppt" role="tab">📊 PowerPoint</button>
@@ -95,7 +100,7 @@
   <div class="canvas" id="wordCanvas">
     <article id="page" class="page" contenteditable="true" spellcheck="true"></article>
   </div>
-  <footer class="status"><span id="wStats">0 words</span><span id="wMsg"></span></footer>
+  <footer class="status"><span id="wStats">0 words</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
 </section>
 
 <!-- ================= POWERPOINT ================= -->
@@ -150,10 +155,10 @@
     <div class="stage" id="stage"><div class="slidewrap" id="slideWrap"></div></div>
   </div>
   <div class="notes"><label for="pNotes">Speaker notes</label><textarea id="pNotes" placeholder="Click to add notes"></textarea></div>
-  <footer class="status"><span id="pStats">Slide 0 of 0</span><span id="pMsg"></span></footer>
+  <footer class="status"><span id="pStats">Slide 0 of 0</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
 </section>
 
-<div id="presenter" class="presenter" hidden><div id="presSlide"></div><div class="presinfo" id="presInfo"></div></div>
+<div id="presenter" class="presenter" hidden><div id="presSlide"></div><div class="presinfo" id="presInfo"></div><button id="presClose" class="presclose" title="End slideshow (Esc)">✕</button></div>
 <div id="drop" class="drop" hidden>Drop a .docx or .pptx file to open it</div>
 <div id="toast" class="toast" hidden></div>
 

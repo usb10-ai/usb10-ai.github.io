@@ -12,7 +12,27 @@ function toast(msg, ms = 2600) {
   toastTimer = setTimeout(() => (t.hidden = true), ms);
 }
 
-function downloadBlob(blob, name) {
+/* Inside the Android app, files are saved through the system "Save as" dialog */
+const IN_APP = typeof window.AndroidBridge !== 'undefined';
+function blobToBase64(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1] || '');
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+function base64ToBuffer(b64) {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
+}
+async function downloadBlob(blob, name) {
+  if (IN_APP) {
+    window.AndroidBridge.saveBase64(name, blob.type || 'application/octet-stream', await blobToBase64(blob));
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = name;

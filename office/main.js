@@ -53,6 +53,11 @@ const App = {
       let name = ed.fileName;
       const want = this.mode === 'word' ? '.docx' : '.pptx';
       if (!name.toLowerCase().endsWith(want)) name = baseName(name) + want;
+      if (IN_APP) { // the system "Save as" screen lets the user pick the name and folder
+        this.pendingSave = { ed, name };
+        await downloadBlob(blob, name);
+        return;
+      }
       if (/^Untitled\./.test(name)) {
         const n = prompt('Save as:', name);
         if (!n) return;
@@ -64,6 +69,24 @@ const App = {
       this.updateTitle();
       toast('Saved ' + name + ' to your downloads');
     });
+  },
+  /* ---- called by the Android app ---- */
+  onAndroidSaved(ok, name) {
+    const p = this.pendingSave;
+    this.pendingSave = null;
+    if (!p || !ok) return;
+    p.ed.fileName = name || p.name;
+    p.ed.dirty = false;
+    this.updateTitle();
+    toast('Saved ' + p.ed.fileName);
+  },
+  isDirty() { return !!(WordEditor.dirty || PptEditor.dirty); },
+  async openFromAndroid() {
+    const name = window.AndroidBridge.pendingName();
+    if (!name) return;
+    const b64 = window.AndroidBridge.pendingData();
+    const file = new File([base64ToBuffer(b64)], name);
+    await this.openFile(file);
   },
   init() {
     WordEditor.init();
@@ -101,6 +124,14 @@ const App = {
     window.addEventListener('beforeunload', (e) => {
       if (WordEditor.dirty || PptEditor.dirty) { e.preventDefault(); e.returnValue = ''; }
     });
+    if (IN_APP) {
+      document.documentElement.classList.add('in-app');
+      this.openFromAndroid();
+    } else if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+    if ('launchQueue' in window) // installed web app opened via "Open with"
+      window.launchQueue.setConsumer(async (p) => { if (p.files && p.files.length) this.openFile(await p.files[0].getFile()); });
     const hash = location.hash.replace('#', '');
     if (hash === 'ppt' || hash === 'powerpoint') this.setMode('ppt');
     this.updateTitle();

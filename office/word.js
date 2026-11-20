@@ -626,7 +626,7 @@ const WordEditor = {
     });
     $('#wTable').addEventListener('mousedown', (e) => { e.preventDefault(); this.tableMenu(); });
     $('#wHr').addEventListener('mousedown', (e) => { e.preventDefault(); this.exec('insertHTML', '<hr class="pagebreak"><p><br></p>'); });
-    $('#wPrint').addEventListener('click', () => window.print());
+    $('#wPrint').addEventListener('click', () => (IN_APP ? window.AndroidBridge.print() : window.print()));
     $('#wFind').addEventListener('click', () => this.toggleFind(true));
     $('#findClose').addEventListener('click', () => this.toggleFind(false));
     $('#findNext').addEventListener('click', () => this.findNext());
@@ -733,28 +733,28 @@ const WordEditor = {
       sel = e.target.tagName === 'IMG' ? e.target : null;
       if (sel) sel.classList.add('sel');
     });
-    this.page.addEventListener('mousemove', (e) => {
+    this.page.addEventListener('pointermove', (e) => {
       if (drag) return;
       const t = e.target;
       if (t.tagName === 'IMG') {
         const r = t.getBoundingClientRect();
-        t.style.cursor = e.clientX > r.right - 14 && e.clientY > r.bottom - 14 ? 'nwse-resize' : '';
+        t.style.cursor = e.clientX > r.right - (e.pointerType === 'touch' ? 32 : 14) && e.clientY > r.bottom - (e.pointerType === 'touch' ? 32 : 14) ? 'nwse-resize' : '';
       }
     });
-    this.page.addEventListener('mousedown', (e) => {
+    this.page.addEventListener('pointerdown', (e) => {
       const t = e.target;
       if (t.tagName !== 'IMG') return;
       const r = t.getBoundingClientRect();
-      if (!(e.clientX > r.right - 14 && e.clientY > r.bottom - 14)) return;
+      if (!(e.clientX > r.right - (e.pointerType === 'touch' ? 32 : 14) && e.clientY > r.bottom - (e.pointerType === 'touch' ? 32 : 14))) return;
       e.preventDefault();
       drag = { img: t, x: e.clientX, w: r.width, ratio: r.height / r.width };
     });
-    window.addEventListener('mousemove', (e) => {
+    window.addEventListener('pointermove', (e) => {
       if (!drag) return;
       const w = Math.max(20, drag.w + (e.clientX - drag.x));
       drag.img.width = Math.round(w); drag.img.height = Math.round(w * drag.ratio);
     });
-    window.addEventListener('mouseup', () => { if (drag) { drag = null; this.changed(); } });
+    window.addEventListener('pointerup', () => { if (drag) { drag = null; this.changed(); } });
   },
   tableMenu() {
     const s = window.getSelection();

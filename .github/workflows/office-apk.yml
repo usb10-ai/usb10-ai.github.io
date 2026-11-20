@@ -1,0 +1,37 @@
+name: Build Office Editor APK
+on:
+  workflow_dispatch:
+  push:
+    paths: ["office-app/**", "office/*.html", "office/*.css", "office/*.js", "office/*.pptx", "office/*.png", "office/vendor/**", ".github/workflows/office-apk.yml"]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: office-app } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.7" }
+      - name: Bundle the web app into assets
+        run: |
+          mkdir -p app/src/main/assets/www
+          cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/manifest.webmanifest ../office/vendor app/src/main/assets/www/
+          rm -f app/src/main/assets/www/sw.js
+      - run: gradle assembleDebug
+      - run: cp app/build/outputs/apk/debug/app-debug.apk OfficeEditor.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: office-editor-apk
+          path: office-app/OfficeEditor.apk
+      - name: Publish APK next to the web app (download link in the editor's status bar)
+        run: |
+          cp OfficeEditor.apk ../office/OfficeEditor.apk
+          cd ..
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add office/OfficeEditor.apk
+          git diff --cached --quiet || git commit -m "Update Office Editor APK [skip ci]"
+          git pull --rebase origin "$GITHUB_REF_NAME" && git push origin "HEAD:$GITHUB_REF_NAME"

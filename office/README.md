@@ -36,3 +36,9 @@ Ctrl+O open · Ctrl+S save · Ctrl+Z / Ctrl+Y undo/redo · F5 present
 - `main.js`, `common.js` – app shell and helpers
 - `blank.pptx` – template for new presentations
 - `vendor/` – JSZip 3.10.1, mammoth 1.8.0 (fallback reader), docx 8.5.0
+
+## Mobile
+- **Android app**: see `../office-app/` — built automatically by GitHub Actions into `office/OfficeEditor.apk`
+  (download link in the editor's status bar). Adds Open with / Share, system Save as, print, full-screen slideshow.
+- **iPhone / iPad**: open the page in Safari → Share → *Add to Home Screen*. It installs as a
+  full-screen app and works offline (`manifest.webmanifest` + `sw.js`).

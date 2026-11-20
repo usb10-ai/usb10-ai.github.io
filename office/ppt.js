@@ -1124,7 +1124,10 @@ const PptEditor = {
   bindShapes() {
     for (const d of $$(':scope > .shp', this.slideEl)) {
       if (d._template) continue;
-      d.addEventListener('mousedown', (e) => this.shapeDown(e, d));
+      // pointer events drive move/resize for mouse, touch and pen; the mousedown
+      // listener only stops the browser from focusing text when we're dragging
+      d.addEventListener('pointerdown', (e) => this.shapeDown(e, d));
+      d.addEventListener('mousedown', (e) => { if (!this.textActive(e, d)) e.preventDefault(); });
       const tx = $(':scope > .tx', d);
       if (tx) {
         tx.addEventListener('focus', () => {
@@ -1199,11 +1202,16 @@ const PptEditor = {
     if (sf) { $('#pFill').value = '#' + sf.getAttribute('val'); $('#pFill').parentElement.style.setProperty('--swatch', $('#pFill').value); }
     void fromText;
   },
-  shapeDown(e, d) {
+  textActive(e, d) {
     const handle = e.target.dataset && e.target.dataset.h;
-    const isMoveBar = e.target.classList.contains('mv');
     const tx = $(':scope > .tx', d);
-    if (!handle && !isMoveBar && tx && document.activeElement === tx && !e.altKey) return; // already typing: normal text selection
+    return !handle && !e.target.classList.contains('mv') && tx && document.activeElement === tx && !e.altKey;
+  },
+  shapeDown(e, d) {
+    if (e.button > 0) return;
+    const handle = e.target.dataset && e.target.dataset.h;
+    const tx = $(':scope > .tx', d);
+    if (this.textActive(e, d)) return; // already typing: normal text selection
     e.preventDefault();
     if (this.editing && this.editing.d !== d) this.commitText();
     this.select(d);
@@ -1232,7 +1240,7 @@ const PptEditor = {
       if (d.dataset.kind === 'group') { this.groupNeedsRerender = true; }
     };
     const mu = () => {
-      window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu);
+      window.removeEventListener('pointermove', mm); window.removeEventListener('pointerup', mu); window.removeEventListener('pointercancel', mu);
       if (!moved) {
         if (tx && !handle) {
           tx.focus();
@@ -1248,7 +1256,7 @@ const PptEditor = {
       if (this.groupNeedsRerender) { this.groupNeedsRerender = false; this.show(this.cur); }
       this.refreshThumb();
     };
-    window.addEventListener('mousemove', mm); window.addEventListener('mouseup', mu);
+    window.addEventListener('pointermove', mm); window.addEventListener('pointerup', mu); window.addEventListener('pointercancel', mu);
   },
   getXfrm(d) {
     const r = new SlideRenderer(this.px, this.px.slides[this.cur], {});
@@ -1529,11 +1537,20 @@ const PptEditor = {
     this.presIdx = from ?? this.cur;
     const p = $('#presenter');
     p.hidden = false;
-    try { await p.requestFullscreen(); } catch {}
+    if (IN_APP) window.AndroidBridge.setFullscreen(true);
+    else try { await p.requestFullscreen(); } catch {}
     await this.presShow();
     this.presResize = () => this.presShow();
     window.addEventListener('resize', this.presResize);
-    p.onclick = () => this.presGo(1);
+    p.onclick = (e) => { if (e.target.id !== 'presClose') this.presGo(e.clientX < window.innerWidth / 3 ? -1 : 1); };
+    let tx0 = null;
+    p.ontouchstart = (e) => { tx0 = e.touches[0].clientX; };
+    p.ontouchend = (e) => {
+      if (tx0 === null) return;
+      const dx = e.changedTouches[0].clientX - tx0; tx0 = null;
+      if (Math.abs(dx) > 50) { e.preventDefault(); this.presGo(dx < 0 ? 1 : -1); }
+    };
+    $('#presClose').onclick = (e) => { e.stopPropagation(); this.presExit(); };
     document.onfullscreenchange = () => { if (!document.fullscreenElement) this.presExit(); };
   },
   async presShow() {
@@ -1563,6 +1580,7 @@ const PptEditor = {
     const p = $('#presenter');
     if (p.hidden) return;
     p.hidden = true;
+    if (IN_APP) window.AndroidBridge.setFullscreen(false);
     window.removeEventListener('resize', this.presResize);
     document.onfullscreenchange = null;
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
