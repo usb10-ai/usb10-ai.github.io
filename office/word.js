@@ -850,7 +850,9 @@ const WordEditor = {
     $('#findInfo').textContent = `${count} replaced`;
     if (count) this.changed();
   },
+  version: 0,
   changed() {
+    this.version++;
     this.dirty = true;
     App.updateTitle();
     clearTimeout(this.statT);

@@ -105,3 +105,28 @@ function escXml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 function baseName(n) { return n.replace(/\.[^.]+$/, ''); }
+
+/* Tiny IndexedDB store for crash/close recovery drafts (one per editor) */
+const Drafts = {
+  db() {
+    if (!this._db) this._db = new Promise((res, rej) => {
+      const r = indexedDB.open('office-editor', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('drafts');
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    return this._db;
+  },
+  async run(mode, fn) {
+    const db = await this.db();
+    return new Promise((res, rej) => {
+      const tx = db.transaction('drafts', mode);
+      const req = fn(tx.objectStore('drafts'));
+      tx.oncomplete = () => res(req && req.result);
+      tx.onerror = () => rej(tx.error);
+    });
+  },
+  put(kind, value) { return this.run('readwrite', (s) => s.put(value, kind)).catch(() => {}); },
+  get(kind) { return this.run('readonly', (s) => s.get(kind)).catch(() => null); },
+  del(kind) { return this.run('readwrite', (s) => s.delete(kind)).catch(() => {}); },
+};

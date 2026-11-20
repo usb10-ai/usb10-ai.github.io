@@ -148,3 +148,15 @@ label.color input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;
   .page hr.pagebreak{border:0;page-break-after:always;break-after:page;margin:0}
   .page hr.pagebreak::after{display:none}
 }
+
+/* start screen */
+.splash{position:fixed;inset:0;z-index:500;background:var(--panel);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:opacity .4s ease}
+.splash img{width:96px;height:96px;margin-bottom:10px}
+.splash .sp-name{font-size:26px;font-weight:700}
+.splash .sp-sub{color:var(--muted)}
+.splash .sp-by{position:absolute;bottom:max(32px,env(safe-area-inset-bottom));color:var(--muted);font-size:14px;letter-spacing:.02em}
+.splash .sp-by b{color:var(--accent)}
+.splash.gone{opacity:0;pointer-events:none}
+.in-app .splash{display:none} /* the Android app shows its own native start screen */
+.status .credit{color:var(--muted)}
+@media (max-width:700px){ .status .credit{display:none} .in-app .status .credit{display:inline} }

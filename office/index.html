@@ -10,6 +10,13 @@
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
+<script>if (window.AndroidBridge) document.documentElement.classList.add('in-app');</script>
+<div id="splash" class="splash" aria-hidden="true">
+  <img src="icon-192.png" alt="" width="96" height="96">
+  <div class="sp-name">Office Editor</div>
+  <div class="sp-sub">Word &amp; PowerPoint, anywhere</div>
+  <div class="sp-by">Developed by <b>USB10</b></div>
+</div>
 <header class="appbar">
   <div class="brand"><span class="logo">✎</span><span class="txt"> Office Editor</span></div>
   <nav class="tabs" role="tablist">
@@ -97,7 +104,7 @@
   <div class="canvas" id="wordCanvas">
     <article id="page" class="page" contenteditable="true" spellcheck="true"></article>
   </div>
-  <footer class="status"><span id="wStats">0 words</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
+  <footer class="status"><span id="wStats">0 words</span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
 </section>
 
 <!-- ================= POWERPOINT ================= -->
@@ -152,7 +159,7 @@
     <div class="stage" id="stage"><div class="slidewrap" id="slideWrap"></div></div>
   </div>
   <div class="notes"><label for="pNotes">Speaker notes</label><textarea id="pNotes" placeholder="Click to add notes"></textarea></div>
-  <footer class="status"><span id="pStats">Slide 0 of 0</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
+  <footer class="status"><span id="pStats">Slide 0 of 0</span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
 </section>
 
 <div id="presenter" class="presenter" hidden><div id="presSlide"></div><div class="presinfo" id="presInfo"></div><button id="presClose" class="presclose" title="End slideshow (Esc)">✕</button></div>

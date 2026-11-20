@@ -1047,7 +1047,10 @@ const PptEditor = {
     await this.renderAll();
     App.updateTitle();
   },
-  markDirty() { this.dirty = true; App.updateTitle(); },
+  version: 0,
+  markDirty() { this.dirty = true; this.version++; App.updateTitle(); },
+  /** current deck as a .pptx blob for the recovery draft (keeps any text box being typed in active) */
+  async draftBlob() { this.commitText(true); return this.px.save(); },
   slideScale(container) {
     const W = this.px.cx / EMU_PT * 4 / 3, H = this.px.cy / EMU_PT * 4 / 3;
     const r = container.getBoundingClientRect();

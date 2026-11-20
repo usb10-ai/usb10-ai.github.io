@@ -36,6 +36,7 @@ const App = {
       const buf = await readFileAsArrayBuffer(file);
       await this.setMode(ext === 'docx' ? 'word' : 'ppt');
       await target.open(buf, file.name);
+      Drafts.del(ext === 'docx' ? 'word' : 'ppt');
       this.fileHandle = null;
       toast('Opened ' + file.name);
     });
@@ -44,6 +45,7 @@ const App = {
     const ed = this.editor();
     if (ed.dirty && !confirm('Discard unsaved changes and start a new file?')) return;
     await this.guard(() => ed.newDoc());
+    Drafts.del(this.mode);
     this.updateTitle();
   },
   async save() {
@@ -66,6 +68,7 @@ const App = {
       downloadBlob(blob, name);
       ed.fileName = name;
       ed.dirty = false;
+      Drafts.del(this.mode);
       this.updateTitle();
       toast('Saved ' + name + ' to your downloads');
     });
@@ -77,8 +80,45 @@ const App = {
     if (!p || !ok) return;
     p.ed.fileName = name || p.name;
     p.ed.dirty = false;
+    Drafts.del(p.ed === WordEditor ? 'word' : 'ppt');
     this.updateTitle();
     toast('Saved ' + p.ed.fileName);
+  },
+  /* ---- drafts: keep unsaved work safe if the tab/app is closed ---- */
+  async saveDrafts() {
+    if (this.savingDrafts) return;
+    this.savingDrafts = true;
+    try {
+      if (WordEditor.dirty && WordEditor.draftVersion !== WordEditor.version) {
+        WordEditor.draftVersion = WordEditor.version;
+        await Drafts.put('word', { name: WordEditor.fileName, html: WordEditor.page.innerHTML, at: Date.now() });
+      }
+      if (PptEditor.px && PptEditor.dirty && PptEditor.draftVersion !== PptEditor.version) {
+        PptEditor.draftVersion = PptEditor.version;
+        await Drafts.put('ppt', { name: PptEditor.fileName, blob: await PptEditor.draftBlob(), at: Date.now() });
+      }
+    } catch (e) { console.warn('draft save failed', e); }
+    this.savingDrafts = false;
+  },
+  async offerRecovery() {
+    for (const kind of ['word', 'ppt']) {
+      const d = await Drafts.get(kind);
+      if (!d) continue;
+      const when = new Date(d.at).toLocaleString();
+      if (!confirm(`Recover unsaved changes to "${d.name}" from ${when}?`)) { Drafts.del(kind); continue; }
+      await this.guard(async () => {
+        await this.setMode(kind);
+        if (kind === 'word') {
+          WordEditor.page.innerHTML = d.html;
+          WordEditor.fileName = d.name;
+          WordEditor.changed();
+        } else {
+          await PptEditor.open(await d.blob.arrayBuffer(), d.name);
+          PptEditor.markDirty();
+        }
+        toast('Recovered ' + d.name);
+      });
+    }
   },
   isDirty() { return !!(WordEditor.dirty || PptEditor.dirty); },
   async openFromAndroid() {
@@ -124,10 +164,10 @@ const App = {
     window.addEventListener('beforeunload', (e) => {
       if (WordEditor.dirty || PptEditor.dirty) { e.preventDefault(); e.returnValue = ''; }
     });
-    if (IN_APP) {
-      document.documentElement.classList.add('in-app');
-      this.openFromAndroid();
-    }
+    setTimeout(() => { const s = $('#splash'); s.classList.add('gone'); setTimeout(() => s.remove(), 500); }, IN_APP ? 0 : 1300);
+    this.offerRecovery().then(() => { if (IN_APP) this.openFromAndroid(); });
+    setInterval(() => this.saveDrafts(), 15000);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.saveDrafts(); });
     const hash = location.hash.replace('#', '');
     if (hash === 'ppt' || hash === 'powerpoint') this.setMode('ppt');
     this.updateTitle();

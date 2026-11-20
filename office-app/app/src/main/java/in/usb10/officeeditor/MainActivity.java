@@ -13,7 +13,17 @@ import android.print.PrintAttributes;
 import android.print.PrintManager;
 import android.provider.OpenableColumns;
 import android.util.Base64;
+import android.graphics.Typeface;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.webkit.JavascriptInterface;
@@ -54,6 +64,9 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> pickCallback;
     private byte[] pendingSave;
     private boolean pageReady;
+    private View splash;
+    private long splashShownAt;
+    private static final long SPLASH_MIN_MS = 1600;
 
     // a file handed to us by another app, waiting for the page to collect it
     private volatile String incomingName;
@@ -65,7 +78,16 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(Color.parseColor("#2b579a"));
         getWindow().setNavigationBarColor(Color.parseColor("#26292e"));
         web = new WebView(this);
-        setContentView(web);
+        FrameLayout root = new FrameLayout(this);
+        root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        if (state == null) {
+            splash = buildSplash();
+            root.addView(splash, new FrameLayout.LayoutParams(-1, -1));
+            splashShownAt = SystemClock.uptimeMillis();
+        }
+        setContentView(root);
+        // never leave the start screen up if the page fails to report it finished loading
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() { public void run() { hideSplash(); } }, 6000);
 
         assets = new WebViewAssetLoader.Builder()
             .setDomain(HOST)
@@ -101,6 +123,7 @@ public class MainActivity extends Activity {
             public void onPageFinished(WebView v, String url) {
                 pageReady = true;
                 deliverIncoming();
+                hideSplash();
             }
         });
         web.setWebChromeClient(new WebChromeClient() {
@@ -155,6 +178,60 @@ public class MainActivity extends Activity {
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
         web.saveState(out);
+    }
+
+    /* ---------- start screen: app name and "Developed by USB10" ---------- */
+    private int dp(float v) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics());
+    }
+
+    private View buildSplash() {
+        FrameLayout box = new FrameLayout(this);
+        box.setBackgroundColor(Color.WHITE);
+        box.setClickable(true); // swallow taps while loading
+
+        LinearLayout center = new LinearLayout(this);
+        center.setOrientation(LinearLayout.VERTICAL);
+        center.setGravity(Gravity.CENTER_HORIZONTAL);
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.ic_launcher);
+        center.addView(logo, new LinearLayout.LayoutParams(dp(96), dp(96)));
+        TextView name = new TextView(this);
+        name.setText(R.string.app_name);
+        name.setTextColor(Color.parseColor("#1f2329"));
+        name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+        name.setTypeface(Typeface.DEFAULT_BOLD);
+        name.setPadding(0, dp(16), 0, dp(4));
+        center.addView(name);
+        TextView tag = new TextView(this);
+        tag.setText("Word & PowerPoint, anywhere");
+        tag.setTextColor(Color.parseColor("#646b75"));
+        tag.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        center.addView(tag);
+        box.addView(center, new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+
+        TextView by = new TextView(this);
+        by.setText(android.text.Html.fromHtml("Developed by <b><font color='#2b579a'>USB10</font></b>", 0));
+        by.setTextColor(Color.parseColor("#646b75"));
+        by.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER_HORIZONTAL | Gravity.BOTTOM);
+        lp.bottomMargin = dp(48);
+        box.addView(by, lp);
+        return box;
+    }
+
+    private void hideSplash() {
+        if (splash == null) return;
+        final View v = splash;
+        splash = null;
+        long wait = Math.max(0, SPLASH_MIN_MS - (SystemClock.uptimeMillis() - splashShownAt));
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            public void run() {
+                v.animate().alpha(0f).setDuration(350).withEndAction(new Runnable() {
+                    public void run() { v.setVisibility(View.GONE); }
+                }).start();
+            }
+        }, wait);
     }
 
     /* ---------- files opened from other apps ---------- */

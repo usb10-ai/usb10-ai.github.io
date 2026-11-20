@@ -9,8 +9,8 @@ android {
         applicationId = "in.usb10.officeeditor"
         minSdk = 24
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
     signingConfigs {
         // Fixed debug key committed to the repo so every build is signed identically
