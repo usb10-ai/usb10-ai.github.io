@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b579a">
+<link rel="icon" href="icon-192.png">
+<title>Office Editor</title>
+<meta name="description" content="Open, edit and save Word (.docx) and PowerPoint (.pptx) files right in your browser. Files never leave your computer.">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<script>if (window.AndroidBridge) document.documentElement.classList.add('in-app');</script>
+<div id="splash" class="splash" aria-hidden="true">
+  <img src="icon-192.png" alt="" width="96" height="96">
+  <div class="sp-name">Office Editor</div>
+  <div class="sp-sub">Word &amp; PowerPoint, anywhere</div>
+  <div class="sp-by">Developed by <b>USB10</b></div>
+</div>
+<header class="appbar">
+  <div class="brand"><span class="logo">✎</span><span class="txt"> Office Editor</span></div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-mode="word" role="tab">📄 Word</button>
+    <button class="tab" data-mode="ppt" role="tab">📊 PowerPoint</button>
+  </nav>
+  <div class="filebar">
+    <span id="fileName" class="filename">Untitled.docx</span>
+    <button id="btnNew" title="New file">New</button>
+    <button id="btnOpen" title="Open a .docx or .pptx file (Ctrl+O)">Open…</button>
+    <button id="btnSave" class="primary" title="Save / download (Ctrl+S)">Save</button>
+    <input type="file" id="fileInput" accept=".docx,.pptx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+  </div>
+</header>
+
+<!-- ================= WORD ================= -->
+<section id="wordApp" class="mode">
+  <div class="toolbar" id="wordToolbar">
+    <div class="grp">
+      <button data-cmd="undo" title="Undo (Ctrl+Z)">↶</button>
+      <button data-cmd="redo" title="Redo (Ctrl+Y)">↷</button>
+    </div>
+    <div class="grp">
+      <select id="wBlock" title="Paragraph style">
+        <option value="P">Normal</option>
+        <option value="H1">Heading 1</option>
+        <option value="H2">Heading 2</option>
+        <option value="H3">Heading 3</option>
+        <option value="H4">Heading 4</option>
+        <option value="BLOCKQUOTE">Quote</option>
+      </select>
+      <select id="wFont" title="Font">
+        <option>Calibri</option><option>Arial</option><option>Times New Roman</option>
+        <option>Georgia</option><option>Cambria</option><option>Verdana</option>
+        <option>Courier New</option><option>Segoe UI</option>
+      </select>
+      <select id="wSize" title="Font size (pt)">
+        <option>8</option><option>9</option><option>10</option><option selected>11</option><option>12</option>
+        <option>14</option><option>16</option><option>18</option><option>20</option><option>24</option>
+        <option>28</option><option>32</option><option>36</option><option>48</option><option>72</option>
+      </select>
+    </div>
+    <div class="grp">
+      <button data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      <button data-cmd="subscript" title="Subscript">x₂</button>
+      <button data-cmd="superscript" title="Superscript">x²</button>
+      <label class="color" title="Text color">A<input type="color" id="wColor" value="#c00000"></label>
+      <label class="color hl" title="Highlight">▮<input type="color" id="wHilite" value="#ffff00"></label>
+      <button data-cmd="removeFormat" title="Clear formatting">⌫</button>
+    </div>
+    <div class="grp">
+      <button data-cmd="justifyLeft" title="Align left">⯇</button>
+      <button data-cmd="justifyCenter" title="Center">≡</button>
+      <button data-cmd="justifyRight" title="Align right">⯈</button>
+      <button data-cmd="justifyFull" title="Justify">☰</button>
+    </div>
+    <div class="grp">
+      <button data-cmd="insertUnorderedList" title="Bulleted list">• ☰</button>
+      <button data-cmd="insertOrderedList" title="Numbered list">1. ☰</button>
+      <button data-cmd="outdent" title="Decrease indent">⇤</button>
+      <button data-cmd="indent" title="Increase indent">⇥</button>
+    </div>
+    <div class="grp">
+      <button id="wLink" title="Insert link">🔗</button>
+      <button id="wImage" title="Insert picture">🖼</button>
+      <button id="wTable" title="Insert table">▦</button>
+      <button id="wHr" title="Page break">⤓</button>
+      <button id="wFind" title="Find &amp; replace (Ctrl+H)">🔍</button>
+      <button id="wPrint" title="Print / save as PDF">🖨</button>
+    </div>
+    <input type="file" id="wImageInput" accept="image/png,image/jpeg,image/gif" hidden>
+  </div>
+  <div class="findbar" id="findBar" hidden>
+    <input id="findText" placeholder="Find">
+    <input id="replText" placeholder="Replace with">
+    <button id="findNext">Find next</button>
+    <button id="replOne">Replace</button>
+    <button id="replAll">Replace all</button>
+    <span id="findInfo"></span>
+    <button id="findClose" title="Close">✕</button>
+  </div>
+  <div class="canvas" id="wordCanvas">
+    <article id="page" class="page" contenteditable="true" spellcheck="true"></article>
+  </div>
+  <footer class="status"><span id="wStats">0 words</span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
+</section>
+
+<!-- ================= POWERPOINT ================= -->
+<section id="pptApp" class="mode" hidden>
+  <div class="toolbar" id="pptToolbar">
+    <div class="grp">
+      <button id="pUndo" title="Undo (Ctrl+Z when not typing)">↶</button>
+      <button id="pRedo" title="Redo">↷</button>
+    </div>
+    <div class="grp">
+      <select id="pLayout" title="Layout for new slide"></select>
+      <button id="pAddSlide" title="New slide">＋ Slide</button>
+      <button id="pDupSlide" title="Duplicate slide">⧉</button>
+      <button id="pDelSlide" title="Delete slide">🗑</button>
+      <button id="pUp" title="Move slide up">▲</button>
+      <button id="pDown" title="Move slide down">▼</button>
+    </div>
+    <div class="grp">
+      <button id="pTextBox" title="Insert text box">T＋</button>
+      <button id="pRect" title="Insert rectangle">▭</button>
+      <button id="pEllipse" title="Insert ellipse">◯</button>
+      <button id="pImage" title="Insert picture">🖼</button>
+      <button id="pDelShape" title="Delete selected shape (Del)">✕</button>
+      <button id="pFront" title="Bring to front">⬒</button>
+      <button id="pBack" title="Send to back">⬓</button>
+    </div>
+    <div class="grp">
+      <select id="pSize" title="Font size (pt)">
+        <option value="">Size</option>
+        <option>10</option><option>12</option><option>14</option><option>16</option><option>18</option>
+        <option>20</option><option>24</option><option>28</option><option>32</option><option>36</option>
+        <option>40</option><option>44</option><option>54</option><option>60</option><option>72</option>
+      </select>
+      <button data-pcmd="bold" title="Bold"><b>B</b></button>
+      <button data-pcmd="italic" title="Italic"><i>I</i></button>
+      <button data-pcmd="underline" title="Underline"><u>U</u></button>
+      <label class="color" title="Text color">A<input type="color" id="pColor" value="#c00000"></label>
+      <button data-palign="l" title="Align left">⯇</button>
+      <button data-palign="ctr" title="Center">≡</button>
+      <button data-palign="r" title="Align right">⯈</button>
+    </div>
+    <div class="grp">
+      <label class="color" title="Shape fill">◼<input type="color" id="pFill" value="#4472c4"></label>
+      <button id="pNoFill" title="No fill">⌀</button>
+      <label class="color" title="Slide background">▣<input type="color" id="pBg" value="#ffffff"></label>
+      <button id="pPresent" class="primary" title="Present (F5)">▶ Present</button>
+    </div>
+    <input type="file" id="pImageInput" accept="image/png,image/jpeg,image/gif" hidden>
+  </div>
+  <div class="pptmain">
+    <aside class="thumbs" id="thumbs"></aside>
+    <div class="stage" id="stage"><div class="slidewrap" id="slideWrap"></div></div>
+  </div>
+  <div class="notes"><label for="pNotes">Speaker notes</label><textarea id="pNotes" placeholder="Click to add notes"></textarea></div>
+  <footer class="status"><span id="pStats">Slide 0 of 0</span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
+</section>
+
+<div id="presenter" class="presenter" hidden><div id="presSlide"></div><div class="presinfo" id="presInfo"></div><button id="presClose" class="presclose" title="End slideshow (Esc)">✕</button></div>
+<div id="drop" class="drop" hidden>Drop a .docx or .pptx file to open it</div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/mammoth.browser.min.js"></script>
+<script src="vendor/docx.min.js"></script>
+<script src="common.js"></script>
+<script src="word.js"></script>
+<script src="ppt.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
