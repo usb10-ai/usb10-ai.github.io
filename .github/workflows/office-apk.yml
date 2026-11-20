@@ -18,8 +18,7 @@ jobs:
       - name: Bundle the web app into assets
         run: |
           mkdir -p app/src/main/assets/www
-          cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/manifest.webmanifest ../office/vendor app/src/main/assets/www/
-          rm -f app/src/main/assets/www/sw.js
+          cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/vendor app/src/main/assets/www/
       - run: gradle assembleDebug
       - run: cp app/build/outputs/apk/debug/app-debug.apk OfficeEditor.apk
       - uses: actions/upload-artifact@v4

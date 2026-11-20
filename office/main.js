@@ -127,11 +127,7 @@ const App = {
     if (IN_APP) {
       document.documentElement.classList.add('in-app');
       this.openFromAndroid();
-    } else if ('serviceWorker' in navigator && location.protocol === 'https:') {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
     }
-    if ('launchQueue' in window) // installed web app opened via "Open with"
-      window.launchQueue.setConsumer(async (p) => { if (p.files && p.files.length) this.openFile(await p.files[0].getFile()); });
     const hash = location.hash.replace('#', '');
     if (hash === 'ppt' || hash === 'powerpoint') this.setMode('ppt');
     this.updateTitle();

@@ -40,5 +40,3 @@ Ctrl+O open · Ctrl+S save · Ctrl+Z / Ctrl+Y undo/redo · F5 present
 ## Mobile
 - **Android app**: see `../office-app/` — built automatically by GitHub Actions into `office/OfficeEditor.apk`
   (download link in the editor's status bar). Adds Open with / Share, system Save as, print, full-screen slideshow.
-- **iPhone / iPad**: open the page in Safari → Share → *Add to Home Screen*. It installs as a
-  full-screen app and works offline (`manifest.webmanifest` + `sw.js`).

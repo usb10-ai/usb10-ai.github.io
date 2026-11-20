@@ -19,7 +19,7 @@ It publishes the APK at `office/OfficeEditor.apk` (download link in the editor's
 
 ## Build locally
 ```
-mkdir -p app/src/main/assets/www && cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/manifest.webmanifest ../office/vendor app/src/main/assets/www/
+mkdir -p app/src/main/assets/www && cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/vendor app/src/main/assets/www/
 gradle assembleDebug        # JDK 17, Android SDK 34
 ```
 
@@ -28,5 +28,3 @@ gradle assembleDebug        # JDK 17, Android SDK 34
 - Signed with a fixed key (`app/debug.keystore`, same public debug key as the GATE CE app) so new
   versions install over old ones. Bump `versionCode` in `app/build.gradle.kts` for each release.
   For the Play Store you would need your own release key.
-- iPhone/iPad: open `https://usb10-ai.github.io/office/` in Safari → Share → **Add to Home Screen**.
-  It then runs full screen and offline like an app.
