@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bhasha — Learn Telugu &amp; Odia</title>
+<meta name="description" content="Learn Telugu and Odia with short, game-like lessons: vocabulary, sentence building, matching pairs, letters and pronunciation. Free, in the browser, progress saved on your device.">
+<meta name="theme-color" content="#e8742a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&family=Noto+Sans+Telugu:wght@500;700&family=Noto+Sans+Oriya:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbf8f3; --surface:#fff; --surface-2:#f3efe8; --ink:#2b2622; --ink-soft:#655d56; --ink-faint:#9a918a;
+  --line:#e6dfd5; --line-strong:#d6cdc1;
+  --accent:#e8742a; --accent-dark:#c45a14; --accent-soft:#fde7d6; --accent-ink:#fff;
+  --ok:#3f9b3a; --ok-dark:#2e7a2a; --ok-soft:#e1f3dc;
+  --bad:#d64545; --bad-dark:#a93030; --bad-soft:#fbe2e2;
+  --gold:#f2b705; --gold-dark:#c99400; --lock:#d9d2c8; --lock-dark:#bfb6aa;
+  --sky:#2e86c1; --sky-dark:#1f6696;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171412; --surface:#211d1a; --surface-2:#2a2521; --ink:#f3ede6; --ink-soft:#b9afa5; --ink-faint:#837a71;
+    --line:#38312b; --line-strong:#4a4139;
+    --accent:#f28b45; --accent-dark:#b85d1e; --accent-soft:#3a2617; --accent-ink:#1b120b;
+    --ok:#62c25c; --ok-dark:#3f8f3a; --ok-soft:#1f3320;
+    --bad:#ef6b6b; --bad-dark:#a94040; --bad-soft:#3a1f1f;
+    --gold:#f5c842; --gold-dark:#b8900f; --lock:#3b342e; --lock-dark:#2b2520;
+    --sky:#5aa9dc; --sky-dark:#2f6f99;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171412; --surface:#211d1a; --surface-2:#2a2521; --ink:#f3ede6; --ink-soft:#b9afa5; --ink-faint:#837a71;
+  --line:#38312b; --line-strong:#4a4139;
+  --accent:#f28b45; --accent-dark:#b85d1e; --accent-soft:#3a2617; --accent-ink:#1b120b;
+  --ok:#62c25c; --ok-dark:#3f8f3a; --ok-soft:#1f3320;
+  --bad:#ef6b6b; --bad-dark:#a94040; --bad-soft:#3a1f1f;
+  --gold:#f5c842; --gold-dark:#b8900f; --lock:#3b342e; --lock-dark:#2b2520;
+  --sky:#5aa9dc; --sky-dark:#2f6f99;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45}
+.te{font-family:"Noto Sans Telugu",Nunito,sans-serif}
+.or{font-family:"Noto Sans Oriya",Nunito,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--sky)}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:2px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:10px;height:58px}
+.brand{font-weight:900;font-size:1.3rem;color:var(--accent);letter-spacing:-.02em;margin-right:auto;display:flex;align-items:center;gap:8px;background:none;border:0;padding:0}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:1rem}
+.stat{display:flex;align-items:center;gap:4px;font-weight:800;color:var(--ink-soft);background:none;border:0;padding:6px 6px;border-radius:10px}
+.stat.fire{color:var(--accent)} .stat.xp{color:var(--gold-dark)}
+.langbtn{display:flex;align-items:center;gap:6px;border:2px solid var(--line);border-radius:12px;padding:4px 10px;background:var(--surface);font-weight:800}
+.langbtn:hover{border-color:var(--line-strong)}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;padding:14px 0 4px}
+.tab{flex:1;border:2px solid var(--line);background:var(--surface);border-radius:14px;padding:9px 6px;font-weight:800;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;gap:6px}
+.tab[aria-selected="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:13px 22px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;font-size:.95rem;background:var(--accent);color:var(--accent-ink);box-shadow:0 4px 0 var(--accent-dark);transition:transform .05s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-dark)}
+.btn[disabled]{background:var(--lock);color:var(--ink-faint);box-shadow:0 4px 0 var(--lock-dark);cursor:default}
+.btn.ok{background:var(--ok);box-shadow:0 4px 0 var(--ok-dark);color:#fff}
+.btn.bad{background:var(--bad);box-shadow:0 4px 0 var(--bad-dark);color:#fff}
+.btn.ghost{background:var(--surface);color:var(--ink-soft);border:2px solid var(--line);box-shadow:0 4px 0 var(--line)}
+.btn.wide{width:100%}
+
+/* Language picker */
+.hero{text-align:center;padding:34px 0 10px}
+.hero h1{font-size:2rem;line-height:1.15;margin:0 0 8px;font-weight:900;letter-spacing:-.02em}
+.hero p{color:var(--ink-soft);margin:0 auto;max-width:440px}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0}
+.langcard{border:2px solid var(--line);border-bottom-width:5px;border-radius:20px;background:var(--surface);padding:22px 14px;text-align:center}
+.langcard:hover{border-color:var(--accent)}
+.langcard .big{font-size:2.4rem;font-weight:700;line-height:1.3;display:block;color:var(--accent)}
+.langcard .nm{font-weight:900;font-size:1.2rem;display:block;margin-top:4px}
+.langcard .rg{color:var(--ink-faint);font-size:.85rem;display:block}
+.langcard .pg{font-size:.8rem;color:var(--ink-soft);margin-top:8px;display:block;font-weight:700}
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:30px}
+.feature{background:var(--surface-2);border-radius:14px;padding:12px;font-size:.9rem;color:var(--ink-soft)}
+.feature b{display:block;color:var(--ink)}
+
+/* Daily goal */
+.goal{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:16px;padding:12px 14px;margin:12px 0;background:var(--surface)}
+.goal .ring{width:46px;height:46px;flex:none}
+.goal b{display:block}
+.goal small{color:var(--ink-soft)}
+
+/* Path */
+.unit{margin:18px 0 8px;border-radius:18px;padding:14px 16px;color:#fff;display:flex;align-items:center;gap:12px}
+.unit h2{margin:0;font-size:1.15rem;font-weight:900}
+.unit p{margin:0;opacity:.9;font-size:.88rem}
+.unit .ico{font-size:1.8rem}
+.unit.locked{background:var(--lock)!important;color:var(--ink-faint)}
+.path{display:flex;flex-direction:column;align-items:center;gap:16px;padding:12px 0 6px}
+.node{position:relative;width:74px;height:68px;border-radius:50%;border:0;font-size:1.7rem;display:grid;place-items:center;color:#fff}
+.node .lbl{position:absolute;top:100%;margin-top:6px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:.75rem;font-weight:800;color:var(--ink-soft)}
+.node.locked{background:var(--lock);box-shadow:0 6px 0 var(--lock-dark);color:var(--ink-faint);cursor:default}
+.node.done{background:var(--gold);box-shadow:0 6px 0 var(--gold-dark)}
+.node.current{animation:bob 1.6s ease-in-out infinite}
+.node:not(.locked):active{transform:translateY(4px)}
+.start-bubble{position:absolute;bottom:100%;margin-bottom:10px;left:50%;transform:translateX(-50%);background:var(--surface);border:2px solid var(--line);color:var(--accent);font-weight:900;font-size:.8rem;padding:4px 10px;border-radius:10px;letter-spacing:.06em}
+@keyframes bob{0%,100%{translate:0 0}50%{translate:0 -5px}}
+@media (prefers-reduced-motion: reduce){.node.current{animation:none}}
+
+/* Letters */
+.letters-head{margin:18px 0 6px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.letters-head h2{margin:0;font-size:1.15rem;font-weight:900}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+.letter{border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;background:var(--surface);padding:8px 4px;text-align:center}
+.letter .g{font-size:1.8rem;display:block;line-height:1.4}
+.letter .r{font-size:.8rem;color:var(--ink-soft);font-weight:700}
+.letter:hover{border-color:var(--accent)}
+.note{color:var(--ink-soft);font-size:.88rem;background:var(--surface-2);border-radius:12px;padding:10px 12px;margin:10px 0}
+
+/* Profile */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.card{border:2px solid var(--line);border-radius:16px;padding:14px;background:var(--surface)}
+.card .v{font-size:1.5rem;font-weight:900}
+.card .k{color:var(--ink-soft);font-size:.85rem;font-weight:700}
+.week{display:flex;gap:6px;align-items:flex-end;height:110px;margin:8px 0 4px}
+.week .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.week .bar i{display:block;width:100%;background:var(--accent);border-radius:6px 6px 2px 2px;min-height:3px}
+.week .bar span{font-size:.72rem;color:var(--ink-faint);font-weight:700}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 0;border-top:2px solid var(--line)}
+select{font:inherit;border:2px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--surface);color:var(--ink)}
+
+/* Lesson */
+.lesson{min-height:100dvh;display:flex;flex-direction:column}
+.lhead{display:flex;align-items:center;gap:14px;padding:16px 0}
+.x{border:0;background:none;font-size:1.6rem;color:var(--ink-faint);padding:0 4px;line-height:1}
+.prog{flex:1;height:16px;background:var(--line);border-radius:99px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok);border-radius:99px;transition:width .35s;box-shadow:inset 0 -4px 0 rgba(0,0,0,.08)}
+.hearts{font-weight:900;color:var(--bad);display:flex;align-items:center;gap:4px}
+.lbody{flex:1;padding:8px 0 24px}
+.qtype{font-size:.8rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:4px 0}
+.qtitle{font-size:1.5rem;font-weight:900;margin:0 0 18px;line-height:1.25}
+.prompt{display:flex;align-items:center;gap:14px;margin:6px 0 22px}
+.prompt .bubble{border:2px solid var(--line);border-radius:16px;padding:12px 16px;background:var(--surface);position:relative}
+.prompt .n{font-size:1.7rem;font-weight:700;display:block;line-height:1.35}
+.prompt .t{color:var(--ink-soft);font-size:.92rem}
+.mascot{width:64px;height:64px;flex:none;border-radius:50%;background:var(--accent-soft);display:grid;place-items:center;font-size:2rem}
+.speak{flex:none;width:44px;height:44px;border-radius:12px;border:0;background:var(--sky);box-shadow:0 4px 0 var(--sky-dark);color:#fff;font-size:1.2rem;display:grid;place-items:center}
+.speak.big{width:96px;height:96px;border-radius:24px;font-size:2.6rem;margin:6px auto 26px}
+.opts{display:grid;gap:10px}
+.opts.two{grid-template-columns:1fr 1fr}
+.opt{border:2px solid var(--line);border-bottom-width:4px;border-radius:14px;background:var(--surface);padding:14px 14px;text-align:left;display:flex;align-items:center;gap:12px;font-weight:700;font-size:1.05rem}
+.opt .k{flex:none;width:26px;height:26px;border:2px solid var(--line);border-radius:8px;display:grid;place-items:center;font-size:.78rem;color:var(--ink-faint)}
+.opt .n{font-size:1.35rem;line-height:1.3}
+.opt .s{display:block;font-size:.82rem;color:var(--ink-faint);font-weight:600}
+.opt:hover{background:var(--surface-2)}
+.opt.sel{border-color:var(--sky);background:color-mix(in srgb,var(--sky) 12%,var(--surface));color:var(--sky)}
+.opt.sel .k{border-color:var(--sky);color:var(--sky)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok-dark)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt.gone{opacity:.35;pointer-events:none}
+.opt.match{justify-content:center;text-align:center;min-height:62px}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+.answer-line{min-height:64px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;padding:8px 0;margin-bottom:6px;align-content:flex-start}
+.answer-line.l2{border-top:2px solid var(--line);min-height:120px;background:repeating-linear-gradient(transparent 0 62px,var(--line) 62px 64px)}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:18px 0}
+.tile{border:2px solid var(--line);border-bottom-width:4px;border-radius:12px;background:var(--surface);padding:8px 13px;font-weight:700;font-size:1.1rem;min-height:46px}
+.tile.n{font-size:1.25rem}
+.tile.used{background:var(--line);border-color:var(--line);color:transparent;pointer-events:none;box-shadow:none}
+
+.intro{text-align:center;padding:10px 0}
+.intro .n{font-size:3rem;font-weight:700;line-height:1.35;display:block;color:var(--accent)}
+.intro .t{font-size:1.1rem;color:var(--ink-soft);display:block}
+.intro .e{font-size:1.4rem;font-weight:900;display:block;margin-top:12px}
+
+/* Footer feedback */
+.lfoot{border-top:2px solid var(--line);padding:16px 0 calc(16px + env(safe-area-inset-bottom));background:var(--bg)}
+.lfoot.right{background:var(--ok-soft);border-color:transparent}
+.lfoot.wrong{background:var(--bad-soft);border-color:transparent}
+.lfoot .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.fb{flex:1;min-width:200px}
+.fb b{font-size:1.25rem;font-weight:900;display:block}
+.lfoot.right .fb b{color:var(--ok-dark)} .lfoot.wrong .fb b{color:var(--bad)}
+.fb .ans{color:var(--ink);font-weight:700}
+.fb .ans small{color:var(--ink-soft);font-weight:600}
+.lfoot .btn{min-width:150px}
+@media (max-width:520px){.lfoot .btn{width:100%}.fb{min-width:100%}}
+
+/* Result */
+.result{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:18px;padding:30px 0}
+.result .emoji{font-size:4.5rem}
+.result h1{margin:0;font-size:2rem;font-weight:900;color:var(--gold-dark)}
+.result.fail h1{color:var(--bad)}
+.result p{margin:0;color:var(--ink-soft)}
+.rstats{display:flex;gap:10px;justify-content:center}
+.rstat{border:2px solid var(--gold);border-radius:14px;min-width:96px;overflow:hidden}
+.rstat .k{background:var(--gold);color:#fff;font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;padding:4px}
+.rstat .v{font-size:1.35rem;font-weight:900;padding:8px}
+.rstat.ok{border-color:var(--ok)} .rstat.ok .k{background:var(--ok)}
+.rstat.fire{border-color:var(--accent)} .rstat.fire .k{background:var(--accent)}
+.foot-note{color:var(--ink-faint);font-size:.8rem;text-align:center;padding:30px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="courses.js"></script>
+<script>
+(() => {
+"use strict";
+const C = window.COURSES;
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pick = (a, n) => shuffle(a).slice(0, n);
+const UNIT_COLORS = ["#e8742a", "#3f9b3a", "#2e86c1", "#9b59b6", "#d64545", "#c99400", "#16a085"];
+const LESSONS_PER_UNIT = 3;
+const MAX_HEARTS = 5;
+
+/* ---------- Storage ---------- */
+const KEY = "bhasha.v1";
+const today = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dayOffset = n => { const d = new Date(); d.setDate(d.getDate() + n); return today(d); };
+function load() {
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+  s = s && typeof s === "object" ? s : {};
+  s.lang = C[s.lang] ? s.lang : null;
+  s.progress = s.progress || {};
+  for (const k in C) s.progress[k] = s.progress[k] || { done: {}, xp: 0, letters: 0 };
+  s.daily = s.daily || {};
+  s.streak = s.streak || 0;
+  s.last = s.last || null;
+  s.goal = s.goal || 20;
+  s.translit = s.translit !== false;
+  s.sound = s.sound !== false;
+  return s;
+}
+let S = load();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function liveStreak() { return (S.last === today() || S.last === dayOffset(-1)) ? S.streak : 0; }
+
+/* ---------- Speech ---------- */
+const voices = {};
+function refreshVoices() {
+  if (!("speechSynthesis" in window)) return;
+  const v = speechSynthesis.getVoices();
+  for (const k in C) voices[k] = v.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(C[k].speech + "-")) || v.find(x => x.lang && x.lang.toLowerCase() === C[k].speech) || null;
+}
+if ("speechSynthesis" in window) { refreshVoices(); speechSynthesis.addEventListener?.("voiceschanged", () => { refreshVoices(); if (view === "home") render(); }); }
+const canSpeak = lang => !!voices[lang];
+function speak(text, lang = S.lang, slow) {
+  if (!canSpeak(lang)) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = voices[lang]; u.lang = voices[lang].lang; u.rate = slow ? .6 : .85;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+let actx = null;
+function chime(good) {
+  if (!S.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = good ? [660, 880] : [300, 220];
+    notes.forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = good ? "sine" : "triangle"; o.frequency.value = f;
+      const t = actx.currentTime + i * .11;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .18);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .2);
+    });
+  } catch (e) {}
+}
+function toast(msg) {
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 2600);
+}
+
+/* ---------- Progress helpers ---------- */
+const P = () => S.progress[S.lang];
+const course = () => C[S.lang];
+const unitDone = (u) => P().done[u.id] || 0;
+function unitUnlocked(i) { return i === 0 || unitDone(course().units[i - 1]) >= LESSONS_PER_UNIT; }
+function totalLessons(lang) { return C[lang].units.length * LESSONS_PER_UNIT; }
+function doneLessons(lang) { return C[lang].units.reduce((a, u) => a + Math.min(LESSONS_PER_UNIT, S.progress[lang].done[u.id] || 0), 0); }
+function addXp(n) {
+  const d = today();
+  S.daily[d] = (S.daily[d] || 0) + n;
+  P().xp += n;
+  if (S.last !== d) { S.streak = S.last === dayOffset(-1) ? S.streak + 1 : 1; S.last = d; }
+  save();
+}
+
+/* ---------- Exercise generation ---------- */
+const L = () => S.lang;
+const nat = (txt, cls = "") => `<span class="${L()} ${cls}" lang="${L()}">${esc(txt)}</span>`;
+const allItems = () => course().units.flatMap(u => u.items);
+const allSentences = () => course().units.flatMap(u => u.sentences || []);
+const tokens = s => s.split(" ");
+const normEn = s => s.toLowerCase().replace(/[?.!,]/g, "").replace(/\s+/g, " ").trim();
+const normN = s => s.replace(/[?.!,]/g, "").replace(/\s+/g, " ").trim();
+
+function distractors(item, field, pool, n = 3) {
+  const seen = new Set([item[field]]);
+  const out = [];
+  for (const x of shuffle(pool)) { if (!seen.has(x[field])) { seen.add(x[field]); out.push(x); } if (out.length >= n) break; }
+  return out;
+}
+function mcqMeaning(item, pool) {
+  const opts = shuffle([item, ...distractors(item, "e", pool)]);
+  return { type: "mcq", qtype: "What does this mean?", title: "", item, mode: "n2e",
+    options: opts.map(o => ({ html: esc(o.e), key: o.e })), answer: item.e, reveal: item.e };
+}
+function mcqTranslate(item, pool) {
+  const opts = shuffle([item, ...distractors(item, "n", pool)]);
+  return { type: "mcq", qtype: "Select the correct translation", title: `“${item.e}”`, item, mode: "e2n",
+    options: opts.map(o => ({ html: nat(o.n, "n") + (S.translit ? `<span class="s">${esc(o.t)}</span>` : ""), key: o.n, speak: o.n })),
+    answer: item.n, reveal: item.n, revealSub: item.t };
+}
+function mcqListen(item, pool) {
+  const opts = shuffle([item, ...distractors(item, "n", pool)]);
+  return { type: "mcq", qtype: "Listen", title: "What do you hear?", item, mode: "listen",
+    options: opts.map(o => ({ html: nat(o.n, "n"), key: o.n })), answer: item.n, reveal: item.n, revealSub: `${item.t} — ${item.e}` };
+}
+function buildToNative(s, sentPool, itemPool) {
+  const ans = tokens(s.n);
+  const extra = new Set();
+  for (const x of shuffle([...sentPool.flatMap(z => tokens(z.n)), ...itemPool.map(z => z.n)])) { if (!ans.includes(x)) extra.add(x); if (extra.size >= Math.min(4, Math.max(2, 7 - ans.length))) break; }
+  return { type: "build", qtype: "Write this in " + course().name, title: "", sentence: s, target: "n",
+    bank: shuffle([...ans, ...extra]), answer: s.n, reveal: s.n, revealSub: s.t };
+}
+function buildToEnglish(s, sentPool) {
+  const ans = tokens(s.e);
+  const extra = new Set();
+  for (const x of shuffle(sentPool.flatMap(z => tokens(z.e)))) { if (!ans.map(normEn).includes(normEn(x))) extra.add(x); if (extra.size >= 3) break; }
+  return { type: "build", qtype: "Translate this sentence", title: "", sentence: s, target: "e",
+    bank: shuffle([...ans, ...extra]), answer: s.e, reveal: s.e };
+}
+function matchPairs(items) {
+  return { type: "match", qtype: "Tap the matching pairs", title: "", pairs: pick(items, Math.min(5, items.length)) };
+}
+
+function buildLesson(unitIdx, lessonIdx) {
+  const u = course().units[unitIdx];
+  const items = u.items, half = Math.ceil(items.length / 2);
+  const pool = allItems();
+  const prior = course().units.slice(0, unitIdx + 1).flatMap(x => x.sentences || []);
+  let focus, ex = [];
+  if (lessonIdx === 0) focus = items.slice(0, half);
+  else if (lessonIdx === 1) focus = items.slice(half);
+  else focus = items;
+  const listen = canSpeak(L());
+  const seen = P().seen || (P().seen = {});
+
+  if (lessonIdx < 2) {
+    for (const it of focus) {
+      if (!seen[it.n]) ex.push({ type: "intro", qtype: "New word", item: it });
+      ex.push(mcqMeaning(it, pool));
+    }
+    for (const it of shuffle(focus)) ex.push(listen && Math.random() < .5 ? mcqListen(it, items) : mcqTranslate(it, pool));
+    ex.push(matchPairs(focus.length >= 4 ? focus : items));
+    const sents = u.sentences || [];
+    if (lessonIdx === 1) for (const s of sents.slice(0, 2)) ex.push(buildToEnglish(s, prior));
+    else if (sents[0]) ex.push(buildToEnglish(sents[0], prior));
+  } else {
+    for (const it of pick(items, 4)) ex.push(mcqTranslate(it, pool));
+    for (const it of pick(items, 2)) ex.push(listen ? mcqListen(it, items) : mcqMeaning(it, pool));
+    ex.push(matchPairs(items));
+    for (const s of u.sentences || []) ex.push(Math.random() < .55 ? buildToNative(s, prior, items) : buildToEnglish(s, prior));
+  }
+  // keep intros directly before their first question; shuffle the rest lightly in blocks
+  return ex;
+}
+function buildPractice() {
+  const units = course().units.filter((u, i) => unitDone(u) > 0);
+  if (!units.length) return null;
+  const items = units.flatMap(u => u.items), sents = units.flatMap(u => u.sentences || []), pool = allItems();
+  const ex = [];
+  for (const it of pick(items, 4)) ex.push(mcqTranslate(it, pool));
+  for (const it of pick(items, 3)) ex.push(canSpeak(L()) ? mcqListen(it, items) : mcqMeaning(it, pool));
+  ex.push(matchPairs(items));
+  for (const s of pick(sents, 3)) ex.push(Math.random() < .5 ? buildToNative(s, sents, items) : buildToEnglish(s, sents));
+  return shuffle(ex.filter(e => e.type !== "match")).concat(ex.filter(e => e.type === "match"));
+}
+function buildLetterQuiz(kind) {
+  const a = course().alphabet, set = kind === "v" ? a.vowels : kind === "c" ? a.consonants : a.vowels.concat(a.consonants);
+  const asItems = set.map(([n, t]) => ({ n, t, e: t }));
+  const ex = [];
+  for (const it of pick(asItems, 6)) {
+    const opts = shuffle([it, ...distractors(it, "t", asItems)]);
+    ex.push({ type: "mcq", qtype: "Which sound is this letter?", title: "", item: it, mode: "letter",
+      options: opts.map(o => ({ html: esc(o.t), key: o.t })), answer: it.t, reveal: it.t, revealSub: it.n });
+  }
+  for (const it of pick(asItems, 4)) {
+    const opts = shuffle([it, ...distractors(it, "n", asItems)]);
+    ex.push({ type: "mcq", qtype: "Find the letter", title: `Which letter says “${it.t}”?`, item: it, mode: "e2n", grid: true,
+      options: opts.map(o => ({ html: nat(o.n, "n"), key: o.n, speak: o.n })), answer: it.n, reveal: it.n, revealSub: it.t });
+  }
+  return ex;
+}
+
+/* ---------- Views ---------- */
+let view = S.lang ? "home" : "pick";
+let tab = "learn";
+const app = $("#app");
+
+function topBar() {
+  const c = course();
+  return `<header class="top"><div class="wrap">
+    <button class="brand" data-act="home" aria-label="Bhasha home"><span class="logo">భ</span>Bhasha</button>
+    ${c ? `<button class="langbtn" data-act="pick" title="Change language"><span class="${S.lang}" lang="${S.lang}">${esc(c.native)}</span></button>` : ""}
+    <span class="stat fire" title="Day streak">🔥 ${liveStreak()}</span>
+    ${c ? `<span class="stat xp" title="Total XP">⚡ ${P().xp}</span>` : ""}
+  </div></header>`;
+}
+
+function render() {
+  if (view === "pick") return renderPick();
+  if (view === "home") return renderHome();
+}
+
+function renderPick() {
+  app.innerHTML = topBar() + `<main class="wrap">
+    <section class="hero">
+      <h1>Learn Telugu &amp; Odia,<br>five minutes a day</h1>
+      <p>Bite-sized lessons with words, sentences, letters and pronunciation. Pick a language to start — you can switch any time.</p>
+    </section>
+    <div class="langs">
+      ${Object.entries(C).map(([k, c]) => `<button class="langcard" data-lang="${k}">
+        <span class="big ${k}" lang="${k}">${esc(c.native)}</span>
+        <span class="nm">${esc(c.name)}</span>
+        <span class="rg">${esc(c.region)}</span>
+        <span class="pg">${doneLessons(k)} / ${totalLessons(k)} lessons</span>
+      </button>`).join("")}
+    </div>
+    <div class="features">
+      <div class="feature"><b>🧩 Game-like drills</b>Multiple choice, matching pairs and word-tile sentences.</div>
+      <div class="feature"><b>🔤 Learn the script</b>Every letter of the alphabet, with a letter quiz.</div>
+      <div class="feature"><b>🔊 Hear it spoken</b>Uses your device's voice for the language when one is installed.</div>
+      <div class="feature"><b>🔥 Streaks &amp; XP</b>Set a daily goal. Progress stays on this device.</div>
+    </div>
+  </main>`;
+}
+
+function ring(pct) {
+  const r = 19, c = 2 * Math.PI * r, off = c * (1 - Math.min(1, pct));
+  return `<svg class="ring" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--line)" stroke-width="6"/>
+  <circle cx="23" cy="23" r="${r}" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}" transform="rotate(-90 23 23)"/>
+  <text x="23" y="28" text-anchor="middle" font-size="14">${pct >= 1 ? "✓" : "⚡"}</text></svg>`;
+}
+
+function renderHome() {
+  const c = course();
+  const xpToday = S.daily[today()] || 0;
+  let body = "";
+  body += `<nav class="tabs" role="tablist">
+    ${[["learn","🗺️","Learn"],["letters","🔤","Letters"],["me","📊","Progress"]].map(([k,i,l]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${tab===k}">${i} ${l}</button>`).join("")}
+  </nav>`;
+  if (tab === "learn") {
+    body += `<div class="goal">${ring(xpToday / S.goal)}<div style="flex:1"><b>Daily goal: ${Math.min(xpToday, S.goal)} / ${S.goal} XP</b><small>${xpToday >= S.goal ? "Goal reached — nice work!" : "Finish a lesson to earn 10–15 XP."}</small></div>
+      <button class="btn ghost" data-act="practice" style="padding:10px 14px">Practice</button></div>`;
+    let currentFound = false;
+    c.units.forEach((u, i) => {
+      const unlocked = unitUnlocked(i), done = unitDone(u), color = UNIT_COLORS[i % UNIT_COLORS.length];
+      body += `<section><div class="unit ${unlocked ? "" : "locked"}" style="background:${color}">
+        <span class="ico">${u.icon}</span><div><p>Unit ${i + 1}</p><h2>${esc(u.title)}</h2></div></div><div class="path">`;
+      for (let j = 0; j < LESSONS_PER_UNIT; j++) {
+        const isDone = done > j, avail = unlocked && done >= j;
+        const isCurrent = avail && !isDone && !currentFound;
+        if (isCurrent) currentFound = true;
+        const offset = [0, -60, 40, -20, 60][(i * LESSONS_PER_UNIT + j) % 5];
+        const cls = isDone ? "done" : avail ? "current" : "locked";
+        const icon = isDone ? "★" : !avail ? "🔒" : j === 2 ? "🏆" : "▶";
+        const label = j === 2 ? "Review" : `Lesson ${j + 1}`;
+        body += `<button class="node ${cls}" style="transform:translateX(${offset}px);${avail && !isDone ? `background:${color};box-shadow:0 6px 0 color-mix(in srgb,${color} 70%,#000)` : ""}"
+          ${avail ? `data-lesson="${i}:${j}"` : "disabled"} aria-label="${esc(u.title)} ${label}${isDone ? " (completed)" : !avail ? " (locked)" : ""}">
+          ${isCurrent ? `<span class="start-bubble">START</span>` : ""}${icon}<span class="lbl">${label}</span></button>`;
+      }
+      body += `</div></section>`;
+    });
+    if (!currentFound) body += `<div class="note" style="text-align:center;margin-top:24px">🎉 You've completed every unit in ${esc(c.name)}. Keep your streak going with <b>Practice</b>, or try the other language.</div>`;
+  } else if (tab === "letters") {
+    const a = c.alphabet, sp = canSpeak(S.lang);
+    body += `<div class="note">${esc(c.name)} is written in the ${esc(c.script)} script. Consonants carry an inherent “a” sound. ${sp ? "Tap a letter to hear it." : "Install " + (/^[AEIOU]/.test(c.name) ? "an " : "a ") + esc(c.name) + " voice on your device (text-to-speech settings) to hear letters spoken."}</div>`;
+    for (const [k, title, list] of [["v", "Vowels", a.vowels], ["c", "Consonants", a.consonants]]) {
+      body += `<div class="letters-head"><h2>${title}</h2><button class="btn ghost" data-quiz="${k}" style="padding:8px 14px;font-size:.8rem">Quiz</button></div>
+        <div class="grid">${list.map(([g, r]) => `<button class="letter" data-say="${esc(g)}"><span class="g ${S.lang}" lang="${S.lang}">${esc(g)}</span><span class="r">${esc(r)}</span></button>`).join("")}</div>`;
+    }
+    body += `<div style="margin:22px 0"><button class="btn wide" data-quiz="a">Practise all letters</button></div>`;
+  } else {
+    const days = [...Array(7)].map((_, i) => dayOffset(i - 6));
+    const max = Math.max(S.goal, ...days.map(d => S.daily[d] || 0));
+    const words = c.units.reduce((a, u) => a + (unitDone(u) >= 2 ? u.items.length : unitDone(u) === 1 ? Math.ceil(u.items.length / 2) : 0), 0);
+    body += `<div class="cards">
+      <div class="card"><div class="v">🔥 ${liveStreak()}</div><div class="k">Day streak</div></div>
+      <div class="card"><div class="v">⚡ ${P().xp}</div><div class="k">${esc(c.name)} XP</div></div>
+      <div class="card"><div class="v">📘 ${doneLessons(S.lang)}/${totalLessons(S.lang)}</div><div class="k">Lessons done</div></div>
+      <div class="card"><div class="v">💬 ${words}</div><div class="k">Words learned</div></div>
+    </div>
+    <div class="card"><b>XP this week</b>
+      <div class="week">${days.map(d => { const v = S.daily[d] || 0; return `<div class="bar" title="${d}: ${v} XP"><i style="height:${Math.round(v / max * 80)}%;${v >= S.goal ? "" : "opacity:.55"}"></i><span>${"SMTWTFS"[new Date(d + "T12:00").getDay()]}</span></div>`; }).join("")}</div>
+    </div>
+    <div style="margin-top:14px">
+      <div class="row"><span><b>Daily goal</b></span><select data-set="goal">${[10,20,30,50].map(g => `<option value="${g}" ${S.goal===g?"selected":""}>${g} XP / day</option>`).join("")}</select></div>
+      <div class="row"><span><b>Show transliteration</b><br><small style="color:var(--ink-soft)">Roman letters under ${esc(c.name)} words</small></span><input type="checkbox" data-set="translit" ${S.translit?"checked":""} style="width:22px;height:22px"></div>
+      <div class="row"><span><b>Sound effects</b></span><input type="checkbox" data-set="sound" ${S.sound?"checked":""} style="width:22px;height:22px"></div>
+      <div class="row"><span><b>Voice for ${esc(c.name)}</b><br><small style="color:var(--ink-soft)">${canSpeak(S.lang) ? esc(voices[S.lang].name) : "None found on this device — listening drills are skipped"}</small></span></div>
+      <div class="row"><span><b>Reset ${esc(c.name)} progress</b></span><button class="btn bad" data-act="reset" style="padding:8px 14px;font-size:.8rem">Reset</button></div>
+    </div>`;
+  }
+  app.innerHTML = topBar() + `<main class="wrap">${body}<p class="foot-note">Bhasha · free practice for Telugu &amp; Odia · progress is stored only in this browser</p></main>`;
+  if (tab === "learn") { const cur = $(".node.current"); if (cur && !render._scrolled) { render._scrolled = true; cur.scrollIntoView({ block: "center" }); } }
+}
+
+app.addEventListener("click", e => {
+  const t = e.target.closest("button,[data-act]"); if (!t) return;
+  if (t.dataset.lang) { S.lang = t.dataset.lang; save(); view = "home"; tab = "learn"; render._scrolled = false; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.tab) { tab = t.dataset.tab; render(); return; }
+  if (t.dataset.say) { speak(t.dataset.say); return; }
+  if (t.dataset.quiz) { startLesson(buildLetterQuiz(t.dataset.quiz), { kind: "letters" }); return; }
+  if (t.dataset.lesson) { const [u, l] = t.dataset.lesson.split(":").map(Number); startLesson(buildLesson(u, l), { kind: "lesson", u, l }); return; }
+  const act = t.dataset.act;
+  if (act === "pick") { view = "pick"; render(); }
+  else if (act === "home") { view = S.lang ? "home" : "pick"; render(); }
+  else if (act === "practice") { const ex = buildPractice(); if (!ex) toast("Finish your first lesson to unlock practice."); else startLesson(ex, { kind: "practice" }); }
+  else if (act === "reset") { if (confirm(`Reset all ${course().name} progress?`)) { S.progress[S.lang] = { done: {}, xp: 0, letters: 0 }; save(); render(); } }
+});
+app.addEventListener("change", e => {
+  const k = e.target.dataset.set; if (!k) return;
+  S[k] = e.target.type === "checkbox" ? e.target.checked : Number(e.target.value); save(); render();
+});
+
+/* ---------- Lesson runner ---------- */
+let R = null; // runner state
+function startLesson(exercises, meta) {
+  R = { queue: exercises.slice(), total: exercises.length, done: 0, hearts: MAX_HEARTS, mistakes: 0, meta, state: "ask", sel: null, built: [], start: Date.now() };
+  view = "lesson"; window.scrollTo(0, 0); showEx();
+}
+function current() { return R.queue[0]; }
+
+function showEx() {
+  const ex = current();
+  if (!ex) return finish(true);
+  R.state = "ask"; R.sel = null; R.built = []; R.matchSel = null; R.matched = new Set();
+  const pct = Math.round(R.done / R.total * 100);
+  let inner = "";
+  const sp = canSpeak(L());
+  if (ex.type === "intro") {
+    inner = `<div class="qtype">${ex.qtype}</div><div class="intro">
+      ${sp ? `<button class="speak big" data-speak="${esc(ex.item.n)}" aria-label="Play">🔊</button>` : `<div class="mascot" style="margin:0 auto 14px">✨</div>`}
+      ${nat(ex.item.n, "n")}<span class="t">${esc(ex.item.t)}</span><span class="e">${esc(ex.item.e)}</span></div>`;
+  } else if (ex.type === "mcq") {
+    inner = `<div class="qtype">${ex.qtype}</div>`;
+    if (ex.title) inner += `<h1 class="qtitle">${esc(ex.title)}</h1>`;
+    if (ex.mode === "n2e" || ex.mode === "letter") {
+      inner += `<div class="prompt"><div class="mascot">🦚</div>${sp ? `<button class="speak" data-speak="${esc(ex.item.n)}" aria-label="Play">🔊</button>` : ""}
+        <div class="bubble">${nat(ex.item.n, "n")}${S.translit && ex.mode === "n2e" ? `<span class="t">${esc(ex.item.t)}</span>` : ""}</div></div>`;
+    } else if (ex.mode === "listen") {
+      inner += `<button class="speak big" data-speak="${esc(ex.item.n)}" aria-label="Play again">🔊</button>
+        <div style="text-align:center;margin:-14px 0 20px"><button class="stat" data-speak-slow="${esc(ex.item.n)}" style="margin:auto;color:var(--sky)">🐢 slower</button></div>`;
+    }
+    inner += `<div class="opts ${ex.grid || ex.options.every(o => o.key.length < 14) && ex.mode !== "n2e" ? "two" : ""}">${ex.options.map((o, i) =>
+      `<button class="opt" data-opt="${i}"><span class="k">${i + 1}</span><span>${o.html}</span></button>`).join("")}</div>`;
+  } else if (ex.type === "build") {
+    const s = ex.sentence, src = ex.target === "n" ? `<span>${esc(s.e)}</span>` : nat(s.n, "n") + (S.translit ? `<span class="t">${esc(s.t)}</span>` : "");
+    inner = `<div class="qtype">${ex.qtype}</div>
+      <div class="prompt"><div class="mascot">🦚</div>${ex.target === "e" && sp ? `<button class="speak" data-speak="${esc(s.n)}" aria-label="Play">🔊</button>` : ""}<div class="bubble"><span class="n" style="${ex.target === "n" ? "font-size:1.25rem;font-family:Nunito" : ""}">${src}</span></div></div>
+      <div class="answer-line l2" id="line"></div>
+      <div class="bank" id="bank">${ex.bank.map((w, i) => `<button class="tile ${ex.target === "n" ? "n " + L() : ""}" data-tile="${i}">${esc(w)}</button>`).join("")}</div>`;
+  } else if (ex.type === "match") {
+    const left = shuffle(ex.pairs.map((p, i) => i)), right = shuffle(ex.pairs.map((p, i) => i));
+    inner = `<div class="qtype">${ex.qtype}</div><h1 class="qtitle">Match the words</h1>
+      <div class="opts two">${left.map((li, k) => `
+        <button class="opt match" data-m="n${li}">${nat(ex.pairs[li].n, "n")}</button>
+        <button class="opt match" data-m="e${right[k]}">${esc(ex.pairs[right[k]].e)}</button>`).join("")}</div>`;
+  }
+  const btnLabel = ex.type === "intro" ? "Continue" : "Check";
+  const disabled = ex.type === "intro" ? "" : "disabled";
+  app.innerHTML = `<div class="lesson"><div class="wrap" style="width:100%">
+      <div class="lhead"><button class="x" data-quit aria-label="Quit lesson">✕</button>
+        <div class="prog" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+        <span class="hearts" title="Hearts">❤️ ${R.hearts}</span></div>
+    </div>
+    <div class="lbody"><div class="wrap">${inner}</div></div>
+    <footer class="lfoot" id="foot"><div class="wrap">
+      <div class="fb" id="fb">${ex.type === "match" ? `<span style="color:var(--ink-soft)">Tap ${/^[AEIOU]/.test(course().name) ? "an" : "a"} ${esc(course().name)} word, then its meaning.</span>` : ""}</div>
+      ${ex.type === "match" ? "" : `<button class="btn" id="go" ${disabled}>${btnLabel}</button>`}
+    </div></footer></div>`;
+  if ((ex.type === "intro" || ex.mode === "listen") && sp) setTimeout(() => speak(ex.item.n), 250);
+  if (ex.type === "build" && ex.target === "e" && sp) setTimeout(() => speak(ex.sentence.n), 250);
+}
+
+function updateBuildUI() {
+  const ex = current(), line = $("#line");
+  line.innerHTML = R.built.map((bi, k) => `<button class="tile ${ex.target === "n" ? "n " + L() : ""}" data-unbuild="${k}">${esc(ex.bank[bi])}</button>`).join("");
+  document.querySelectorAll("[data-tile]").forEach(b => b.classList.toggle("used", R.built.includes(+b.dataset.tile)));
+  $("#go").disabled = !R.built.length;
+}
+
+function check() {
+  const ex = current();
+  if (ex.type === "intro") { P().seen = P().seen || {}; P().seen[ex.item.n] = 1; save(); return advance(true, true); }
+  let ok = false;
+  if (ex.type === "mcq") {
+    if (R.sel == null) return;
+    ok = ex.options[R.sel].key === ex.answer;
+    document.querySelectorAll("[data-opt]").forEach((b, i) => { b.disabled = true; if (ex.options[i].key === ex.answer) b.classList.add("right"); else if (i === R.sel) b.classList.add("wrong"); });
+  } else if (ex.type === "build") {
+    if (!R.built.length) return;
+    const got = R.built.map(i => ex.bank[i]).join(" ");
+    ok = ex.target === "n" ? normN(got) === normN(ex.answer) : normEn(got) === normEn(ex.answer);
+    document.querySelectorAll(".tile").forEach(b => b.disabled = true);
+  }
+  feedback(ok);
+}
+
+function feedback(ok) {
+  const ex = current();
+  R.state = "fb";
+  chime(ok);
+  const foot = $("#foot"), fb = $("#fb"), go = $("#go");
+  foot.classList.add(ok ? "right" : "wrong");
+  const isNat = ex.mode === "e2n" || ex.mode === "listen" || ex.target === "n";
+  const ans = isNat ? nat(ex.reveal) : esc(ex.reveal);
+  const sub = ex.revealSub && S.translit || ex.mode === "listen" ? `<br><small>${esc(ex.revealSub || "")}</small>` : "";
+  const praise = ["Excellent!", "Great job!", "Correct!", "Nice!", "Well done!"][Math.random() * 5 | 0];
+  fb.innerHTML = ok ? `<b>${praise}</b>${ex.mode === "listen" || ex.target === "e" ? `<span class="ans">${ans}${sub}</span>` : ""}`
+                    : `<b>Correct answer:</b><span class="ans">${ans}${sub}</span>`;
+  go.disabled = false; go.textContent = "Continue"; go.className = "btn " + (ok ? "ok" : "bad");
+  if (!ok) {
+    R.hearts--; R.mistakes++;
+    $(".hearts").textContent = "❤️ " + R.hearts;
+    $(".lbody .wrap").classList.add("shake");
+  }
+  if (ok && canSpeak(L()) && (ex.mode === "e2n" || ex.target === "n")) speak(ex.answer);
+  R.lastOk = ok;
+}
+
+function advance(ok, isIntro) {
+  const ex = R.queue.shift();
+  if (ok) { if (!isIntro) R.done++; else { R.total--; } }
+  else { R.queue.push(ex.type === "mcq" ? { ...ex, options: shuffle(ex.options) } : ex.type === "build" ? { ...ex, bank: shuffle(ex.bank) } : ex); }
+  if (R.hearts <= 0) return finish(false);
+  showEx();
+}
+
+function finish(passed) {
+  view = "result";
+  const m = R.meta;
+  let xp = 0;
+  if (passed) {
+    xp = (m.kind === "letters" ? 5 : 10) + (R.mistakes === 0 ? 5 : 0);
+    if (m.kind === "lesson") { const u = course().units[m.u]; P().done[u.id] = Math.max(unitDone(u), m.l + 1); }
+    if (m.kind === "letters") P().letters++;
+    const before = S.daily[today()] || 0;
+    addXp(xp);
+    if (before < S.goal && before + xp >= S.goal) setTimeout(() => toast("🎯 Daily goal reached!"), 600);
+  }
+  const acc = Math.round(R.total / Math.max(1, R.total + R.mistakes) * 100);
+  const secs = Math.round((Date.now() - R.start) / 1000);
+  app.innerHTML = `<div class="wrap"><div class="result ${passed ? "" : "fail"}">
+    <div class="emoji">${passed ? (R.mistakes === 0 ? "🏆" : "🎉") : "💔"}</div>
+    <h1>${passed ? (R.mistakes === 0 ? "Perfect lesson!" : "Lesson complete!") : "Out of hearts"}</h1>
+    <p>${passed ? (m.kind === "lesson" && m.l === 2 ? `You finished the <b>${esc(course().units[m.u].title)}</b> unit.` : "Keep it up — every lesson counts.") : "Mistakes happen. Try the lesson again — you'll get it."}</p>
+    ${passed ? `<div class="rstats">
+      <div class="rstat"><div class="k">XP</div><div class="v">⚡ ${xp}</div></div>
+      <div class="rstat ok"><div class="k">Accuracy</div><div class="v">${acc}%</div></div>
+      <div class="rstat fire"><div class="k">Streak</div><div class="v">🔥 ${liveStreak()}</div></div></div>
+      <p style="font-size:.85rem">Time: ${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}</p>` : ""}
+    <div style="display:grid;gap:12px;margin-top:10px">
+      ${passed ? "" : `<button class="btn" data-retry>Try again</button>`}
+      <button class="btn ${passed ? "" : "ghost"}" data-back>Continue</button>
+    </div></div></div>`;
+}
+
+document.addEventListener("click", e => {
+  if (!R || (view !== "lesson" && view !== "result")) return;
+  const t = e.target.closest("button"); if (!t) return;
+  if (view === "result") {
+    if (t.hasAttribute("data-back")) { R = null; view = "home"; render._scrolled = false; render(); }
+    else if (t.hasAttribute("data-retry")) { const m = R.meta; if (m.kind === "lesson") startLesson(buildLesson(m.u, m.l), m); else render(); }
+    return;
+  }
+  const ex = current();
+  if (t.hasAttribute("data-quit")) { if (R.done === 0 || confirm("Quit this lesson? Your progress in it will be lost.")) { R = null; view = "home"; render(); } return; }
+  if (t.dataset.speak) { speak(t.dataset.speak); return; }
+  if (t.dataset.speakSlow) { speak(t.dataset.speakSlow, L(), true); return; }
+  if (t.id === "go") { if (R.state === "ask") check(); else advance(R.lastOk); return; }
+  if (R.state !== "ask") return;
+  if (t.dataset.opt != null) {
+    R.sel = +t.dataset.opt;
+    document.querySelectorAll("[data-opt]").forEach(b => b.classList.toggle("sel", b === t));
+    $("#go").disabled = false;
+    const o = ex.options[R.sel]; if (o.speak) speak(o.speak);
+    return;
+  }
+  if (t.dataset.tile != null) { R.built.push(+t.dataset.tile); if (ex.target === "n") speak(ex.bank[+t.dataset.tile]); updateBuildUI(); return; }
+  if (t.dataset.unbuild != null) { R.built.splice(+t.dataset.unbuild, 1); updateBuildUI(); return; }
+  if (t.dataset.m) {
+    const side = t.dataset.m[0], idx = +t.dataset.m.slice(1);
+    if (side === "n") speak(ex.pairs[idx].n);
+    if (!R.matchSel || R.matchSel.side === side) {
+      document.querySelectorAll("[data-m]").forEach(b => b.classList.remove("sel"));
+      t.classList.add("sel"); R.matchSel = { side, idx, el: t }; return;
+    }
+    const a = R.matchSel; R.matchSel = null;
+    if (a.idx === idx) {
+      [a.el, t].forEach(b => { b.classList.remove("sel"); b.classList.add("right"); });
+      setTimeout(() => [a.el, t].forEach(b => { b.classList.remove("right"); b.classList.add("gone"); }), 350);
+      R.matched.add(idx); chime(true);
+      if (R.matched.size === ex.pairs.length) {
+        R.state = "fb"; R.lastOk = true;
+        const foot = $("#foot"); foot.classList.add("right");
+        $("#fb").innerHTML = "<b>All matched!</b>";
+        foot.querySelector(".wrap").insertAdjacentHTML("beforeend", `<button class="btn ok" id="go">Continue</button>`);
+      }
+    } else {
+      [a.el, t].forEach(b => { b.classList.remove("sel"); b.classList.add("wrong", "shake"); setTimeout(() => b.classList.remove("wrong", "shake"), 400); });
+      R.matchMiss = (R.matchMiss || 0) + 1; chime(false);
+    }
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (view !== "lesson" || !R) return;
+  const ex = current();
+  if (e.key === "Enter") { const go = $("#go"); if (go && !go.disabled) { e.preventDefault(); go.click(); } return; }
+  if (R.state === "ask" && ex && ex.type === "mcq" && /^[1-9]$/.test(e.key)) { const b = document.querySelector(`[data-opt="${+e.key - 1}"]`); if (b) b.click(); }
+  if (R.state === "ask" && ex && ex.type === "build" && e.key === "Backspace" && R.built.length) { R.built.pop(); updateBuildUI(); }
+});
+
+window.__bhasha = { get runner() { return R; } };
+render();
+})();
+</script>
+</body>
+</html>
