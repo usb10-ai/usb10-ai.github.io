@@ -245,17 +245,29 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e
 function liveStreak() { return (S.last === today() || S.last === dayOffset(-1)) ? S.streak : 0; }
 
 /* ---------- Speech ---------- */
+// In the Android app, window.AndroidTTS (native TextToSpeech) replaces the Web Speech API,
+// which Android's WebView does not provide.
+const NATIVE = window.AndroidTTS || null;
+const IN_APP = !!NATIVE;
 const voices = {};
 function refreshVoices() {
+  if (NATIVE) {
+    for (const k in C) { let name = ""; try { name = NATIVE.voiceName(C[k].speech); } catch (e) {} voices[k] = name ? { name, native: true } : null; }
+    return;
+  }
   if (!("speechSynthesis" in window)) return;
   const v = speechSynthesis.getVoices();
   for (const k in C) voices[k] = v.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(C[k].speech + "-")) || v.find(x => x.lang && x.lang.toLowerCase() === C[k].speech) || null;
 }
-if ("speechSynthesis" in window) { refreshVoices(); speechSynthesis.addEventListener?.("voiceschanged", () => { refreshVoices(); if (view === "home") render(); }); }
+// Called by the Android app once its speech engine has started.
+window.bhashaVoicesReady = () => { refreshVoices(); if (view === "home") render(); };
+if (NATIVE) refreshVoices();
+else if ("speechSynthesis" in window) { refreshVoices(); speechSynthesis.addEventListener?.("voiceschanged", () => { refreshVoices(); if (view === "home") render(); }); }
 const canSpeak = lang => !!voices[lang];
 function speak(text, lang = S.lang, slow) {
   if (!canSpeak(lang)) return;
   try {
+    if (NATIVE) { NATIVE.speak(text, C[lang].speech, slow ? .6 : .85); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.voice = voices[lang]; u.lang = voices[lang].lang; u.rate = slow ? .6 : .85;
@@ -445,6 +457,7 @@ function renderPick() {
       <div class="feature"><b>🔊 Hear it spoken</b>Uses your device's voice for the language when one is installed.</div>
       <div class="feature"><b>🔥 Streaks &amp; XP</b>Set a daily goal. Progress stays on this device.</div>
     </div>
+    ${IN_APP ? "" : `<p style="text-align:center;margin:-10px 0 30px"><a class="btn ghost" href="Bhasha.apk" download style="text-decoration:none">📱 Download the Android app</a></p>`}
   </main>`;
 }
 
@@ -487,7 +500,7 @@ function renderHome() {
     if (!currentFound) body += `<div class="note" style="text-align:center;margin-top:24px">🎉 You've completed every unit in ${esc(c.name)}. Keep your streak going with <b>Practice</b>, or try the other language.</div>`;
   } else if (tab === "letters") {
     const a = c.alphabet, sp = canSpeak(S.lang);
-    body += `<div class="note">${esc(c.name)} is written in the ${esc(c.script)} script. Consonants carry an inherent “a” sound. ${sp ? "Tap a letter to hear it." : "Install " + (/^[AEIOU]/.test(c.name) ? "an " : "a ") + esc(c.name) + " voice on your device (text-to-speech settings) to hear letters spoken."}</div>`;
+    body += `<div class="note">${esc(c.name)} is written in the ${esc(c.script)} script. Consonants carry an inherent “a” sound. ${sp ? "Tap a letter to hear it." : (IN_APP ? "No " + esc(c.name) + " voice is installed. Open Progress → Get voice to add one in Android's text-to-speech settings." : "Install " + (/^[AEIOU]/.test(c.name) ? "an " : "a ") + esc(c.name) + " voice on your device (text-to-speech settings) to hear letters spoken.")}</div>`;
     for (const [k, title, list] of [["v", "Vowels", a.vowels], ["c", "Consonants", a.consonants]]) {
       body += `<div class="letters-head"><h2>${title}</h2><button class="btn ghost" data-quiz="${k}" style="padding:8px 14px;font-size:.8rem">Quiz</button></div>
         <div class="grid">${list.map(([g, r]) => `<button class="letter" data-say="${esc(g)}"><span class="g ${S.lang}" lang="${S.lang}">${esc(g)}</span><span class="r">${esc(r)}</span></button>`).join("")}</div>`;
@@ -510,11 +523,11 @@ function renderHome() {
       <div class="row"><span><b>Daily goal</b></span><select data-set="goal">${[10,20,30,50].map(g => `<option value="${g}" ${S.goal===g?"selected":""}>${g} XP / day</option>`).join("")}</select></div>
       <div class="row"><span><b>Show transliteration</b><br><small style="color:var(--ink-soft)">Roman letters under ${esc(c.name)} words</small></span><input type="checkbox" data-set="translit" ${S.translit?"checked":""} style="width:22px;height:22px"></div>
       <div class="row"><span><b>Sound effects</b></span><input type="checkbox" data-set="sound" ${S.sound?"checked":""} style="width:22px;height:22px"></div>
-      <div class="row"><span><b>Voice for ${esc(c.name)}</b><br><small style="color:var(--ink-soft)">${canSpeak(S.lang) ? esc(voices[S.lang].name) : "None found on this device — listening drills are skipped"}</small></span></div>
+      <div class="row"><span><b>Voice for ${esc(c.name)}</b><br><small style="color:var(--ink-soft)">${canSpeak(S.lang) ? esc(voices[S.lang].name) : "None found on this device — listening drills are skipped"}</small></span>${IN_APP && !canSpeak(S.lang) ? `<button class="btn ghost" data-act="ttsSettings" style="padding:8px 14px;font-size:.8rem">Get voice</button>` : ""}</div>
       <div class="row"><span><b>Reset ${esc(c.name)} progress</b></span><button class="btn bad" data-act="reset" style="padding:8px 14px;font-size:.8rem">Reset</button></div>
     </div>`;
   }
-  app.innerHTML = topBar() + `<main class="wrap">${body}<p class="foot-note">Bhasha · free practice for Telugu &amp; Odia · progress is stored only in this browser</p></main>`;
+  app.innerHTML = topBar() + `<main class="wrap">${body}<p class="foot-note">Bhasha · free practice for Telugu &amp; Odia · progress is stored only ${IN_APP ? "on this phone" : "in this browser"}${IN_APP ? "" : ` · <a href="Bhasha.apk" download>Get the Android app</a>`}</p></main>`;
   if (tab === "learn") { const cur = $(".node.current"); if (cur && !render._scrolled) { render._scrolled = true; cur.scrollIntoView({ block: "center" }); } }
 }
 
@@ -529,6 +542,7 @@ app.addEventListener("click", e => {
   if (act === "pick") { view = "pick"; render(); }
   else if (act === "home") { view = S.lang ? "home" : "pick"; render(); }
   else if (act === "practice") { const ex = buildPractice(); if (!ex) toast("Finish your first lesson to unlock practice."); else startLesson(ex, { kind: "practice" }); }
+  else if (act === "ttsSettings") { try { NATIVE.openSettings(); } catch (e) {} }
   else if (act === "reset") { if (confirm(`Reset all ${course().name} progress?`)) { S.progress[S.lang] = { done: {}, xp: 0, letters: 0 }; save(); render(); } }
 });
 app.addEventListener("change", e => {
@@ -735,6 +749,13 @@ document.addEventListener("keydown", e => {
   if (R.state === "ask" && ex && ex.type === "build" && e.key === "Backspace" && R.built.length) { R.built.pop(); updateBuildUI(); }
 });
 
+window.bhashaBack = () => {
+  if (view === "lesson") { const q = $("[data-quit]"); if (q) q.click(); return true; }
+  if (view === "result") { const b = $("[data-back]"); if (b) b.click(); return true; }
+  if (view === "home" && tab !== "learn") { tab = "learn"; render(); return true; }
+  if (view === "pick" && S.lang) { view = "home"; render(); return true; }
+  return false;
+};
 window.__bhasha = { get runner() { return R; } };
 render();
 })();
