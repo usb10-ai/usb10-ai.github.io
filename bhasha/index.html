@@ -218,7 +218,16 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const pick = (a, n) => shuffle(a).slice(0, n);
 const UNIT_COLORS = ["#e8742a", "#3f9b3a", "#2e86c1", "#9b59b6", "#d64545", "#c99400", "#16a085"];
-const LESSONS_PER_UNIT = 3;
+const WORDS_PER_LESSON = 4;
+/* A unit is: word lessons (about 4 new words each), then a Phrases lesson, then a Review. */
+function unitPlan(u) {
+  const n = u.items.length, k = Math.max(1, Math.round(n / WORDS_PER_LESSON)), plan = [];
+  for (let i = 0; i < k; i++) plan.push({ kind: "words", chunk: i, items: u.items.slice(Math.round(i * n / k), Math.round((i + 1) * n / k)) });
+  if ((u.sentences || []).length) plan.push({ kind: "phrases" });
+  plan.push({ kind: "review" });
+  return plan;
+}
+const lessonCount = u => unitPlan(u).length;
 const MAX_HEARTS = 5;
 
 /* ---------- Storage ---------- */
@@ -237,6 +246,14 @@ function load() {
   s.last = s.last || null;
   s.goal = s.goal || 20;
   s.translit = s.translit !== false;
+  if (s.ver !== 2) { // v1 had 3 lessons per unit (2 word lessons + review): keep earned unlocks
+    for (const k in C) for (const u of C[k].units) {
+      const d = s.progress[k].done[u.id] || 0; if (!d) continue;
+      const plan = unitPlan(u), words = plan.filter(x => x.kind === "words").length;
+      s.progress[k].done[u.id] = d >= 3 ? plan.length : d === 2 ? words : Math.floor(words / 2);
+    }
+    s.ver = 2;
+  }
   s.sound = s.sound !== false;
   return s;
 }
@@ -298,9 +315,9 @@ function toast(msg) {
 const P = () => S.progress[S.lang];
 const course = () => C[S.lang];
 const unitDone = (u) => P().done[u.id] || 0;
-function unitUnlocked(i) { return i === 0 || unitDone(course().units[i - 1]) >= LESSONS_PER_UNIT; }
-function totalLessons(lang) { return C[lang].units.length * LESSONS_PER_UNIT; }
-function doneLessons(lang) { return C[lang].units.reduce((a, u) => a + Math.min(LESSONS_PER_UNIT, S.progress[lang].done[u.id] || 0), 0); }
+function unitUnlocked(i) { return i === 0 || unitDone(course().units[i - 1]) >= lessonCount(course().units[i - 1]); }
+function totalLessons(lang) { return C[lang].units.reduce((a, u) => a + lessonCount(u), 0); }
+function doneLessons(lang) { return C[lang].units.reduce((a, u) => a + Math.min(lessonCount(u), S.progress[lang].done[u.id] || 0), 0); }
 function addXp(n) {
   const d = today();
   S.daily[d] = (S.daily[d] || 0) + n;
@@ -359,34 +376,38 @@ function matchPairs(items) {
 }
 
 function buildLesson(unitIdx, lessonIdx) {
-  const u = course().units[unitIdx];
-  const items = u.items, half = Math.ceil(items.length / 2);
-  const pool = allItems();
+  const u = course().units[unitIdx], plan = unitPlan(u), step = plan[lessonIdx];
+  const items = u.items, pool = allItems(), sents = u.sentences || [];
   const prior = course().units.slice(0, unitIdx + 1).flatMap(x => x.sentences || []);
-  let focus, ex = [];
-  if (lessonIdx === 0) focus = items.slice(0, half);
-  else if (lessonIdx === 1) focus = items.slice(half);
-  else focus = items;
   const listen = canSpeak(L());
   const seen = P().seen || (P().seen = {});
+  const ex = [];
 
-  if (lessonIdx < 2) {
+  if (step.kind === "words") {
+    const focus = step.items;
+    const earlier = plan.filter(x => x.kind === "words" && x.chunk < step.chunk).flatMap(x => x.items);
     for (const it of focus) {
       if (!seen[it.n]) ex.push({ type: "intro", qtype: "New word", item: it });
       ex.push(mcqMeaning(it, pool));
     }
     for (const it of shuffle(focus)) ex.push(listen && Math.random() < .5 ? mcqListen(it, items) : mcqTranslate(it, pool));
-    ex.push(matchPairs(focus.length >= 4 ? focus : items));
-    const sents = u.sentences || [];
-    if (lessonIdx === 1) for (const s of sents.slice(0, 2)) ex.push(buildToEnglish(s, prior));
-    else if (sents[0]) ex.push(buildToEnglish(sents[0], prior));
+    // bring back two words from earlier lessons in this unit
+    for (const it of pick(earlier, 2)) ex.push(Math.random() < .5 ? mcqTranslate(it, pool) : mcqMeaning(it, pool));
+    ex.push(matchPairs(focus.concat(pick(earlier, Math.max(0, 5 - focus.length)))));
+    const s1 = sents[step.chunk % Math.max(1, sents.length)];
+    if (s1 && step.chunk > 0) ex.push(buildToEnglish(s1, prior));
+  } else if (step.kind === "phrases") {
+    for (const s of sents) {
+      if (!seen[s.n]) ex.push({ type: "intro", qtype: "New phrase", item: s });
+      ex.push(buildToEnglish(s, prior));
+    }
+    for (const s of pick(sents, Math.min(4, sents.length))) ex.push(buildToNative(s, prior, items));
   } else {
-    for (const it of pick(items, 4)) ex.push(mcqTranslate(it, pool));
-    for (const it of pick(items, 2)) ex.push(listen ? mcqListen(it, items) : mcqMeaning(it, pool));
+    for (const it of pick(items, 5)) ex.push(mcqTranslate(it, pool));
+    for (const it of pick(items, 3)) ex.push(listen ? mcqListen(it, items) : mcqMeaning(it, pool));
     ex.push(matchPairs(items));
-    for (const s of u.sentences || []) ex.push(Math.random() < .55 ? buildToNative(s, prior, items) : buildToEnglish(s, prior));
+    for (const s of pick(sents, 4)) ex.push(Math.random() < .6 ? buildToNative(s, prior, items) : buildToEnglish(s, prior));
   }
-  // keep intros directly before their first question; shuffle the rest lightly in blocks
   return ex;
 }
 function buildPractice() {
@@ -482,15 +503,17 @@ function renderHome() {
     c.units.forEach((u, i) => {
       const unlocked = unitUnlocked(i), done = unitDone(u), color = UNIT_COLORS[i % UNIT_COLORS.length];
       body += `<section><div class="unit ${unlocked ? "" : "locked"}" style="background:${color}">
-        <span class="ico">${u.icon}</span><div><p>Unit ${i + 1}</p><h2>${esc(u.title)}</h2></div></div><div class="path">`;
-      for (let j = 0; j < LESSONS_PER_UNIT; j++) {
+        <span class="ico">${u.icon}</span><div style="flex:1"><p>Unit ${i + 1}</p><h2>${esc(u.title)}</h2></div><span style="font-weight:800;font-size:.85rem;opacity:.9">${Math.min(done, lessonCount(u))}/${lessonCount(u)}</span></div><div class="path">`;
+      const plan = unitPlan(u);
+      for (let j = 0; j < plan.length; j++) {
         const isDone = done > j, avail = unlocked && done >= j;
         const isCurrent = avail && !isDone && !currentFound;
         if (isCurrent) currentFound = true;
-        const offset = [0, -60, 40, -20, 60][(i * LESSONS_PER_UNIT + j) % 5];
+        const offset = [0, -50, -70, -40, 10, 55, 70, 40][(j + i * 3) % 8];
         const cls = isDone ? "done" : avail ? "current" : "locked";
-        const icon = isDone ? "★" : !avail ? "🔒" : j === 2 ? "🏆" : "▶";
-        const label = j === 2 ? "Review" : `Lesson ${j + 1}`;
+        const kind = plan[j].kind;
+        const icon = isDone ? "★" : !avail ? "🔒" : kind === "review" ? "🏆" : kind === "phrases" ? "💬" : "▶";
+        const label = kind === "review" ? "Review" : kind === "phrases" ? "Phrases" : `Lesson ${j + 1}`;
         body += `<button class="node ${cls}" style="transform:translateX(${offset}px);${avail && !isDone ? `background:${color};box-shadow:0 6px 0 color-mix(in srgb,${color} 70%,#000)` : ""}"
           ${avail ? `data-lesson="${i}:${j}"` : "disabled"} aria-label="${esc(u.title)} ${label}${isDone ? " (completed)" : !avail ? " (locked)" : ""}">
           ${isCurrent ? `<span class="start-bubble">START</span>` : ""}${icon}<span class="lbl">${label}</span></button>`;
@@ -509,7 +532,7 @@ function renderHome() {
   } else {
     const days = [...Array(7)].map((_, i) => dayOffset(i - 6));
     const max = Math.max(S.goal, ...days.map(d => S.daily[d] || 0));
-    const words = c.units.reduce((a, u) => a + (unitDone(u) >= 2 ? u.items.length : unitDone(u) === 1 ? Math.ceil(u.items.length / 2) : 0), 0);
+    const words = c.units.reduce((a, u) => a + unitPlan(u).slice(0, unitDone(u)).reduce((b, x) => b + (x.items ? x.items.length : 0), 0), 0);
     body += `<div class="cards">
       <div class="card"><div class="v">🔥 ${liveStreak()}</div><div class="k">Day streak</div></div>
       <div class="card"><div class="v">⚡ ${P().xp}</div><div class="k">${esc(c.name)} XP</div></div>
@@ -681,7 +704,7 @@ function finish(passed) {
   app.innerHTML = `<div class="wrap"><div class="result ${passed ? "" : "fail"}">
     <div class="emoji">${passed ? (R.mistakes === 0 ? "🏆" : "🎉") : "💔"}</div>
     <h1>${passed ? (R.mistakes === 0 ? "Perfect lesson!" : "Lesson complete!") : "Out of hearts"}</h1>
-    <p>${passed ? (m.kind === "lesson" && m.l === 2 ? `You finished the <b>${esc(course().units[m.u].title)}</b> unit.` : "Keep it up — every lesson counts.") : "Mistakes happen. Try the lesson again — you'll get it."}</p>
+    <p>${passed ? (m.kind === "lesson" && m.l === lessonCount(course().units[m.u]) - 1 ? `You finished the <b>${esc(course().units[m.u].title)}</b> unit.` : "Keep it up — every lesson counts.") : "Mistakes happen. Try the lesson again — you'll get it."}</p>
     ${passed ? `<div class="rstats">
       <div class="rstat"><div class="k">XP</div><div class="v">⚡ ${xp}</div></div>
       <div class="rstat ok"><div class="k">Accuracy</div><div class="v">${acc}%</div></div>

@@ -13,13 +13,23 @@ window.COURSES = {
           { n: "దయచేసి", t: "dayachēsi", e: "Please" },
           { n: "క్షమించండి", t: "kshaminchaṇḍi", e: "Sorry" },
           { n: "మంచి", t: "manchi", e: "Good" },
-          { n: "స్నేహితుడు", t: "snēhituḍu", e: "Friend" }
+          { n: "స్నేహితుడు", t: "snēhituḍu", e: "Friend" },
+          { n: "స్వాగతం", t: "svāgataṁ", e: "Welcome" },
+          { n: "సరే", t: "sarē", e: "Okay" },
+          { n: "వెళ్ళొస్తాను", t: "veḷḷostānu", e: "Goodbye (I'll be back)" },
+          { n: "చెడు", t: "cheḍu", e: "Bad" },
+          { n: "పేరు", t: "pēru", e: "Name" },
+          { n: "నేను", t: "nēnu", e: "I" },
+          { n: "మీరు", t: "mīru", e: "You (respectful)" },
+          { n: "చాలా", t: "chālā", e: "Very" }
         ],
         sentences: [
           { n: "మీరు ఎలా ఉన్నారు?", t: "mīru elā unnāru?", e: "How are you?" },
           { n: "నేను బాగున్నాను", t: "nēnu bāgunnānu", e: "I am fine" },
           { n: "మీ పేరు ఏమిటి?", t: "mī pēru ēmiṭi?", e: "What is your name?" },
-          { n: "నా పేరు రవి", t: "nā pēru Ravi", e: "My name is Ravi" }
+          { n: "నా పేరు రవి", t: "nā pēru Ravi", e: "My name is Ravi" },
+          { n: "చాలా ధన్యవాదాలు", t: "chālā dhanyavādālu", e: "Thank you very much" },
+          { n: "మిమ్మల్ని కలవడం సంతోషం", t: "mimmalni kalavaḍaṁ santōṣaṁ", e: "Nice to meet you" }
         ] },
       { id: "family", title: "Family", icon: "👪",
         items: [
@@ -30,14 +40,24 @@ window.COURSES = {
           { n: "తమ్ముడు", t: "tammuḍu", e: "Younger brother" },
           { n: "చెల్లి", t: "chelli", e: "Younger sister" },
           { n: "కొడుకు", t: "koḍuku", e: "Son" },
-          { n: "కూతురు", t: "kūturu", e: "Daughter" }
+          { n: "కూతురు", t: "kūturu", e: "Daughter" },
+          { n: "నానమ్మ", t: "nānamma", e: "Grandmother (father's mother)" },
+          { n: "తాత", t: "tāta", e: "Grandfather" },
+          { n: "భర్త", t: "bharta", e: "Husband" },
+          { n: "భార్య", t: "bhārya", e: "Wife" },
+          { n: "బిడ్డ", t: "biḍḍa", e: "Child" },
+          { n: "కుటుంబం", t: "kuṭumbaṁ", e: "Family" },
+          { n: "మామయ్య", t: "māmayya", e: "Uncle (mother's brother)" },
+          { n: "అత్త", t: "atta", e: "Aunt (father's sister)" }
         ],
         sentences: [
           { n: "ఈమె మా అమ్మ", t: "īme mā amma", e: "This is my mother" },
           { n: "మా నాన్న ఉపాధ్యాయుడు", t: "mā nānna upādhyāyuḍu", e: "My father is a teacher" },
-          { n: "నాకు ఒక చెల్లి ఉంది", t: "nāku oka chelli undi", e: "I have one younger sister" }
+          { n: "నాకు ఒక చెల్లి ఉంది", t: "nāku oka chelli undi", e: "I have one younger sister" },
+          { n: "మా కుటుంబం పెద్దది", t: "mā kuṭumbaṁ peddadi", e: "My family is big" },
+          { n: "మా తాత ఊరిలో ఉంటారు", t: "mā tāta ūrilō uṇṭāru", e: "My grandfather lives in the village" }
         ] },
-      { id: "num", title: "Numbers 1–10", icon: "🔢",
+      { id: "num", title: "Numbers 1–20", icon: "🔢",
         items: [
           { n: "ఒకటి", t: "okaṭi", e: "One (1)" },
           { n: "రెండు", t: "reṇḍu", e: "Two (2)" },
@@ -48,10 +68,23 @@ window.COURSES = {
           { n: "ఏడు", t: "ēḍu", e: "Seven (7)" },
           { n: "ఎనిమిది", t: "enimidi", e: "Eight (8)" },
           { n: "తొమ్మిది", t: "tommidi", e: "Nine (9)" },
-          { n: "పది", t: "padi", e: "Ten (10)" }
+          { n: "పది", t: "padi", e: "Ten (10)" },
+          { n: "పదకొండు", t: "padakoṇḍu", e: "Eleven (11)" },
+          { n: "పన్నెండు", t: "panneṇḍu", e: "Twelve (12)" },
+          { n: "పదమూడు", t: "padamūḍu", e: "Thirteen (13)" },
+          { n: "పద్నాలుగు", t: "padnālugu", e: "Fourteen (14)" },
+          { n: "పదిహేను", t: "padihēnu", e: "Fifteen (15)" },
+          { n: "పదహారు", t: "padahāru", e: "Sixteen (16)" },
+          { n: "పదిహేడు", t: "padihēḍu", e: "Seventeen (17)" },
+          { n: "పద్దెనిమిది", t: "paddenimidi", e: "Eighteen (18)" },
+          { n: "పందొమ్మిది", t: "pandommidi", e: "Nineteen (19)" },
+          { n: "ఇరవై", t: "iravai", e: "Twenty (20)" }
         ],
         sentences: [
-          { n: "నా దగ్గర రెండు పుస్తకాలు ఉన్నాయి", t: "nā daggara reṇḍu pustakālu unnāyi", e: "I have two books" }
+          { n: "నా దగ్గర రెండు పుస్తకాలు ఉన్నాయి", t: "nā daggara reṇḍu pustakālu unnāyi", e: "I have two books" },
+          { n: "నాకు ఇరవై ఏళ్ళు", t: "nāku iravai ēḷḷu", e: "I am twenty years old" },
+          { n: "నాకు ఐదు అరటిపండ్లు ఇవ్వండి", t: "nāku aidu araṭipaṇḍlu ivvaṇḍi", e: "Give me five bananas" },
+          { n: "మా ఇంట్లో నలుగురు ఉన్నారు", t: "mā iṇṭlō naluguru unnāru", e: "There are four people in my house" }
         ] },
       { id: "food", title: "Food & Drink", icon: "🍛",
         items: [
@@ -62,25 +95,49 @@ window.COURSES = {
           { n: "అరటిపండు", t: "araṭipaṇḍu", e: "Banana" },
           { n: "మామిడిపండు", t: "māmiḍipaṇḍu", e: "Mango" },
           { n: "టీ", t: "ṭī", e: "Tea" },
-          { n: "ఉప్పు", t: "uppu", e: "Salt" }
+          { n: "ఉప్పు", t: "uppu", e: "Salt" },
+          { n: "కూరగాయలు", t: "kūragāyalu", e: "Vegetables" },
+          { n: "కూర", t: "kūra", e: "Curry" },
+          { n: "గుడ్డు", t: "guḍḍu", e: "Egg" },
+          { n: "చేప", t: "chēpa", e: "Fish" },
+          { n: "చక్కెర", t: "chakkera", e: "Sugar" },
+          { n: "కాఫీ", t: "kāphī", e: "Coffee" },
+          { n: "పెరుగు", t: "perugu", e: "Curd" },
+          { n: "పప్పు", t: "pappu", e: "Dal (lentils)" }
         ],
         sentences: [
           { n: "నేను నీళ్ళు తాగుతాను", t: "nēnu nīḷḷu tāgutānu", e: "I drink water" },
           { n: "నేను అన్నం తింటాను", t: "nēnu annaṁ tiṇṭānu", e: "I eat rice" },
-          { n: "నాకు టీ కావాలి", t: "nāku ṭī kāvāli", e: "I want tea" }
+          { n: "నాకు టీ కావాలి", t: "nāku ṭī kāvāli", e: "I want tea" },
+          { n: "నాకు చేపలు ఇష్టం", t: "nāku chēpalu iṣṭaṁ", e: "I like fish" },
+          { n: "భోజనం రుచిగా ఉంది", t: "bhōjanaṁ ruchigā undi", e: "The food is tasty" },
+          { n: "నాకు ఆకలిగా ఉంది", t: "nāku ākaligā undi", e: "I am hungry" }
         ] },
-      { id: "color", title: "Colours", icon: "🎨",
+      { id: "color", title: "Colours & Describing", icon: "🎨",
         items: [
           { n: "ఎరుపు", t: "erupu", e: "Red" },
           { n: "ఆకుపచ్చ", t: "ākupachcha", e: "Green" },
           { n: "తెలుపు", t: "telupu", e: "White" },
           { n: "నలుపు", t: "nalupu", e: "Black" },
           { n: "పసుపు", t: "pasupu", e: "Yellow" },
-          { n: "నీలం", t: "nīlaṁ", e: "Blue" }
+          { n: "నీలం", t: "nīlaṁ", e: "Blue" },
+          { n: "నారింజ", t: "nārinja", e: "Orange" },
+          { n: "గులాబీ", t: "gulābī", e: "Pink" },
+          { n: "రంగు", t: "raṅgu", e: "Colour" },
+          { n: "అందమైన", t: "andamaina", e: "Beautiful" },
+          { n: "పెద్ద", t: "pedda", e: "Big" },
+          { n: "చిన్న", t: "chinna", e: "Small" },
+          { n: "కొత్త", t: "kotta", e: "New" },
+          { n: "పాత", t: "pāta", e: "Old" },
+          { n: "వేడి", t: "vēḍi", e: "Hot" },
+          { n: "చల్లని", t: "challani", e: "Cold" }
         ],
         sentences: [
           { n: "పాలు తెల్లగా ఉంటాయి", t: "pālu tellagā uṇṭāyi", e: "Milk is white" },
-          { n: "చెట్టు ఆకుపచ్చగా ఉంది", t: "cheṭṭu ākupachchagā undi", e: "The tree is green" }
+          { n: "చెట్టు ఆకుపచ్చగా ఉంది", t: "cheṭṭu ākupachchagā undi", e: "The tree is green" },
+          { n: "టీ వేడిగా ఉంది", t: "ṭī vēḍigā undi", e: "The tea is hot" },
+          { n: "పాలు చల్లగా ఉన్నాయి", t: "pālu challagā unnāyi", e: "The milk is cold" },
+          { n: "ఇది పెద్ద ఇల్లు", t: "idi pedda illu", e: "This is a big house" }
         ] },
       { id: "around", title: "Around Us", icon: "🏡",
         items: [
@@ -91,12 +148,23 @@ window.COURSES = {
           { n: "పిల్లి", t: "pilli", e: "Cat" },
           { n: "ఆవు", t: "āvu", e: "Cow" },
           { n: "చెట్టు", t: "cheṭṭu", e: "Tree" },
-          { n: "సూర్యుడు", t: "sūryuḍu", e: "Sun" }
+          { n: "సూర్యుడు", t: "sūryuḍu", e: "Sun" },
+          { n: "చంద్రుడు", t: "chandruḍu", e: "Moon" },
+          { n: "పువ్వు", t: "puvvu", e: "Flower" },
+          { n: "నది", t: "nadi", e: "River" },
+          { n: "ఊరు", t: "ūru", e: "Village" },
+          { n: "రోడ్డు", t: "rōḍḍu", e: "Road" },
+          { n: "పక్షి", t: "pakṣi", e: "Bird" },
+          { n: "వర్షం", t: "varṣaṁ", e: "Rain" },
+          { n: "తలుపు", t: "talupu", e: "Door" }
         ],
         sentences: [
           { n: "ఇది నా ఇల్లు", t: "idi nā illu", e: "This is my house" },
           { n: "కుక్క పెద్దది", t: "kukka peddadi", e: "The dog is big" },
-          { n: "నేను బడికి వెళ్తాను", t: "nēnu baḍiki veḷtānu", e: "I go to school" }
+          { n: "నేను బడికి వెళ్తాను", t: "nēnu baḍiki veḷtānu", e: "I go to school" },
+          { n: "వర్షం పడుతోంది", t: "varṣaṁ paḍutōndi", e: "It is raining" },
+          { n: "పక్షి చెట్టు మీద ఉంది", t: "pakṣi cheṭṭu mīda undi", e: "The bird is on the tree" },
+          { n: "పువ్వు అందంగా ఉంది", t: "puvvu andaṅgā undi", e: "The flower is beautiful" }
         ] },
       { id: "time", title: "Time", icon: "⏰",
         items: [
@@ -107,11 +175,22 @@ window.COURSES = {
           { n: "రాత్రి", t: "rātri", e: "Night" },
           { n: "రోజు", t: "rōju", e: "Day" },
           { n: "ఇప్పుడు", t: "ippuḍu", e: "Now" },
-          { n: "తర్వాత", t: "tarvāta", e: "Later" }
+          { n: "తర్వాత", t: "tarvāta", e: "Later" },
+          { n: "వారం", t: "vāraṁ", e: "Week" },
+          { n: "నెల", t: "nela", e: "Month" },
+          { n: "సంవత్సరం", t: "saṁvatsaraṁ", e: "Year" },
+          { n: "సాయంత్రం", t: "sāyantraṁ", e: "Evening" },
+          { n: "మధ్యాహ్నం", t: "madhyāhnaṁ", e: "Afternoon" },
+          { n: "సమయం", t: "samayaṁ", e: "Time" },
+          { n: "ఎప్పుడూ", t: "eppuḍū", e: "Always" },
+          { n: "ఎప్పుడు?", t: "eppuḍu?", e: "When?" }
         ],
         sentences: [
           { n: "రేపు కలుద్దాం", t: "rēpu kaluddāṁ", e: "See you tomorrow" },
-          { n: "నేను ఇప్పుడు వెళ్తున్నాను", t: "nēnu ippuḍu veḷtunnānu", e: "I am going now" }
+          { n: "నేను ఇప్పుడు వెళ్తున్నాను", t: "nēnu ippuḍu veḷtunnānu", e: "I am going now" },
+          { n: "సమయం ఎంత?", t: "samayaṁ enta?", e: "What time is it?" },
+          { n: "సాయంత్రం రండి", t: "sāyantraṁ raṇḍi", e: "Come in the evening" },
+          { n: "నిన్న వర్షం పడింది", t: "ninna varṣaṁ paḍindi", e: "It rained yesterday" }
         ] }
     ],
     alphabet: {
@@ -132,13 +211,23 @@ window.COURSES = {
           { n: "ଦୟାକରି", t: "dayākari", e: "Please" },
           { n: "କ୍ଷମା କରନ୍ତୁ", t: "kshamā karantu", e: "Sorry" },
           { n: "ଭଲ", t: "bhala", e: "Good" },
-          { n: "ସାଙ୍ଗ", t: "sāṅga", e: "Friend" }
+          { n: "ସାଙ୍ଗ", t: "sāṅga", e: "Friend" },
+          { n: "ସ୍ୱାଗତ", t: "swāgata", e: "Welcome" },
+          { n: "ଠିକ୍ ଅଛି", t: "ṭhik achhi", e: "Okay" },
+          { n: "ଆସୁଛି", t: "āsuchhi", e: "Goodbye (I'll be back)" },
+          { n: "ଖରାପ", t: "kharāpa", e: "Bad" },
+          { n: "ନାମ", t: "nāma", e: "Name" },
+          { n: "ମୁଁ", t: "muṁ", e: "I" },
+          { n: "ଆପଣ", t: "āpaṇa", e: "You (respectful)" },
+          { n: "ବହୁତ", t: "bahuta", e: "Very" }
         ],
         sentences: [
           { n: "ଆପଣ କେମିତି ଅଛନ୍ତି?", t: "āpaṇa kemiti achhanti?", e: "How are you?" },
           { n: "ମୁଁ ଭଲ ଅଛି", t: "muṁ bhala achhi", e: "I am fine" },
           { n: "ଆପଣଙ୍କ ନାମ କ'ଣ?", t: "āpaṇaṅka nāma ka'ṇa?", e: "What is your name?" },
-          { n: "ମୋ ନାମ ରବି", t: "mo nāma Rabi", e: "My name is Ravi" }
+          { n: "ମୋ ନାମ ରବି", t: "mo nāma Rabi", e: "My name is Ravi" },
+          { n: "ବହୁତ ଧନ୍ୟବାଦ", t: "bahuta dhanyabāda", e: "Thank you very much" },
+          { n: "ଆପଣଙ୍କୁ ଭେଟି ଖୁସି ହେଲି", t: "āpaṇaṅku bheṭi khusi heli", e: "Nice to meet you" }
         ] },
       { id: "family", title: "Family", icon: "👪",
         items: [
@@ -149,14 +238,24 @@ window.COURSES = {
           { n: "ସାନ ଭାଇ", t: "sāna bhāi", e: "Younger brother" },
           { n: "ସାନ ଭଉଣୀ", t: "sāna bhauṇī", e: "Younger sister" },
           { n: "ପୁଅ", t: "pua", e: "Son" },
-          { n: "ଝିଅ", t: "jhia", e: "Daughter" }
+          { n: "ଝିଅ", t: "jhia", e: "Daughter" },
+          { n: "ଜେଜେମା", t: "jejemā", e: "Grandmother (father's mother)" },
+          { n: "ଜେଜେବାପା", t: "jejebāpā", e: "Grandfather" },
+          { n: "ସ୍ୱାମୀ", t: "swāmī", e: "Husband" },
+          { n: "ସ୍ତ୍ରୀ", t: "strī", e: "Wife" },
+          { n: "ପିଲା", t: "pilā", e: "Child" },
+          { n: "ପରିବାର", t: "paribāra", e: "Family" },
+          { n: "ମାମୁଁ", t: "māmuṁ", e: "Uncle (mother's brother)" },
+          { n: "ପିଉସୀ", t: "piusī", e: "Aunt (father's sister)" }
         ],
         sentences: [
           { n: "ଇଏ ମୋ ମା", t: "ie mo mā", e: "This is my mother" },
           { n: "ମୋ ବାପା ଶିକ୍ଷକ", t: "mo bāpā śikshaka", e: "My father is a teacher" },
-          { n: "ମୋର ଗୋଟିଏ ସାନ ଭଉଣୀ ଅଛି", t: "mora goṭie sāna bhauṇī achhi", e: "I have one younger sister" }
+          { n: "ମୋର ଗୋଟିଏ ସାନ ଭଉଣୀ ଅଛି", t: "mora goṭie sāna bhauṇī achhi", e: "I have one younger sister" },
+          { n: "ମୋ ପରିବାର ବଡ଼", t: "mo paribāra baṛa", e: "My family is big" },
+          { n: "ମୋ ଜେଜେବାପା ଗାଁରେ ରୁହନ୍ତି", t: "mo jejebāpā gāṁre ruhanti", e: "My grandfather lives in the village" }
         ] },
-      { id: "num", title: "Numbers 1–10", icon: "🔢",
+      { id: "num", title: "Numbers 1–20", icon: "🔢",
         items: [
           { n: "ଏକ", t: "eka", e: "One (1)" },
           { n: "ଦୁଇ", t: "dui", e: "Two (2)" },
@@ -167,10 +266,23 @@ window.COURSES = {
           { n: "ସାତ", t: "sāta", e: "Seven (7)" },
           { n: "ଆଠ", t: "āṭha", e: "Eight (8)" },
           { n: "ନଅ", t: "na'a", e: "Nine (9)" },
-          { n: "ଦଶ", t: "daśa", e: "Ten (10)" }
+          { n: "ଦଶ", t: "daśa", e: "Ten (10)" },
+          { n: "ଏଗାର", t: "egāra", e: "Eleven (11)" },
+          { n: "ବାର", t: "bāra", e: "Twelve (12)" },
+          { n: "ତେର", t: "tera", e: "Thirteen (13)" },
+          { n: "ଚଉଦ", t: "chauda", e: "Fourteen (14)" },
+          { n: "ପନ୍ଦର", t: "pandara", e: "Fifteen (15)" },
+          { n: "ଷୋହଳ", t: "shohaḷa", e: "Sixteen (16)" },
+          { n: "ସତର", t: "satara", e: "Seventeen (17)" },
+          { n: "ଅଠର", t: "aṭhara", e: "Eighteen (18)" },
+          { n: "ଊଣେଇଶି", t: "ūṇeiśi", e: "Nineteen (19)" },
+          { n: "କୋଡ଼ିଏ", t: "koṛie", e: "Twenty (20)" }
         ],
         sentences: [
-          { n: "ମୋ ପାଖରେ ଦୁଇଟି ବହି ଅଛି", t: "mo pākhare duiṭi bahi achhi", e: "I have two books" }
+          { n: "ମୋ ପାଖରେ ଦୁଇଟି ବହି ଅଛି", t: "mo pākhare duiṭi bahi achhi", e: "I have two books" },
+          { n: "ମୋ ବୟସ କୋଡ଼ିଏ ବର୍ଷ", t: "mo bayasa koṛie barsha", e: "I am twenty years old" },
+          { n: "ମୋତେ ପାଞ୍ଚଟି କଦଳୀ ଦିଅନ୍ତୁ", t: "mote pāñchaṭi kadaḷī diantu", e: "Give me five bananas" },
+          { n: "ମୋ ଘରେ ଚାରିଜଣ ଅଛନ୍ତି", t: "mo ghare chārijaṇa achhanti", e: "There are four people in my house" }
         ] },
       { id: "food", title: "Food & Drink", icon: "🍛",
         items: [
@@ -181,25 +293,49 @@ window.COURSES = {
           { n: "କଦଳୀ", t: "kadaḷī", e: "Banana" },
           { n: "ଆମ୍ବ", t: "āmba", e: "Mango" },
           { n: "ଚା", t: "chā", e: "Tea" },
-          { n: "ଲୁଣ", t: "luṇa", e: "Salt" }
+          { n: "ଲୁଣ", t: "luṇa", e: "Salt" },
+          { n: "ପରିବା", t: "paribā", e: "Vegetables" },
+          { n: "ତରକାରୀ", t: "tarakārī", e: "Curry" },
+          { n: "ଅଣ୍ଡା", t: "aṇḍā", e: "Egg" },
+          { n: "ମାଛ", t: "māchha", e: "Fish" },
+          { n: "ଚିନି", t: "chini", e: "Sugar" },
+          { n: "କଫି", t: "kaphi", e: "Coffee" },
+          { n: "ଦହି", t: "dahi", e: "Curd" },
+          { n: "ଡାଲି", t: "ḍāli", e: "Dal (lentils)" }
         ],
         sentences: [
           { n: "ମୁଁ ପାଣି ପିଏ", t: "muṁ pāṇi pie", e: "I drink water" },
           { n: "ମୁଁ ଭାତ ଖାଏ", t: "muṁ bhāta khāe", e: "I eat rice" },
-          { n: "ମୋତେ ଚା ଦରକାର", t: "mote chā darakāra", e: "I want tea" }
+          { n: "ମୋତେ ଚା ଦରକାର", t: "mote chā darakāra", e: "I want tea" },
+          { n: "ମୋତେ ମାଛ ଭଲ ଲାଗେ", t: "mote māchha bhala lāge", e: "I like fish" },
+          { n: "ଖାଇବା ସୁଆଦିଆ ହୋଇଛି", t: "khāibā suādiā hoichhi", e: "The food is tasty" },
+          { n: "ମୋତେ ଭୋକ ଲାଗୁଛି", t: "mote bhoka lāguchhi", e: "I am hungry" }
         ] },
-      { id: "color", title: "Colours", icon: "🎨",
+      { id: "color", title: "Colours & Describing", icon: "🎨",
         items: [
           { n: "ନାଲି", t: "nāli", e: "Red" },
           { n: "ସବୁଜ", t: "sabuja", e: "Green" },
           { n: "ଧଳା", t: "dhaḷā", e: "White" },
           { n: "କଳା", t: "kaḷā", e: "Black" },
           { n: "ହଳଦିଆ", t: "haḷadiā", e: "Yellow" },
-          { n: "ନୀଳ", t: "nīḷa", e: "Blue" }
+          { n: "ନୀଳ", t: "nīḷa", e: "Blue" },
+          { n: "କମଳା", t: "kamaḷā", e: "Orange" },
+          { n: "ଗୋଲାପୀ", t: "golāpī", e: "Pink" },
+          { n: "ରଙ୍ଗ", t: "raṅga", e: "Colour" },
+          { n: "ସୁନ୍ଦର", t: "sundara", e: "Beautiful" },
+          { n: "ବଡ଼", t: "baṛa", e: "Big" },
+          { n: "ଛୋଟ", t: "chhoṭa", e: "Small" },
+          { n: "ନୂଆ", t: "nūā", e: "New" },
+          { n: "ପୁରୁଣା", t: "puruṇā", e: "Old" },
+          { n: "ଗରମ", t: "garama", e: "Hot" },
+          { n: "ଥଣ୍ଡା", t: "thaṇḍā", e: "Cold" }
         ],
         sentences: [
           { n: "କ୍ଷୀର ଧଳା", t: "kshīra dhaḷā", e: "Milk is white" },
-          { n: "ଗଛଟି ସବୁଜ", t: "gachhaṭi sabuja", e: "The tree is green" }
+          { n: "ଗଛଟି ସବୁଜ", t: "gachhaṭi sabuja", e: "The tree is green" },
+          { n: "ଚା ଗରମ ଅଛି", t: "chā garama achhi", e: "The tea is hot" },
+          { n: "କ୍ଷୀର ଥଣ୍ଡା ଅଛି", t: "kshīra thaṇḍā achhi", e: "The milk is cold" },
+          { n: "ଏହା ଏକ ବଡ଼ ଘର", t: "ehā eka baṛa ghara", e: "This is a big house" }
         ] },
       { id: "around", title: "Around Us", icon: "🏡",
         items: [
@@ -210,12 +346,23 @@ window.COURSES = {
           { n: "ବିରାଡ଼ି", t: "birāṛi", e: "Cat" },
           { n: "ଗାଈ", t: "gāi", e: "Cow" },
           { n: "ଗଛ", t: "gachha", e: "Tree" },
-          { n: "ସୂର୍ଯ୍ୟ", t: "sūrjya", e: "Sun" }
+          { n: "ସୂର୍ଯ୍ୟ", t: "sūrjya", e: "Sun" },
+          { n: "ଜହ୍ନ", t: "jahna", e: "Moon" },
+          { n: "ଫୁଲ", t: "phula", e: "Flower" },
+          { n: "ନଦୀ", t: "nadī", e: "River" },
+          { n: "ଗାଁ", t: "gāṁ", e: "Village" },
+          { n: "ରାସ୍ତା", t: "rāstā", e: "Road" },
+          { n: "ଚଢ଼େଇ", t: "chaṛhei", e: "Bird" },
+          { n: "ବର୍ଷା", t: "barshā", e: "Rain" },
+          { n: "କବାଟ", t: "kabāṭa", e: "Door" }
         ],
         sentences: [
           { n: "ଏହା ମୋ ଘର", t: "ehā mo ghara", e: "This is my house" },
           { n: "କୁକୁରଟି ବଡ଼", t: "kukuraṭi baṛa", e: "The dog is big" },
-          { n: "ମୁଁ ବିଦ୍ୟାଳୟକୁ ଯାଏ", t: "muṁ bidyāḷayaku jāe", e: "I go to school" }
+          { n: "ମୁଁ ବିଦ୍ୟାଳୟକୁ ଯାଏ", t: "muṁ bidyāḷayaku jāe", e: "I go to school" },
+          { n: "ବର୍ଷା ହେଉଛି", t: "barshā heuchhi", e: "It is raining" },
+          { n: "ଚଢ଼େଇଟି ଗଛ ଉପରେ ଅଛି", t: "chaṛheiṭi gachha upare achhi", e: "The bird is on the tree" },
+          { n: "ଫୁଲଟି ସୁନ୍ଦର", t: "phulaṭi sundara", e: "The flower is beautiful" }
         ] },
       { id: "time", title: "Time", icon: "⏰",
         items: [
@@ -226,11 +373,22 @@ window.COURSES = {
           { n: "ରାତି", t: "rāti", e: "Night" },
           { n: "ଦିନ", t: "dina", e: "Day" },
           { n: "ଏବେ", t: "ebe", e: "Now" },
-          { n: "ପରେ", t: "pare", e: "Later" }
+          { n: "ପରେ", t: "pare", e: "Later" },
+          { n: "ସପ୍ତାହ", t: "saptāha", e: "Week" },
+          { n: "ମାସ", t: "māsa", e: "Month" },
+          { n: "ବର୍ଷ", t: "barsha", e: "Year" },
+          { n: "ସନ୍ଧ୍ୟା", t: "sandhyā", e: "Evening" },
+          { n: "ଅପରାହ୍ନ", t: "aparāhna", e: "Afternoon" },
+          { n: "ସମୟ", t: "samaya", e: "Time" },
+          { n: "ସବୁବେଳେ", t: "sabubeḷe", e: "Always" },
+          { n: "କେବେ?", t: "kebe?", e: "When?" }
         ],
         sentences: [
           { n: "କାଲି ଦେଖା ହେବ", t: "kāli dekhā heba", e: "See you tomorrow" },
-          { n: "ମୁଁ ଏବେ ଯାଉଛି", t: "muṁ ebe jāuchhi", e: "I am going now" }
+          { n: "ମୁଁ ଏବେ ଯାଉଛି", t: "muṁ ebe jāuchhi", e: "I am going now" },
+          { n: "କେତେ ବାଜିଲାଣି?", t: "kete bājilāṇi?", e: "What time is it?" },
+          { n: "ସନ୍ଧ୍ୟାରେ ଆସନ୍ତୁ", t: "sandhyāre āsantu", e: "Come in the evening" },
+          { n: "ଗତକାଲି ବର୍ଷା ହେଲା", t: "gatakāli barshā helā", e: "It rained yesterday" }
         ] }
     ],
     alphabet: {
