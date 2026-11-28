@@ -33,6 +33,41 @@ class MainActivity : Activity() {
         val hero = Ui.card(c).apply { addView(status); addView(toggle) }
         root.addView(hero)
 
+        // Badges (card is added below the habits)
+        val badgeCard = Ui.card(c)
+        val badgeTitle = Ui.text(c, "", 18f, bold = true)
+        badgeCard.addView(badgeTitle)
+        badgeCard.addView(Ui.text(c, "Earn them with habits, priorities and breaks. Tap one to see its goal.", 14f, Ui.MUTED))
+        val badgeGrid = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL; setPadding(0, Ui.dp(c, 8), 0, 0) }
+        badgeCard.addView(badgeGrid)
+        fun refreshBadges() {
+            Badges.check(c)
+            val earned = Badges.earnedIds(c); val st = Badges.stats(c)
+            badgeTitle.text = "Badges  ${earned.size}/${Badges.ALL.size}"
+            badgeGrid.removeAllViews()
+            Badges.ALL.chunked(3).forEach { rowBadges ->
+                val row = LinearLayout(c)
+                rowBadges.forEach { b ->
+                    val got = b.id in earned
+                    row.addView(LinearLayout(c).apply {
+                        orientation = LinearLayout.VERTICAL; gravity = android.view.Gravity.CENTER
+                        setPadding(Ui.dp(c, 4), Ui.dp(c, 8), Ui.dp(c, 4), Ui.dp(c, 8))
+                        alpha = if (got) 1f else 0.3f
+                        addView(Ui.text(c, b.emoji, 30f).apply { gravity = android.view.Gravity.CENTER })
+                        addView(Ui.text(c, b.name, 12f, if (got) Color.WHITE else Ui.MUTED).apply { gravity = android.view.Gravity.CENTER })
+                        setOnClickListener {
+                            val (have, need) = b.progress(st)
+                            val msg = if (got) "Earned! ${b.goal}." else "${b.goal}.\nProgress: ${minOf(have, need)} / $need"
+                            android.app.AlertDialog.Builder(c).setTitle("${b.emoji} ${b.name}").setMessage(msg)
+                                .setPositiveButton("OK", null).show()
+                        }
+                    }, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                }
+                repeat(3 - rowBadges.size) { row.addView(android.view.View(c), LinearLayout.LayoutParams(0, 1, 1f)) }
+                badgeGrid.addView(row)
+            }
+        }
+
         // Today's priorities: add as many as needed; ticked ones are struck out
         val prio = Ui.card(c)
         prio.addView(Ui.text(c, "Today's priorities", 18f, bold = true))
@@ -59,7 +94,7 @@ class MainActivity : Activity() {
                 }
                 val box = CheckBox(c).apply {
                     isChecked = Prefs.taskDone(c, i)
-                    setOnCheckedChangeListener { _, v -> Prefs.setDone(c, i, v); strike(field, v) }
+                    setOnCheckedChangeListener { _, v -> Prefs.setDone(c, i, v); strike(field, v); Badges.onPriorityToggled(c, v); refreshBadges() }
                 }
                 strike(field, box.isChecked)
                 val del = TextView(c).apply {
@@ -110,7 +145,7 @@ class MainActivity : Activity() {
                 }
                 val box = CheckBox(c).apply {
                     isChecked = Habits.doneToday(c, i)
-                    setOnCheckedChangeListener { _, v -> Habits.setDoneToday(c, i, v); strike(field, v); showStreak() }
+                    setOnCheckedChangeListener { _, v -> Habits.setDoneToday(c, i, v); strike(field, v); showStreak(); Badges.onHabitToggled(c); refreshBadges() }
                 }
                 strike(field, box.isChecked); showStreak()
                 val del = TextView(c).apply {
@@ -138,6 +173,8 @@ class MainActivity : Activity() {
             }
         })
         root.addView(habitCard)
+        refreshBadges()
+        root.addView(badgeCard)
 
         // Break reminder settings
         val limit = Ui.number(c, Prefs.limitMin(c))
@@ -173,7 +210,7 @@ class MainActivity : Activity() {
             removeBtn.visibility = if (p == null) android.view.View.GONE else android.view.View.VISIBLE
             usageBtn.visibility = if (p != null && !Restriction.usageAccessGranted(c)) android.view.View.VISIBLE else android.view.View.GONE
         }
-        refreshAllowedHook = { refreshAllowed(); refreshTasks(); refreshHabits() }
+        refreshAllowedHook = { refreshAllowed(); refreshTasks(); refreshHabits(); refreshBadges() }
         usageBtn.setOnClickListener { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
         removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed() }
         root.addView(Ui.card(c).apply {

@@ -78,7 +78,7 @@ object BreakView {
             override fun onViewAttachedToWindow(v: View) { timer.start() }
             override fun onViewDetachedFromWindow(v: View) { timer.cancel() }
         })
-        stop.setOnClickListener { onStop() }
+        stop.setOnClickListener { Badges.recordBreak(c, night); onStop() }
         return root
     }
 
@@ -99,7 +99,7 @@ object BreakView {
         addPriorities(root, c)
         addHabits(root, c)
         root.addView(Ui.button(c, "Open $appLabel").apply { setOnClickListener { onOpenAllowed() } })
-        root.addView(Ui.button(c, "Go to home screen", Color.parseColor("#263449")).apply { setOnClickListener { onHome() } })
+        root.addView(Ui.button(c, "Go to home screen", Color.parseColor("#263449")).apply { setOnClickListener { Badges.recordBreak(c, night); onHome() } })
         if (onSnooze != null) root.addView(Ui.button(c, snoozeLabel(c), Color.parseColor("#263449")).apply { setOnClickListener { onSnooze() } })
         return root
     }
