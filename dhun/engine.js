@@ -628,6 +628,7 @@
     chip: [['#06d6a0', '#118ab2'], ['#ffd166', '#ef476f'], ['#8ac926', '#1982c4']],
     piano: [['#f1ede4', '#3d3d3d'], ['#e8e1d4', '#22333b'], ['#efe6dd', '#5c4d4d']],
     jazz: [['#e0a458', '#0b2545'], ['#c9a227', '#13315c'], ['#d4a373', '#1d3557']],
+    radio: [['#e5383b', '#6a040f'], ['#ff7b00', '#9d0208'], ['#3a86ff', '#3a0ca3'], ['#06d6a0', '#073b4c'], ['#f72585', '#480ca8'], ['#ffb703', '#d62828']],
     upload: [['#7f5af0', '#2cb67d'], ['#ff8906', '#e53170'], ['#3da9fc', '#094067'], ['#f25f4c', '#0f0e17']],
     mix: [['#ff5f6d', '#ffc371']]
   };
@@ -709,6 +710,16 @@
         c.strokeStyle = 'rgba(255,215,140,.35)'; c.lineWidth = S / 70;
         for (k = -4; k < 10; k++) { c.beginPath(); c.moveTo(k * S * 0.15, 0); c.lineTo(k * S * 0.15 + S * 0.6, S); c.stroke(); }
         for (k = 0; k < 3; k++) { c.fillStyle = 'rgba(230,180,90,' + (0.5 + k * 0.15) + ')'; c.beginPath(); c.arc(S * (0.25 + r() * 0.5), S * (0.25 + r() * 0.5), S * (0.07 + r() * 0.12), 0, Math.PI * 2); c.fill(); }
+        break;
+      }
+      case 'radio': {
+        c.strokeStyle = 'rgba(255,255,255,.18)'; c.lineWidth = S / 40;
+        for (var w = 1; w <= 5; w++) { c.beginPath(); c.arc(S * 0.5, S * 0.5, S * 0.12 * w, -Math.PI * 0.8, -Math.PI * 0.2); c.stroke(); c.beginPath(); c.arc(S * 0.5, S * 0.5, S * 0.12 * w, Math.PI * 0.2, Math.PI * 0.8); c.stroke(); }
+        var words = String(key).replace(/[^\p{L}\p{N} ]/gu, ' ').trim().split(/\s+/).filter(Boolean);
+        var ini = (words.length > 1 ? words[0][0] + words[1][0] : (words[0] || 'FM').slice(0, 2)).toUpperCase();
+        c.fillStyle = '#fff'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = '800 ' + Math.round(S * 0.3) + 'px Figtree, system-ui, sans-serif';
+        c.shadowColor = 'rgba(0,0,0,.25)'; c.shadowBlur = S / 30; c.fillText(ini, S / 2, S / 2); c.shadowBlur = 0;
         break;
       }
       default: { // upload / generic

@@ -48,6 +48,8 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setTextZoom(100);
         s.setAllowFileAccess(false);
+        // Many radio stations only stream over plain http.
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         web.addJavascriptInterface(new Bridge(), "DhunAndroid");
         web.setWebViewClient(new WebViewClient() {
