@@ -84,6 +84,61 @@ class MainActivity : Activity() {
         })
         root.addView(prio)
 
+        // Daily habits: kept every day, ticks reset daily, streak shown
+        val habitCard = Ui.card(c)
+        habitCard.addView(Ui.text(c, "Daily habits", 18f, bold = true))
+        habitCard.addView(Ui.text(c, "Repeat every day. Ticks reset each morning; 🔥 is your streak.", 14f, Ui.MUTED))
+        val habitList = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
+        habitCard.addView(habitList)
+        lateinit var refreshHabits: () -> Unit
+        refreshHabits = {
+            habitList.removeAllViews()
+            if (Habits.count(c) == 0)
+                habitList.addView(Ui.text(c, "No habits yet. e.g. Walk 30 min, Read 10 pages, Drink water", 14f, Ui.MUTED)
+                    .apply { setPadding(0, Ui.dp(c, 10), 0, 0) })
+            for (i in 0 until Habits.count(c)) {
+                val streak = Ui.text(c, "", 15f, Color.parseColor("#FFB347"))
+                fun showStreak() { val n = Habits.streak(c, i); streak.text = if (n > 0) "🔥 $n" else "" }
+                val field = EditText(c).apply {
+                    hint = "Habit ${i + 1}"; setText(Habits.name(c, i)); textSize = 16f
+                    setHintTextColor(Ui.MUTED); setSingleLine(true); background = null
+                    addTextChangedListener(object : android.text.TextWatcher {
+                        override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                        override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c2: Int) {}
+                        override fun afterTextChanged(s: android.text.Editable?) { Habits.setName(c, i, s.toString()) }
+                    })
+                }
+                val box = CheckBox(c).apply {
+                    isChecked = Habits.doneToday(c, i)
+                    setOnCheckedChangeListener { _, v -> Habits.setDoneToday(c, i, v); strike(field, v); showStreak() }
+                }
+                strike(field, box.isChecked); showStreak()
+                val del = TextView(c).apply {
+                    text = "✕"; textSize = 18f; setTextColor(Ui.MUTED)
+                    setPadding(Ui.dp(c, 12), Ui.dp(c, 8), Ui.dp(c, 4), Ui.dp(c, 8))
+                    setOnClickListener {
+                        android.app.AlertDialog.Builder(c).setMessage("Delete this habit and its streak?")
+                            .setPositiveButton("Delete") { _, _ -> Habits.remove(c, i); refreshHabits() }
+                            .setNegativeButton("Cancel", null).show()
+                    }
+                }
+                habitList.addView(LinearLayout(c).apply {
+                    gravity = android.view.Gravity.CENTER_VERTICAL
+                    addView(box)
+                    addView(field, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    addView(streak); addView(del)
+                })
+            }
+        }
+        refreshHabits()
+        habitCard.addView(Ui.button(c, "+ Add habit", Color.parseColor("#263449")).apply {
+            setOnClickListener {
+                if (Habits.count(c) < Habits.MAX) { Habits.add(c); refreshHabits() }
+                else Toast.makeText(c, "Maximum ${Habits.MAX} habits", Toast.LENGTH_SHORT).show()
+            }
+        })
+        root.addView(habitCard)
+
         // Break reminder settings
         val limit = Ui.number(c, Prefs.limitMin(c))
         val brk = Ui.number(c, Prefs.breakMin(c))
@@ -118,7 +173,7 @@ class MainActivity : Activity() {
             removeBtn.visibility = if (p == null) android.view.View.GONE else android.view.View.VISIBLE
             usageBtn.visibility = if (p != null && !Restriction.usageAccessGranted(c)) android.view.View.VISIBLE else android.view.View.GONE
         }
-        refreshAllowedHook = { refreshAllowed(); refreshTasks() }
+        refreshAllowedHook = { refreshAllowed(); refreshTasks(); refreshHabits() }
         usageBtn.setOnClickListener { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
         removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed() }
         root.addView(Ui.card(c).apply {
