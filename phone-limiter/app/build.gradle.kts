@@ -9,8 +9,10 @@ android {
         applicationId = "com.example.phonelimiter"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        // Each GitHub Actions run gets its own version, shown in the app header.
+        val run = System.getenv("GITHUB_RUN_NUMBER")?.toIntOrNull() ?: 1
+        versionCode = run
+        versionName = "build $run"
     }
     signingConfigs {
         // Fixed debug key committed to the repo so every build is signed identically
@@ -24,5 +26,6 @@ android {
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
+    buildFeatures { buildConfig = true }
 }
 dependencies { testImplementation("junit:junit:4.13.2") }

@@ -25,7 +25,7 @@ class MainActivity : Activity() {
             setPadding(Ui.dp(c, 20), Ui.dp(c, 48), Ui.dp(c, 20), Ui.dp(c, 32))
         }
         root.addView(Ui.text(c, "Phone Limiter", 30f, bold = true))
-        root.addView(Ui.text(c, "Take breaks. Sleep at night.", 15f, Ui.MUTED))
+        root.addView(Ui.text(c, "Take breaks. Sleep at night.  ·  ${BuildConfig.VERSION_NAME}", 15f, Ui.MUTED))
 
         // Status + start/stop
         val status = Ui.text(c, "", 18f, bold = true)
