@@ -30,7 +30,7 @@ jobs:
           import json, os, re, subprocess
           n = int(os.environ["GITHUB_RUN_NUMBER"])
           notes = subprocess.check_output(["git", "log", "-1", "--format=%s"]).decode().strip()
-          notes = re.sub(r"^Bhasha( APK)?:\s*", "", notes)
+          notes = re.sub(r"^Bhasha( app| APK)?:\s*", "", notes, flags=re.I)
           notes = notes[:1].upper() + notes[1:]
           json.dump({"code": n, "name": f"1.0.{n}", "notes": notes, "apk": "Bhasha.apk"},
                     open("../bhasha/version.json", "w"), ensure_ascii=False)
