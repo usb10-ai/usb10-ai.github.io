@@ -29,6 +29,13 @@ object Habits {
         sp(c).edit().putString("dates$i", kept.joinToString(",")).apply()
     }
 
+    /** Habit names not yet ticked today. */
+    fun pending(c: Context): List<String> =
+        (0 until count(c)).filter { name(c, it).isNotBlank() && !doneToday(c, it) }.map { name(c, it).trim() }
+
+    /** Snooze/re-prompt length: only 1 minute while any habit is still undone, else 5. */
+    fun snoozeMs(c: Context): Long = if (pending(c).isNotEmpty()) 60_000L else 5 * 60_000L
+
     fun add(c: Context) { val n = count(c); if (n < MAX) sp(c).edit().putInt("count", n + 1).putString("name$n", "").remove("dates$n").apply() }
 
     fun remove(c: Context, i: Int) {

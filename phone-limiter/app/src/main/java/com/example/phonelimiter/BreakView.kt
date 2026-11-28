@@ -9,6 +9,23 @@ import android.widget.*
 
 /** The break / night prompt UI, shared by the on-top overlay and BreakActivity. */
 object BreakView {
+    /** Lists today's unticked habits. */
+    private fun addHabits(root: LinearLayout, c: Context) {
+        val pending = Habits.pending(c)
+        if (pending.isEmpty()) return
+        root.addView(Ui.text(c, "Daily habits not done yet:", 14f, Ui.MUTED)
+            .apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(c, 6)) })
+        pending.take(5).forEach {
+            root.addView(Ui.text(c, "○ $it", 17f, Color.parseColor("#FFB347"))
+                .apply { gravity = Gravity.CENTER; setPadding(0, 0, 0, Ui.dp(c, 4)) })
+        }
+        if (pending.size > 5) root.addView(Ui.text(c, "+ ${pending.size - 5} more", 14f, Ui.MUTED).apply { gravity = Gravity.CENTER })
+        root.addView(Ui.text(c, "Only 1 minute at a time until they're done.", 13f, Ui.MUTED)
+            .apply { gravity = Gravity.CENTER; setPadding(0, Ui.dp(c, 4), 0, Ui.dp(c, 12)) })
+    }
+
+    private fun snoozeLabel(c: Context) = if (Habits.pending(c).isNotEmpty()) "1 more minute" else "5 more minutes"
+
     /** Lists today's unfinished priorities so the prompt says what to do instead. */
     private fun addPriorities(root: LinearLayout, c: Context) {
         val pending = Prefs.pendingTasks(c)
@@ -42,10 +59,11 @@ object BreakView {
             root.addView(centered("Look away. Stretch. Drink some water.", 18f, Ui.MUTED))
         }
         addPriorities(root, c)
+        addHabits(root, c)
         val stop = Ui.button(c, "Wait 10s…").apply { isEnabled = false; alpha = 0.5f }
         root.addView(stop)
         if (!night) {
-            root.addView(Ui.button(c, "5 more minutes", Color.parseColor("#263449")).apply {
+            root.addView(Ui.button(c, snoozeLabel(c), Color.parseColor("#263449")).apply {
                 setOnClickListener { onSnooze() }
             })
         }
@@ -79,9 +97,10 @@ object BreakView {
         root.addView(centered("Only $appLabel is allowed", 26f, bold = true))
         root.addView(centered(if (night) "It's night time. Put the phone down." else "You've had your 20-minute limit. Take a break.", 17f, Ui.MUTED))
         addPriorities(root, c)
+        addHabits(root, c)
         root.addView(Ui.button(c, "Open $appLabel").apply { setOnClickListener { onOpenAllowed() } })
         root.addView(Ui.button(c, "Go to home screen", Color.parseColor("#263449")).apply { setOnClickListener { onHome() } })
-        if (onSnooze != null) root.addView(Ui.button(c, "5 more minutes", Color.parseColor("#263449")).apply { setOnClickListener { onSnooze() } })
+        if (onSnooze != null) root.addView(Ui.button(c, snoozeLabel(c), Color.parseColor("#263449")).apply { setOnClickListener { onSnooze() } })
         return root
     }
 }

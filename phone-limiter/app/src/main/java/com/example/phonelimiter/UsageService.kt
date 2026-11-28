@@ -50,7 +50,7 @@ class UsageService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_SNOOZE -> {
-                tracker.snooze(now(), 5 * 60_000L)
+                tracker.snooze(now(), Habits.snoozeMs(this))
                 getSystemService(NotificationManager::class.java).cancel(2)
             }
         }
@@ -75,7 +75,7 @@ class UsageService : Service() {
         if (Prefs.nightOn(this) &&
             tracker.shouldNightNudge(now(), hour, Prefs.nightStart(this), Prefs.nightEnd(this))) {
             nudge("It's night time", "Don't use your phone. Go to sleep.", 0, true)
-        } else if (tracker.shouldNudge(now())) {
+        } else if (tracker.also { it.nagIntervalMs = Habits.snoozeMs(this) }.shouldNudge(now())) {
             val mins = (tracker.elapsedMs(now()) / 60_000L).toInt()
             nudge("$mins minutes on your phone", "Put it down and take a break.", mins, false)
         }
