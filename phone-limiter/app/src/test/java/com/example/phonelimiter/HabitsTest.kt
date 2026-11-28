@@ -47,3 +47,25 @@ class ScreenTimeEventsTest {
         assertEquals(10 * min, ScreenTime.foregroundMs(evs, 0, 100 * min, none))
     }
 }
+
+class VisibleTimeTest {
+    private val min = 60_000L
+    private fun ev(t: Int, p: String, m: Long, cls: String = "") = ScreenTime.Ev(t, p, m * min, cls)
+
+    @Test fun pictureInPictureKeepsCounting() {
+        // YouTube pauses into PiP at 10 but stays visible until stopped at 30, while WhatsApp is used 10-25.
+        val evs = listOf(ev(1, "yt", 0), ev(2, "yt", 10), ev(1, "wa", 10), ev(23, "wa", 25), ev(23, "yt", 30))
+        val m = ScreenTime.perAppMs(evs, 0, 100 * min)
+        assertEquals(30 * min, m["yt"]); assertEquals(15 * min, m["wa"])
+    }
+
+    @Test fun switchingScreensInsideOneAppIsContinuous() {
+        val evs = listOf(ev(1, "yt", 0, "Home"), ev(1, "yt", 5, "Player"), ev(23, "yt", 6, "Home"), ev(23, "yt", 20, "Player"))
+        assertEquals(20 * min, ScreenTime.perAppMs(evs, 0, 100 * min)["yt"])
+    }
+
+    @Test fun appOpenBeforeMidnightCountsFromMidnight() {
+        val evs = listOf(ev(1, "yt", -30), ev(23, "yt", 15))
+        assertEquals(15 * min, ScreenTime.perAppMs(evs, 0, 100 * min)["yt"])
+    }
+}

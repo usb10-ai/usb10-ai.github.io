@@ -69,11 +69,13 @@ class MainActivity : Activity() {
         // Screen time summary + 7-day chart
         val stToday = Ui.text(c, "", 30f, bold = true)
         val stCompare = Ui.text(c, "", 14f, Ui.MUTED)
+        val topApps = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL; setPadding(0, Ui.dp(c, 10), 0, 0) }
         val chart = BarChart(c).apply {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(c, 140)).apply { topMargin = Ui.dp(c, 12) }
         }
         today.addView(Ui.card(c).apply {
             addView(Ui.text(c, "Screen time today", 14f, Ui.MUTED)); addView(stToday); addView(stCompare); addView(chart)
+            addView(topApps)
         })
         fun refreshSummary() {
             // Reading a week of usage history can take a moment, so do it off the UI thread.
@@ -82,7 +84,19 @@ class MainActivity : Activity() {
                 val days = (6 downTo 0).map { d0.minusDays(it.toLong()) }
                 val accurate = Restriction.usageAccessGranted(c)
                 val values = days.map { runCatching { ScreenTime.msFor(c, it) }.getOrDefault(ScreenTime.msOn(c, it)) }
+                val top = runCatching { ScreenTime.systemPerApp(c, d0) }.getOrNull().orEmpty()
+                    .entries.sortedByDescending { it.value }.filter { it.value >= 60_000L }.take(6)
+                    .map { Restriction.appLabel(c, it.key) to it.value }
                 runOnUiThread {
+                    topApps.removeAllViews()
+                    if (top.isNotEmpty()) topApps.addView(Ui.text(c, "Top apps today", 14f, Ui.MUTED).apply { setPadding(0, 0, 0, Ui.dp(c, 4)) })
+                    top.forEach { (name, ms) ->
+                        topApps.addView(LinearLayout(c).apply {
+                            setPadding(0, Ui.dp(c, 3), 0, Ui.dp(c, 3))
+                            addView(Ui.text(c, name, 15f), LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                            addView(Ui.text(c, ScreenTime.format(ms), 15f, Ui.MUTED))
+                        })
+                    }
                     val t = values.last(); val y = values[values.size - 2]
                     stToday.text = ScreenTime.format(t)
                     val diff = t - y

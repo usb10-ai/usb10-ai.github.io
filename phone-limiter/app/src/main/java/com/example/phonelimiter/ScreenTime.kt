@@ -28,47 +28,68 @@ object ScreenTime {
         return if (m < 60) "${m}m" else "${m / 60}h ${m % 60}m"
     }
 
-    data class Ev(val type: Int, val pkg: String, val time: Long)
+    data class Ev(val type: Int, val pkg: String, val time: Long, val cls: String = "")
     private const val RESUMED = 1; private const val PAUSED = 2; private const val STOPPED = 23
     private const val SCREEN_OFF = 16
 
     /**
-     * Pure: time spent in apps between [start] and [end], from app resume/pause events
-     * (the same idea as Digital Wellbeing). Apps in [excluded] (home screen etc.) don't count.
+     * Pure: visible time per app between [start] and [end] (like Digital Wellbeing).
+     * An app counts from when one of its screens appears until all of them are hidden
+     * (STOPPED on Android 10+, PAUSED on older phones) or the screen turns off.
+     * Several apps can be visible at once (split screen, picture-in-picture).
      */
-    fun foregroundMs(events: List<Ev>, start: Long, end: Long, excluded: Set<String>): Long {
-        var cur: String? = null; var since = start; var total = 0L
-        fun close(t: Long) {
-            val p = cur
-            if (p != null && p !in excluded) total += (minOf(t, end) - maxOf(since, start)).coerceAtLeast(0L)
-            cur = null
+    fun perAppMs(events: List<Ev>, start: Long, end: Long): Map<String, Long> {
+        val useStopped = events.any { it.type == STOPPED }
+        val closeType = if (useStopped) STOPPED else PAUSED
+        val open = HashMap<String, MutableSet<String>>()   // pkg -> visible activities
+        val since = HashMap<String, Long>()
+        val total = HashMap<String, Long>()
+        fun addTime(pkg: String, t: Long) {
+            val from = maxOf(since[pkg] ?: t, start); val to = minOf(t, end)
+            if (to > from) total[pkg] = (total[pkg] ?: 0L) + (to - from)
         }
+        fun closeAll(t: Long) { open.keys.toList().forEach { addTime(it, t) }; open.clear(); since.clear() }
         for (e in events.sortedBy { it.time }) when (e.type) {
-            RESUMED -> { close(e.time); cur = e.pkg; since = e.time }
-            PAUSED, STOPPED -> if (e.pkg == cur) close(e.time)
-            SCREEN_OFF -> close(e.time)
+            RESUMED -> {
+                val acts = open.getOrPut(e.pkg) { mutableSetOf() }
+                if (acts.isEmpty()) since[e.pkg] = e.time
+                acts.add(e.cls)
+            }
+            closeType -> open[e.pkg]?.let { acts ->
+                if (acts.remove(e.cls) && acts.isEmpty()) { addTime(e.pkg, e.time); open.remove(e.pkg); since.remove(e.pkg) }
+            }
+            SCREEN_OFF -> closeAll(e.time)
         }
-        close(end)
+        closeAll(end)
         return total
     }
 
-    /** Screen time for [day] from Android's usage history, or null without Usage access. */
-    fun systemMs(c: Context, day: LocalDate): Long? {
+    fun foregroundMs(events: List<Ev>, start: Long, end: Long, excluded: Set<String>): Long =
+        perAppMs(events, start, end).filterKeys { it !in excluded }.values.sum()
+
+    private fun excluded(c: Context) = setOfNotNull(c.packageName, Restriction.homePackage(c), "com.android.systemui")
+
+    /** Per-app visible time for [day] from Android's usage history, or null without Usage access. */
+    fun systemPerApp(c: Context, day: LocalDate): Map<String, Long>? {
         if (!Restriction.usageAccessGranted(c)) return null
         val zone = ZoneId.systemDefault()
         val start = day.atStartOfDay(zone).toInstant().toEpochMilli()
         val end = minOf(day.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli(), System.currentTimeMillis())
-        if (end <= start) return 0L
+        if (end <= start) return emptyMap()
         val usm = c.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val it = usm.queryEvents(start, end)
+        // Start 3h early so an app already open at midnight is counted from midnight.
+        val it = usm.queryEvents(start - 3 * 3_600_000L, end)
         val e = UsageEvents.Event(); val list = ArrayList<Ev>()
         while (it.hasNextEvent()) {
             it.getNextEvent(e)
-            if (e.eventType in setOf(RESUMED, PAUSED, STOPPED, SCREEN_OFF)) list.add(Ev(e.eventType, e.packageName ?: "", e.timeStamp))
+            if (e.eventType == RESUMED || e.eventType == PAUSED || e.eventType == STOPPED || e.eventType == SCREEN_OFF)
+                list.add(Ev(e.eventType, e.packageName ?: "", e.timeStamp, e.className ?: ""))
         }
-        val excluded = setOfNotNull(c.packageName, Restriction.homePackage(c), "com.android.systemui")
-        return foregroundMs(list, start, end, excluded)
+        val ex = excluded(c)
+        return perAppMs(list, start, end).filterKeys { it !in ex }
     }
+
+    fun systemMs(c: Context, day: LocalDate): Long? = systemPerApp(c, day)?.values?.sum()
 
     /** Best available figure: Android's history if allowed, else our own counter. */
     fun msFor(c: Context, day: LocalDate): Long = systemMs(c, day) ?: msOn(c, day)
