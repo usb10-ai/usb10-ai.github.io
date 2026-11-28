@@ -13,3 +13,11 @@ class HabitsTest {
     @Test fun notYetDoneTodayKeepsYesterdaysStreak() = assertEquals(2, Habits.streak(setOf(d(1), d(2)), today))
     @Test fun gapBreaksStreak() = assertEquals(0, Habits.streak(setOf(d(2), d(3)), today))
 }
+
+class ScreenTimeFormatTest {
+    @Test fun formats() {
+        assertEquals("0m", ScreenTime.format(0))
+        assertEquals("45m", ScreenTime.format(45 * 60_000L))
+        assertEquals("2h 5m", ScreenTime.format(125 * 60_000L))
+    }
+}

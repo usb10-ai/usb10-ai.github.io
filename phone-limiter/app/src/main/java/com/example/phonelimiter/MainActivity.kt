@@ -27,11 +27,64 @@ class MainActivity : Activity() {
         root.addView(Ui.text(c, "Phone Limiter", 30f, bold = true))
         root.addView(Ui.text(c, "Take breaks. Sleep at night.  ·  ${BuildConfig.VERSION_NAME}", 15f, Ui.MUTED))
 
+        // Two tabs: Today (daily things) and Settings
+        val today = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
+        val settingsPage = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL; visibility = android.view.View.GONE }
+        val tabToday = Ui.button(c, "Today"); val tabSettings = Ui.button(c, "Settings")
+        fun showTab(t: Int) {
+            today.visibility = if (t == 0) android.view.View.VISIBLE else android.view.View.GONE
+            settingsPage.visibility = if (t == 1) android.view.View.VISIBLE else android.view.View.GONE
+            tabToday.background = Ui.rounded(if (t == 0) Ui.ACCENT else Ui.CARD, 14f, c)
+            tabSettings.background = Ui.rounded(if (t == 1) Ui.ACCENT else Ui.CARD, 14f, c)
+        }
+        tabToday.setOnClickListener { showTab(0) }; tabSettings.setOnClickListener { showTab(1) }
+        root.addView(LinearLayout(c).apply {
+            setPadding(0, Ui.dp(c, 8), 0, 0)
+            addView(tabToday, LinearLayout.LayoutParams(0, Ui.dp(c, 46), 1f).apply { rightMargin = Ui.dp(c, 6) })
+            addView(tabSettings, LinearLayout.LayoutParams(0, Ui.dp(c, 46), 1f).apply { leftMargin = Ui.dp(c, 6) })
+        })
+        root.addView(today); root.addView(settingsPage)
+        showTab(0)
+
         // Status + start/stop
         val status = Ui.text(c, "", 18f, bold = true)
         val toggle = Ui.button(c, "")
         val hero = Ui.card(c).apply { addView(status); addView(toggle) }
-        root.addView(hero)
+        today.addView(hero)
+
+        // Setup warning (shown on Today only when something needed is missing)
+        val setupBanner = Ui.card(c).apply {
+            background = Ui.rounded(android.graphics.Color.parseColor("#5A3A12"), 18f, c)
+            addView(Ui.text(c, "⚠️ Setup incomplete. Tap to fix it in Settings.", 15f))
+            setOnClickListener { showTab(1) }
+        }
+        today.addView(setupBanner)
+
+        // Screen time summary + 7-day chart
+        val stToday = Ui.text(c, "", 30f, bold = true)
+        val stCompare = Ui.text(c, "", 14f, Ui.MUTED)
+        val chart = BarChart(c).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(c, 140)).apply { topMargin = Ui.dp(c, 12) }
+        }
+        today.addView(Ui.card(c).apply {
+            addView(Ui.text(c, "Screen time today", 14f, Ui.MUTED)); addView(stToday); addView(stCompare); addView(chart)
+        })
+        fun refreshSummary() {
+            val d0 = java.time.LocalDate.now()
+            val t = ScreenTime.msOn(c, d0); val y = ScreenTime.msOn(c, d0.minusDays(1))
+            stToday.text = ScreenTime.format(t)
+            val diff = t - y
+            val cmp = when {
+                y == 0L -> "No data for yesterday yet"
+                diff <= 0 -> "▼ ${ScreenTime.format(-diff)} less than yesterday so far"
+                else -> "▲ ${ScreenTime.format(diff)} more than yesterday"
+            }
+            stCompare.text = "$cmp  ·  Reminders today: ${ScreenTime.reminders(c, d0)}"
+            val days = (6 downTo 0).map { d0.minusDays(it.toLong()) }
+            chart.values = days.map { ScreenTime.msOn(c, it) }
+            chart.labels = days.map { if (it == d0) "Today" else it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()) }
+        }
+        refreshSummary()
 
         // Badges (card is added below the habits)
         val badgeCard = Ui.card(c)
@@ -117,7 +170,7 @@ class MainActivity : Activity() {
                 else Toast.makeText(c, "Maximum ${Prefs.MAX_TASKS} priorities", Toast.LENGTH_SHORT).show()
             }
         })
-        root.addView(prio)
+        today.addView(prio)
 
         // Daily habits: kept every day, ticks reset daily, streak shown
         val habitCard = Ui.card(c)
@@ -172,14 +225,46 @@ class MainActivity : Activity() {
                 else Toast.makeText(c, "Maximum ${Habits.MAX} habits", Toast.LENGTH_SHORT).show()
             }
         })
-        root.addView(habitCard)
+        today.addView(habitCard)
         refreshBadges()
-        root.addView(badgeCard)
+        today.addView(badgeCard)
+
+        // Setup checklist: each permission the app needs, with a fix button
+        val checklist = Ui.card(c)
+        settingsPage.addView(checklist)
+        fun refreshChecklist() {
+            val pm = getSystemService(POWER_SERVICE) as android.os.PowerManager
+            val needsUsage = Prefs.allowedPkg(c) != null
+            val items = listOf(
+                Triple("Notifications", getSystemService(android.app.NotificationManager::class.java).areNotificationsEnabled(),
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, packageName)),
+                Triple("Appear on top (break screen over apps)", Settings.canDrawOverlays(c),
+                    Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))),
+                Triple("Battery: unrestricted", pm.isIgnoringBatteryOptimizations(packageName),
+                    Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))),
+                Triple("Usage access" + if (needsUsage) "" else " (only for one-app restriction)",
+                    Restriction.usageAccessGranted(c) || !needsUsage, Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)))
+            checklist.removeAllViews()
+            checklist.addView(Ui.text(c, "Setup checklist", 18f, bold = true))
+            items.forEach { (name, ok, fix) ->
+                checklist.addView(LinearLayout(c).apply {
+                    gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, Ui.dp(c, 6), 0, Ui.dp(c, 6))
+                    addView(Ui.text(c, (if (ok) "✅  " else "⚠️  ") + name, 15f, if (ok) Ui.MUTED else Color.WHITE),
+                        LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+                    if (!ok) addView(Button(c).apply {
+                        text = "Fix"; isAllCaps = false; setTextColor(Color.WHITE); background = Ui.rounded(Ui.ACCENT, 10f, c)
+                        setOnClickListener { runCatching { startActivity(fix) } }
+                    }, LinearLayout.LayoutParams(Ui.dp(c, 64), Ui.dp(c, 38)))
+                })
+            }
+            setupBanner.visibility = if (items.all { it.second }) android.view.View.GONE else android.view.View.VISIBLE
+        }
+        refreshChecklist()
 
         // Break reminder settings
         val limit = Ui.number(c, Prefs.limitMin(c))
         val brk = Ui.number(c, Prefs.breakMin(c))
-        root.addView(Ui.card(c).apply {
+        settingsPage.addView(Ui.card(c).apply {
             addView(Ui.text(c, "Break reminder", 18f, bold = true))
             addView(Ui.row(c, "Remind after (minutes of use)", limit))
             addView(Ui.row(c, "Screen-off minutes = real break", brk))
@@ -188,7 +273,7 @@ class MainActivity : Activity() {
         // Night mode settings
         val nightOn = Switch(c).apply { isChecked = Prefs.nightOn(c); setTextColor(Color.WHITE) }
         val ns = Ui.number(c, Prefs.nightStart(c)); val ne = Ui.number(c, Prefs.nightEnd(c))
-        root.addView(Ui.card(c).apply {
+        settingsPage.addView(Ui.card(c).apply {
             addView(Ui.text(c, "Night mode", 18f, bold = true))
             addView(Ui.text(c, "Tells you not to use the phone at night.", 14f, Ui.MUTED))
             addView(LinearLayout(c).apply {
@@ -210,10 +295,10 @@ class MainActivity : Activity() {
             removeBtn.visibility = if (p == null) android.view.View.GONE else android.view.View.VISIBLE
             usageBtn.visibility = if (p != null && !Restriction.usageAccessGranted(c)) android.view.View.VISIBLE else android.view.View.GONE
         }
-        refreshAllowedHook = { refreshAllowed(); refreshTasks(); refreshHabits(); refreshBadges() }
+        refreshAllowedHook = { refreshAllowed(); refreshTasks(); refreshHabits(); refreshBadges(); refreshSummary(); refreshChecklist() }
         usageBtn.setOnClickListener { startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)) }
-        removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed() }
-        root.addView(Ui.card(c).apply {
+        removeBtn.setOnClickListener { Prefs.setAllowedPkg(c, null); refreshAllowed(); refreshChecklist() }
+        settingsPage.addView(Ui.card(c).apply {
             addView(Ui.text(c, "Allow only one app", 18f, bold = true))
             addView(Ui.text(c, "When your break reminder is due, or at night, every app except the one you choose is blocked. Only one app can be allowed.", 14f, Ui.MUTED))
             addView(allowedText)
@@ -233,17 +318,6 @@ class MainActivity : Activity() {
             addView(usageBtn); addView(removeBtn)
         })
         refreshAllowed()
-
-        // Overlay permission
-        root.addView(Ui.card(c).apply {
-            addView(Ui.text(c, "Full-screen prompt", 18f, bold = true))
-            addView(Ui.text(c, "Allow \"Display over other apps\" so the break screen appears on top of whatever you're using.", 14f, Ui.MUTED))
-            addView(Ui.button(c, "Grant overlay permission", Color.parseColor("#263449")).apply {
-                setOnClickListener {
-                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
-                }
-            })
-        })
 
         fun save() {
             Prefs.set(c, limit.text.toString().toIntOrNull()?.coerceAtLeast(1) ?: 20,
@@ -266,7 +340,7 @@ class MainActivity : Activity() {
             refresh()
         }
         // Restart the service so changed settings take effect while running.
-        root.addView(Ui.button(c, "Save settings", Color.parseColor("#263449")).apply {
+        settingsPage.addView(Ui.button(c, "Save settings", Color.parseColor("#263449")).apply {
             setOnClickListener {
                 save()
                 if (Prefs.enabled(c)) { UsageService.stop(c); UsageService.start(c) }

@@ -19,6 +19,7 @@ Push to GitHub → Actions → "Build Phone Limiter APK" → download `phone-lim
 - Android 13+: allow notifications when prompted.
 - Some vendors (Xiaomi, Samsung, OnePlus…) kill background apps: set battery to "Unrestricted" for this app.
 - **Daily habits:** a separate list that stays every day; ticks reset daily and each habit shows its 🔥 streak.
+- **Today / Settings tabs**, a **screen time** summary with a 7-day chart, and a **setup checklist** that flags missing permissions.
 - **Badges:** 13 achievements for habit streaks, perfect days, finished priorities, breaks taken and good nights.
 - **Allow only one app:** pick one app in the app; after the limit (and at night) every other app is covered by a block screen. Needs "Usage access" + "Appear on top". "Remove restriction" clears it.
 - Only screen state and the foreground app name are read, on-device; nothing leaves your phone.

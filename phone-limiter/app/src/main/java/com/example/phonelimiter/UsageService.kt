@@ -16,17 +16,25 @@ class UsageService : Service() {
     private var ticks = 0
     private val detector by lazy { ForegroundDetector(this) }
     private var overlayIsRestriction = false
+    private var lastAccrue = 0L
+
+    /** Adds screen-on time since the last call to today's total. */
+    private fun accrue() {
+        val t = now()
+        if (lastAccrue > 0) (t - lastAccrue).takeIf { it in 0..120_000L }?.let { ScreenTime.add(this, it) }
+        lastAccrue = t
+    }
     private val tick = object : Runnable {
         override fun run() {
-            check(); enforce(); if (++ticks % 10 == 0) updateStatus(); handler.postDelayed(this, 3_000L)
+            accrue(); check(); enforce(); if (++ticks % 10 == 0) updateStatus(); handler.postDelayed(this, 3_000L)
         }
     }
 
     private val screenReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context, i: Intent) {
             when (i.action) {
-                Intent.ACTION_SCREEN_ON -> { tracker.onScreenOn(now()); startTicking(); handler.postDelayed({ check() }, 1_500L) }
-                Intent.ACTION_SCREEN_OFF -> { tracker.onScreenOff(now()); handler.removeCallbacks(tick) }
+                Intent.ACTION_SCREEN_ON -> { lastAccrue = now(); tracker.onScreenOn(now()); startTicking(); handler.postDelayed({ check() }, 1_500L) }
+                Intent.ACTION_SCREEN_OFF -> { accrue(); lastAccrue = 0L; tracker.onScreenOff(now()); handler.removeCallbacks(tick) }
             }
         }
     }
@@ -37,7 +45,7 @@ class UsageService : Service() {
         super.onCreate()
         tracker = SessionTracker(Prefs.limitMin(this) * 60_000L, Prefs.breakMin(this) * 60_000L)
         val pm = getSystemService(POWER_SERVICE) as PowerManager
-        if (pm.isInteractive) { tracker.onScreenOn(now()); startTicking() }
+        if (pm.isInteractive) { lastAccrue = now(); tracker.onScreenOn(now()); startTicking() }
         registerReceiver(screenReceiver, IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON); addAction(Intent.ACTION_SCREEN_OFF)
         })
@@ -82,6 +90,7 @@ class UsageService : Service() {
     }
 
     private fun nudge(title: String, text: String, mins: Int, night: Boolean) {
+        ScreenTime.addReminder(this)
         val breakIntent = Intent(this, BreakActivity::class.java)
             .putExtra("minutes", mins).putExtra("night", night).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val pi = PendingIntent.getActivity(this, 0, breakIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
