@@ -14,21 +14,22 @@
 <div id="splash" class="splash" aria-hidden="true">
   <img src="icon-192.png" alt="" width="96" height="96">
   <div class="sp-name">Office Editor</div>
-  <div class="sp-sub">Word &amp; PowerPoint, anywhere</div>
+  <div class="sp-sub">Word, Excel &amp; PowerPoint, anywhere</div>
   <div class="sp-by">Developed by <b>USB10</b></div>
 </div>
 <header class="appbar">
   <div class="brand"><span class="logo">✎</span><span class="txt"> Office Editor</span></div>
   <nav class="tabs" role="tablist">
-    <button class="tab active" data-mode="word" role="tab">📄 Word</button>
-    <button class="tab" data-mode="ppt" role="tab">📊 PowerPoint</button>
+    <button class="tab active" data-mode="word" role="tab" title="Word"><span class="ti">📄</span><span class="tl"> Word</span></button>
+    <button class="tab" data-mode="xls" role="tab" title="Excel"><span class="ti">📈</span><span class="tl"> Excel</span></button>
+    <button class="tab" data-mode="ppt" role="tab" title="PowerPoint"><span class="ti">📊</span><span class="tl"> PowerPoint</span></button>
   </nav>
   <div class="filebar">
     <span id="fileName" class="filename">Untitled.docx</span>
     <button id="btnNew" title="New file">New</button>
-    <button id="btnOpen" title="Open a .docx or .pptx file (Ctrl+O)">Open…</button>
+    <button id="btnOpen" title="Open a Word, Excel or PowerPoint file (Ctrl+O)">Open…</button>
     <button id="btnSave" class="primary" title="Save / download (Ctrl+S)">Save</button>
-    <input type="file" id="fileInput" accept=".docx,.pptx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
+    <input type="file" id="fileInput" accept=".docx,.xlsx,.xlsm,.csv,.pptx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12,text/csv,application/vnd.openxmlformats-officedocument.presentationml.presentation" hidden>
   </div>
 </header>
 
@@ -162,8 +163,70 @@
   <footer class="status"><span id="pStats">Slide 0 of 0</span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
 </section>
 
+<!-- ================= EXCEL ================= -->
+<section id="xlsApp" class="mode" hidden>
+  <div class="toolbar" id="xlsToolbar">
+    <div class="grp">
+      <button id="xUndo" title="Undo (Ctrl+Z)">↶</button>
+      <button id="xRedo" title="Redo (Ctrl+Y)">↷</button>
+    </div>
+    <div class="grp">
+      <select id="xSize" title="Font size (pt)">
+        <option value="">Size</option>
+        <option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>14</option>
+        <option>16</option><option>18</option><option>20</option><option>24</option><option>28</option><option>36</option>
+      </select>
+      <button data-xfont="b" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button data-xfont="i" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button data-xfont="u" title="Underline (Ctrl+U)"><u>U</u></button>
+      <label class="color" title="Text colour">A<input type="color" id="xColor" value="#c00000"></label>
+      <label class="color" title="Fill colour">◼<input type="color" id="xFill" value="#ffff00"></label>
+      <button id="xNoFill" title="No fill">⌀</button>
+      <button id="xBorder" title="Borders on / off">▦</button>
+    </div>
+    <div class="grp">
+      <button data-xalign="left" title="Align left">⯇</button>
+      <button data-xalign="center" title="Center">≡</button>
+      <button data-xalign="right" title="Align right">⯈</button>
+      <button id="xWrap" title="Wrap text">↵</button>
+    </div>
+    <div class="grp">
+      <select id="xFmt" title="Number format">
+        <option value="">Format</option>
+        <option value="General">General</option>
+        <option value="0.00">Number 0.00</option>
+        <option value="#,##0.00">Comma 1,234.00</option>
+        <option value='"₹"#,##0.00'>Rupee ₹</option>
+        <option value='"$"#,##0.00'>Dollar $</option>
+        <option value="0%">Percent %</option>
+        <option value="0.00%">Percent 0.00%</option>
+        <option value="dd-mm-yyyy">Date 28-11-2026</option>
+        <option value="dd-mmm-yyyy">Date 28-Nov-2026</option>
+        <option value="h:mm AM/PM">Time</option>
+        <option value="@">Text</option>
+      </select>
+      <button id="xSum" title="AutoSum">Σ</button>
+      <button id="xSort" title="Sort by the active column (press again to reverse)">⇅</button>
+    </div>
+    <div class="grp">
+      <button id="xInsRow" title="Insert row(s) above">＋Row</button>
+      <button id="xDelRow" title="Delete selected row(s)">−Row</button>
+      <button id="xInsCol" title="Insert column(s) to the left">＋Col</button>
+      <button id="xDelCol" title="Delete selected column(s)">−Col</button>
+    </div>
+  </div>
+  <div class="fxbar">
+    <input id="xName" class="namebox" title="Cell address — type one and press Enter to jump" spellcheck="false">
+    <span class="fxlabel">fx</span>
+    <input id="xFx" class="fx" placeholder="Value or =formula" spellcheck="false" autocomplete="off">
+  </div>
+  <div class="xgridwrap" id="xGrid" tabindex="0"></div>
+  <div class="stabs" id="xTabs"></div>
+  <footer class="status"><span id="xStats"></span><span class="credit">Developed by USB10</span><a class="getapp" href="OfficeEditor.apk" download>📱 Android app</a></footer>
+</section>
+
 <div id="presenter" class="presenter" hidden><div id="presSlide"></div><div class="presinfo" id="presInfo"></div><button id="presClose" class="presclose" title="End slideshow (Esc)">✕</button></div>
-<div id="drop" class="drop" hidden>Drop a .docx or .pptx file to open it</div>
+<div id="drop" class="drop" hidden>Drop a Word, Excel or PowerPoint file to open it</div>
 <div id="toast" class="toast" hidden></div>
 
 <script src="vendor/jszip.min.js"></script>
@@ -172,6 +235,9 @@
 <script src="common.js"></script>
 <script src="word.js"></script>
 <script src="ppt.js"></script>
+<script src="vendor/formula-parser.min.js"></script>
+<script src="vendor/formulajs.min.js"></script>
+<script src="xlsx.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

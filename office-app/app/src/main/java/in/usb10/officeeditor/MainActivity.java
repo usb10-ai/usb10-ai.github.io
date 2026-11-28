@@ -56,6 +56,8 @@ public class MainActivity extends Activity {
     private static final String START = "https://" + HOST + "/assets/www/index.html";
     private static final String DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
     private static final String PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    private static final String XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private static final String XLSM = "application/vnd.ms-excel.sheet.macroEnabled.12";
     private static final int REQ_PICK = 1;
     private static final int REQ_SAVE = 2;
 
@@ -139,12 +141,14 @@ public class MainActivity extends Activity {
                     for (String part : t.split(",")) {
                         part = part.trim();
                         if (part.contains("/")) mimes.add(part);
-                        if (part.equals(".docx") || part.equals(".pptx")) office = true;
+                        if (part.equals(".docx") || part.equals(".pptx") || part.equals(".xlsx")) office = true;
                     }
                 }
                 if (office) {
                     if (!mimes.contains(DOCX)) mimes.add(DOCX);
                     if (!mimes.contains(PPTX)) mimes.add(PPTX);
+                    if (!mimes.contains(XLSX)) mimes.add(XLSX);
+                    for (String m : new String[]{XLSM, "text/csv", "text/comma-separated-values"}) if (!mimes.contains(m)) mimes.add(m);
                     mimes.add("application/octet-stream"); // some providers don't know Office types
                 }
                 if (mimes.isEmpty()) i.setType("*/*");
@@ -204,7 +208,7 @@ public class MainActivity extends Activity {
         name.setPadding(0, dp(16), 0, dp(4));
         center.addView(name);
         TextView tag = new TextView(this);
-        tag.setText("Word & PowerPoint, anywhere");
+        tag.setText("Word, Excel & PowerPoint, anywhere");
         tag.setTextColor(Color.parseColor("#646b75"));
         tag.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
         center.addView(tag);
@@ -251,9 +255,12 @@ public class MainActivity extends Activity {
                     String name = displayName(src);
                     if (name == null) name = "Document";
                     String lower = name.toLowerCase();
-                    if (!lower.endsWith(".docx") && !lower.endsWith(".pptx")) {
-                        if (PPTX.equals(type) || looksLikePptx(data)) name += ".pptx";
-                        else name += ".docx";
+                    if (!lower.matches(".*\\.(docx|pptx|xlsx|xlsm|csv)$")) {
+                        if (PPTX.equals(type)) name += ".pptx";
+                        else if (XLSX.equals(type)) name += ".xlsx";
+                        else if (XLSM.equals(type)) name += ".xlsm";
+                        else if (type != null && type.contains("csv")) name += ".csv";
+                        else name += "." + sniffKind(data);
                     }
                     incomingData = Base64.encodeToString(data, Base64.NO_WRAP);
                     incomingName = name;
@@ -269,10 +276,13 @@ public class MainActivity extends Activity {
         if (pageReady && incomingName != null) web.evaluateJavascript("window.App && App.openFromAndroid()", null);
     }
 
-    private static boolean looksLikePptx(byte[] zip) {
-        // the zip's central directory names its parts; "ppt/" means PowerPoint
-        String head = new String(zip, 0, Math.min(zip.length, 1 << 20), java.nio.charset.StandardCharsets.ISO_8859_1);
-        return head.contains("ppt/") && !head.contains("word/");
+    /** Guess the Office type from the zip's part names: ppt/ = PowerPoint, xl/ = Excel, otherwise Word. */
+    private static String sniffKind(byte[] zip) {
+        int n = zip.length, from = Math.max(0, n - (1 << 20));
+        String tail = new String(zip, from, n - from, java.nio.charset.StandardCharsets.ISO_8859_1);
+        if (tail.contains("ppt/presentation.xml")) return "pptx";
+        if (tail.contains("xl/workbook.xml")) return "xlsx";
+        return "docx";
     }
 
     private byte[] readAll(Uri uri) throws Exception {
@@ -390,6 +400,7 @@ public class MainActivity extends Activity {
                     i.addCategory(Intent.CATEGORY_OPENABLE);
                     String lower = name.toLowerCase();
                     i.setType(lower.endsWith(".pptx") ? PPTX : lower.endsWith(".docx") ? DOCX
+                        : lower.endsWith(".xlsx") ? XLSX : lower.endsWith(".xlsm") ? XLSM
                         : (mime == null || mime.isEmpty() ? "application/octet-stream" : mime));
                     i.putExtra(Intent.EXTRA_TITLE, name);
                     try {

@@ -2,13 +2,18 @@
 'use strict';
 const App = {
   mode: 'word',
-  editor() { return this.mode === 'word' ? WordEditor : PptEditor; },
+  editors() { return { word: WordEditor, xls: XlsxEditor, ppt: PptEditor }; },
+  editor() { return this.editors()[this.mode]; },
+  kindOf(ed) { return Object.entries(this.editors()).find(([, e]) => e === ed)[0]; },
   async setMode(m) {
     this.mode = m;
     $$('.tab').forEach((t) => t.classList.toggle('active', t.dataset.mode === m));
     $('#wordApp').hidden = m !== 'word';
     $('#pptApp').hidden = m !== 'ppt';
+    $('#xlsApp').hidden = m !== 'xls';
     if (m === 'ppt' && !PptEditor.px) await this.guard(() => PptEditor.newDoc());
+    if (m === 'xls' && !XlsxEditor.book) await this.guard(() => XlsxEditor.newDoc());
+    if (m === 'xls') setTimeout(() => $('#xGrid').focus({ preventScroll: true }), 0);
     if (m === 'ppt') PptEditor.fit();
     this.updateTitle();
   },
@@ -27,16 +32,18 @@ const App = {
   },
   async openFile(file) {
     const ext = file.name.split('.').pop().toLowerCase();
-    if (ext === 'doc' || ext === 'ppt') return toast('Old binary .doc/.ppt files are not supported. Save them as .docx/.pptx first.', 5000);
-    if (ext !== 'docx' && ext !== 'pptx') return toast('Please choose a .docx or .pptx file');
-    const target = ext === 'docx' ? WordEditor : PptEditor;
+    if (ext === 'doc' || ext === 'ppt' || ext === 'xls') return toast(`Old .${ext} files are not supported. Save them as .${ext}x first.`, 5000);
+    const kind = { docx: 'word', pptx: 'ppt', xlsx: 'xls', xlsm: 'xls', csv: 'xls' }[ext];
+    if (!kind) return toast('Please choose a .docx, .xlsx or .pptx file');
+    const target = this.editors()[kind];
     if (target.dirty && !confirm(`You have unsaved changes in ${target.fileName}. Discard them?`)) return;
     toast('Opening ' + file.name + '…', 1500);
     await this.guard(async () => {
       const buf = await readFileAsArrayBuffer(file);
-      await this.setMode(ext === 'docx' ? 'word' : 'ppt');
-      await target.open(buf, file.name);
-      Drafts.del(ext === 'docx' ? 'word' : 'ppt');
+      await this.setMode(kind);
+      if (ext === 'csv') await XlsxEditor.openCsv(new TextDecoder().decode(buf), file.name);
+      else await target.open(buf, file.name);
+      Drafts.del(kind);
       this.fileHandle = null;
       toast('Opened ' + file.name);
     });
@@ -53,7 +60,7 @@ const App = {
     await this.guard(async () => {
       const blob = await ed.save();
       let name = ed.fileName;
-      const want = this.mode === 'word' ? '.docx' : '.pptx';
+      const want = { word: '.docx', ppt: '.pptx', xls: /\.xlsm$/i.test(name) ? '.xlsm' : '.xlsx' }[this.mode];
       if (!name.toLowerCase().endsWith(want)) name = baseName(name) + want;
       if (IN_APP) { // the system "Save as" screen lets the user pick the name and folder
         this.pendingSave = { ed, name };
@@ -80,7 +87,7 @@ const App = {
     if (!p || !ok) return;
     p.ed.fileName = name || p.name;
     p.ed.dirty = false;
-    Drafts.del(p.ed === WordEditor ? 'word' : 'ppt');
+    Drafts.del(this.kindOf(p.ed));
     this.updateTitle();
     toast('Saved ' + p.ed.fileName);
   },
@@ -97,11 +104,15 @@ const App = {
         PptEditor.draftVersion = PptEditor.version;
         await Drafts.put('ppt', { name: PptEditor.fileName, blob: await PptEditor.draftBlob(), at: Date.now() });
       }
+      if (XlsxEditor.book && XlsxEditor.dirty && XlsxEditor.draftVersion !== XlsxEditor.version && !XlsxEditor.editor) {
+        XlsxEditor.draftVersion = XlsxEditor.version;
+        await Drafts.put('xls', { name: XlsxEditor.fileName, blob: await XlsxEditor.draftBlob(), at: Date.now() });
+      }
     } catch (e) { console.warn('draft save failed', e); }
     this.savingDrafts = false;
   },
   async offerRecovery() {
-    for (const kind of ['word', 'ppt']) {
+    for (const kind of ['word', 'xls', 'ppt']) {
       const d = await Drafts.get(kind);
       if (!d) continue;
       const when = new Date(d.at).toLocaleString();
@@ -113,14 +124,15 @@ const App = {
           WordEditor.fileName = d.name;
           WordEditor.changed();
         } else {
-          await PptEditor.open(await d.blob.arrayBuffer(), d.name);
-          PptEditor.markDirty();
+          const ed = this.editors()[kind];
+          await ed.open(await d.blob.arrayBuffer(), d.name);
+          ed.markDirty();
         }
         toast('Recovered ' + d.name);
       });
     }
   },
-  isDirty() { return !!(WordEditor.dirty || PptEditor.dirty); },
+  isDirty() { return !!(WordEditor.dirty || PptEditor.dirty || XlsxEditor.dirty); },
   async openFromAndroid() {
     const name = window.AndroidBridge.pendingName();
     if (!name) return;
@@ -131,6 +143,7 @@ const App = {
   init() {
     WordEditor.init();
     PptEditor.init();
+    XlsxEditor.init();
     $$('.tab').forEach((t) => (t.onclick = () => this.setMode(t.dataset.mode)));
     $('#btnOpen').onclick = () => $('#fileInput').click();
     $('#fileInput').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) this.openFile(f); };
@@ -150,19 +163,20 @@ const App = {
       const f = e.dataTransfer.files && e.dataTransfer.files[0];
       if (!f) return;
       e.preventDefault();
-      if (/\.(docx|pptx|doc|ppt)$/i.test(f.name)) this.openFile(f);
+      if (/\.(docx|pptx|xlsx|xlsm|csv|doc|ppt|xls)$/i.test(f.name)) this.openFile(f);
       else if (/^image\//.test(f.type)) {
         e.preventDefault();
         if (this.mode === 'ppt') PptEditor.insertImage(f);
+        else if (this.mode === 'xls') toast('Pictures can be added in Word and PowerPoint');
         else readFileAsDataURL(f).then(async (url) => {
           const { w, h } = await imageSize(url);
           const sc = Math.min(1, 624 / w);
           WordEditor.exec('insertHTML', `<img src="${url}" width="${Math.round(w * sc)}" height="${Math.round(h * sc)}">`);
         });
-      } else toast('Please drop a .docx or .pptx file');
+      } else toast('Please drop a .docx, .xlsx or .pptx file');
     });
     window.addEventListener('beforeunload', (e) => {
-      if (WordEditor.dirty || PptEditor.dirty) { e.preventDefault(); e.returnValue = ''; }
+      if (this.isDirty()) { e.preventDefault(); e.returnValue = ''; }
     });
     setTimeout(() => { const s = $('#splash'); s.classList.add('gone'); setTimeout(() => s.remove(), 500); }, IN_APP ? 0 : 1300);
     this.offerRecovery().then(() => { if (IN_APP) this.openFromAndroid(); });
@@ -170,6 +184,7 @@ const App = {
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.saveDrafts(); });
     const hash = location.hash.replace('#', '');
     if (hash === 'ppt' || hash === 'powerpoint') this.setMode('ppt');
+    if (hash === 'xls' || hash === 'excel') this.setMode('xls');
     this.updateTitle();
   },
 };

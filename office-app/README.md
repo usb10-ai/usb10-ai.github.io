@@ -1,11 +1,11 @@
 # Office Editor (Android)
 
-Android app for the Word / PowerPoint editor in `../office/`. The web app is copied into the
+Android app for the Word / Excel / PowerPoint editor in `../office/`. The web app is copied into the
 APK's assets at build time, so it works fully offline and any change to `office/` produces an
 updated APK.
 
 ## Features on top of the web version
-- **Open with / Share to Office Editor** from any file manager, email or chat app (.docx, .pptx)
+- **Open with / Share to Office Editor** from any file manager, email or chat app (.docx, .xlsx, .pptx, .csv)
 - Saving uses Android's "Save as" screen, so you choose the name and folder (Downloads, Drive, …)
 - Print or save Word documents as PDF through Android's print service
 - Full-screen slideshow (swipe or tap to change slides, Back to exit)
@@ -19,7 +19,7 @@ It publishes the APK at `office/OfficeEditor.apk` (download link in the editor's
 
 ## Build locally
 ```
-mkdir -p app/src/main/assets/www && cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/vendor app/src/main/assets/www/
+mkdir -p app/src/main/assets/www && cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/blank.xlsx ../office/*.png ../office/vendor app/src/main/assets/www/
 gradle assembleDebug        # JDK 17, Android SDK 34
 ```
 

@@ -2,7 +2,7 @@ name: Build Office Editor APK
 on:
   workflow_dispatch:
   push:
-    paths: ["office-app/**", "office/*.html", "office/*.css", "office/*.js", "office/*.pptx", "office/*.png", "office/vendor/**", ".github/workflows/office-apk.yml"]
+    paths: ["office-app/**", "office/*.html", "office/*.css", "office/*.js", "office/*.pptx", "office/*.xlsx", "office/*.png", "office/vendor/**", ".github/workflows/office-apk.yml"]
 permissions:
   contents: write
 concurrency: # one build per branch at a time, so publishes never race
@@ -21,7 +21,7 @@ jobs:
       - name: Bundle the web app into assets
         run: |
           mkdir -p app/src/main/assets/www
-          cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/*.png ../office/vendor app/src/main/assets/www/
+          cp -r ../office/index.html ../office/*.css ../office/*.js ../office/blank.pptx ../office/blank.xlsx ../office/*.png ../office/vendor app/src/main/assets/www/
       - run: gradle assembleDebug
       - run: cp app/build/outputs/apk/debug/app-debug.apk OfficeEditor.apk
       - uses: actions/upload-artifact@v4
