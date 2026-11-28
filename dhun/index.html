@@ -108,6 +108,13 @@ svg{display:block}
 .card .s{margin-top:3px;color:var(--ink-soft);font-size:14px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mix-label{position:absolute;left:12px;right:12px;bottom:12px;color:#fff;font-weight:800;font-size:22px;line-height:1.05;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,0,0,.35)}
 .mix-label small{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85;margin-bottom:4px}
+.card .art img.logo{object-fit:contain;background:#fff;padding:16%}
+.src-badge.live{background:#e5383b;color:#fff}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#e5383b;margin-right:6px;vertical-align:1px;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.fm-hero{display:flex;align-items:center;gap:12px;margin:8px 0 18px}
+.fm-hero .page-title{margin:0}
+.chips.tight{margin-bottom:14px}
 .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:28px 20px}
 .grid-cards .card{width:auto}
 
@@ -349,7 +356,7 @@ svg{display:block}
   <header id="top">
     <button class="icon-btn" id="backBtn" aria-label="Close search"><svg class="ic"><use href="#i-back"/></svg></button>
     <a class="logo" href="#/home" aria-label="Dhun home"><span class="logo-mark"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>Dhun</a>
-    <label class="search"><svg class="ic sm"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search songs, albums, artists, the Internet Archive" autocomplete="off" enterkeyhint="search"></label>
+    <label class="search"><svg class="ic sm"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Search songs, albums, artists, radio stations" autocomplete="off" enterkeyhint="search"></label>
     <div class="top-actions">
       <button class="icon-btn" id="searchToggle" aria-label="Search"><svg class="ic"><use href="#i-search"/></svg></button>
       <button class="icon-btn" id="uploadTop" aria-label="Add music files" title="Add your own music files"><svg class="ic"><use href="#i-upload"/></svg></button>
@@ -361,6 +368,7 @@ svg{display:block}
     <nav class="nav">
       <a href="#/home" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
       <a href="#/explore" data-nav="explore"><svg class="ic"><use href="#i-explore"/></svg>Explore</a>
+      <a href="#/radio" data-nav="radio"><svg class="ic"><use href="#i-fm"/></svg>Radio</a>
       <a href="#/library" data-nav="library"><svg class="ic"><use href="#i-library"/></svg>Library</a>
     </nav>
     <div class="side-sep"></div>
@@ -395,6 +403,7 @@ svg{display:block}
   <nav id="nav">
     <a href="#/home" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>Home</a>
     <a href="#/explore" data-nav="explore"><svg class="ic"><use href="#i-explore"/></svg>Explore</a>
+    <a href="#/radio" data-nav="radio"><svg class="ic"><use href="#i-fm"/></svg>Radio</a>
     <a href="#/library" data-nav="library"><svg class="ic"><use href="#i-library"/></svg>Library</a>
   </nav>
 </div>
@@ -439,6 +448,7 @@ svg{display:block}
 <audio id="au" preload="auto"></audio>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-fm" viewBox="0 0 24 24"><path d="M3.24 6.15C2.51 6.43 2 7.17 2 8v12c0 1.1.89 2 2 2h16c1.11 0 2-.9 2-2V8c0-1.11-.89-2-2-2H8.3l8.26-3.34L15.88 1 3.24 6.15zM7 20c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm13-8h-2v-2h-2v2H4V8h16v4z"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></symbol>
   <symbol id="i-next" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></symbol>
@@ -488,7 +498,7 @@ var view = $('#view'), main = $('#main');
 /* ================= storage ================= */
 var LS = 'dhun.v1';
 var S = (function () { try { return JSON.parse(localStorage.getItem(LS)) || {}; } catch (e) { return {}; } })();
-S.likes = S.likes || []; S.playlists = S.playlists || []; S.history = S.history || []; S.ext = S.ext || {};
+S.likes = S.likes || []; S.fmFav = S.fmFav || []; S.fmRecent = S.fmRecent || []; S.playlists = S.playlists || []; S.history = S.history || []; S.ext = S.ext || {};
 if (S.vol == null) S.vol = 0.9; if (S.autoplay == null) S.autoplay = true; S.repeat = S.repeat || 'off';
 var saveT = 0;
 function save() { clearTimeout(saveT); saveT = setTimeout(saveNow, 150); }
@@ -526,23 +536,24 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function
 function fmt(s) { if (!isFinite(s) || s < 0) s = 0; s = Math.floor(s); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + (m < 10 ? '0' : '') : '') + m + ':' + (x < 10 ? '0' : '') + x; }
 function fmtLong(s) { var m = Math.round(s / 60); return m >= 60 ? Math.floor(m / 60) + ' hr ' + (m % 60) + ' min' : m + ' min'; }
 function icon(n, cls) { return '<svg class="ic' + (cls ? ' ' + cls : '') + '"><use href="#i-' + n + '"/></svg>'; }
-function T(id) { return CAT.byId[id] || UP[id] || IAX[id] || S.ext[id] || null; }
+function T(id) { return CAT.byId[id] || UP[id] || IAX[id] || FM[id] || S.ext[id] || null; }
 function shuffleArr(a, r) { a = a.slice(); r = r || Math.random; for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function today() { var d = new Date(); return d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate(); }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 function plural(n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); }
-function isLiked(id) { return S.likes.indexOf(id) >= 0; }
+function isLiked(id) { if (/^fm:/.test(id)) return S.fmFav.some(function (x) { return x.id === id; }); return S.likes.indexOf(id) >= 0; }
 
 function artOf(t, size) {
   if (!t) return E.cover('none', 'upload', size);
   if (t.src === 'gen') { var al = CAT.albumById[t.albumId]; return E.cover(al.id, al.genre, size); }
   if (t.src === 'ia') return t.art;
+  if (t.src === 'radio') return t.art || E.cover(t.title, 'radio', size);
   return E.cover(t.id, 'upload', size);
 }
 function albumArt(al, size) { return E.cover(al.id, al.genre, size); }
 function artistArt(ar, size) { return E.cover(ar.id + '#artist', ar.genre, size); }
-function subOf(t) { return t.src === 'gen' ? t.artist + ' • ' + t.album : t.src === 'ia' ? t.artist + ' • ' + t.album : t.artist; }
-function remember(t) { if (t && t.src === 'ia') S.ext[t.id] = t; }
+function subOf(t) { if (t.src === 'radio') return 'Live radio' + (t.artist ? ' • ' + t.artist : ''); return t.src === 'gen' ? t.artist + ' • ' + t.album : t.src === 'ia' ? t.artist + ' • ' + t.album : t.artist; }
+function remember(t) { if (t && (t.src === 'ia' || t.src === 'radio')) S.ext[t.id] = t; }
 
 /* ================= lists & play contexts ================= */
 var LISTS = {}, listN = 0;
@@ -552,11 +563,11 @@ function rowHTML(id, i, key, o) {
   o = o || {};
   var t = T(id); if (!t) return '';
   var cur = P.queue[P.i] === id;
-  var badge = t.src === 'ia' ? '<span class="src-badge">IA</span>' : t.src === 'up' ? '<span class="src-badge">FILE</span>' : '';
+  var badge = t.src === 'radio' ? '<span class="src-badge live">LIVE</span>' : t.src === 'ia' ? '<span class="src-badge">IA</span>' : t.src === 'up' ? '<span class="src-badge">FILE</span>' : '';
   var lead = o.num ? '<div class="num">' + (cur ? '<span class="eq' + (au.paused ? '' : '') + '"><i></i><i></i><i></i></span>' : (i + 1)) + '</div>'
     : '<div class="thumb"><img loading="lazy" src="' + esc(artOf(t, 120)) + '" alt=""><div class="ov">' + (cur ? '<span class="eq"><i></i><i></i><i></i></span>' : icon('play')) + '</div></div>';
   return '<div class="row' + (cur ? ' cur' : '') + '" data-act="row" data-li="' + key + '" data-i="' + i + '" data-id="' + esc(id) + '"' + (o.ctx ? ' data-ctx="' + esc(o.ctx) + '"' : '') + '>' + lead +
-    '<div class="meta"><div class="t">' + esc(t.title) + '</div><div class="s">' + badge + esc(o.num ? t.artist : (o.noAlbum ? t.artist : subOf(t))) + '</div></div>' +
+    '<div class="meta"><div class="t">' + esc(t.title) + '</div><div class="s">' + badge + esc(t.src === 'radio' ? (t.artist || 'Live radio') : o.num ? t.artist : (o.noAlbum ? t.artist : subOf(t))) + '</div></div>' +
     (o.albumCol ? '<div class="album-col">' + esc(t.album || '') + '</div>' : '') +
     '<div class="acts"><button class="icon-btn like-btn' + (isLiked(id) ? ' on' : '') + '" data-act="like" data-id="' + esc(id) + '" aria-label="Like">' + icon(isLiked(id) ? 'heart' : 'heart-o', 'sm') + '</button>' +
     '<span class="dur">' + (t.dur ? fmt(t.dur) : '') + '</span>' +
@@ -636,6 +647,72 @@ function radioFor(id, n) {
   return [id].concat(ranked);
 }
 
+/* ================= live radio (radio-browser.info) ================= */
+var FM = {}, fmCache = {};
+var RB_HOSTS = ['de1.api.radio-browser.info', 'de2.api.radio-browser.info', 'fi1.api.radio-browser.info', 'nl1.api.radio-browser.info', 'at1.api.radio-browser.info'], rbH = 0;
+// A secure web page can't play http:// streams; the Android app can, so it shows more stations.
+var ALLOW_HTTP = !!window.DhunAndroid || location.protocol === 'http:';
+var CAN_HLS = !!document.createElement('audio').canPlayType('application/vnd.apple.mpegurl');
+var FM_COUNTRIES = [['IN', 'India'], ['', 'Worldwide'], ['US', 'USA'], ['GB', 'UK'], ['AE', 'UAE'], ['SG', 'Singapore'], ['LK', 'Sri Lanka'], ['NP', 'Nepal'], ['BD', 'Bangladesh'], ['AU', 'Australia'], ['CA', 'Canada'], ['DE', 'Germany'], ['FR', 'France'], ['JP', 'Japan']];
+var FM_LANGS = { IN: ['Hindi', 'Telugu', 'Tamil', 'Kannada', 'Malayalam', 'Odia', 'Bengali', 'Marathi', 'Gujarati', 'Punjabi', 'English'] };
+var FM_TAGS = [['news', 'News'], ['music', 'Music'], ['pop', 'Pop'], ['bollywood', 'Bollywood'], ['devotional', 'Devotional'], ['classical', 'Classical'], ['retro', 'Retro'], ['talk', 'Talk'], ['jazz', 'Jazz'], ['rock', 'Rock']];
+var fmState = { cc: 'IN', f: 'top', q: '' };
+if (S.fmCC != null) fmState.cc = S.fmCC;
+function rbGet(path) {
+  var tries = 0;
+  function attempt() {
+    return fetchJSON('https://' + RB_HOSTS[rbH % RB_HOSTS.length] + '/json/' + path, 10000)
+      .catch(function (e) { if (++tries >= RB_HOSTS.length) throw e; rbH++; return attempt(); });
+  }
+  return attempt();
+}
+function stationFrom(s) {
+  var url = (s.url_resolved || s.url || '').trim();
+  if (!url || !s.stationuuid) return null;
+  if (!ALLOW_HTTP && !/^https:/i.test(url)) return null;
+  if ((s.hls == 1 || /\.m3u8(\?|$)/i.test(url)) && !CAN_HLS) return null;
+  var loc = [s.state, s.country].filter(function (x) { return x && x.trim(); }).join(', ');
+  var name = (s.name || '').replace(/\s+/g, ' ').trim(); if (!name) return null;
+  return { id: 'fm:' + s.stationuuid, uuid: s.stationuuid, src: 'radio', title: name, artist: loc, album: 'Live radio', url: url,
+    art: /^https:/i.test(s.favicon || '') ? s.favicon : '', tags: s.tags || '', cc: s.countrycode || '', lang: s.language || '',
+    codec: s.codec || '', bitrate: s.bitrate || 0, home: /^https?:/i.test(s.homepage || '') ? s.homepage : '', dur: 0 };
+}
+function rbStations(params) {
+  var q = Object.keys(params).filter(function (k) { return params[k]; }).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+  q += (q ? '&' : '') + 'hidebroken=true&order=clickcount&reverse=true&limit=' + (ALLOW_HTTP ? 90 : 250);
+  if (fmCache[q]) return Promise.resolve(fmCache[q]);
+  return rbGet('stations/search?' + q).then(function (arr) {
+    var seen = {}, out = [];
+    (arr || []).forEach(function (s) { var st = stationFrom(s); if (!st) return; var k = st.title.toLowerCase(); if (seen[k]) return; seen[k] = 1; FM[st.id] = FM[st.id] || st; out.push(FM[st.id]); });
+    out = out.slice(0, 60); fmCache[q] = out; return out;
+  });
+}
+function stationCards(list, scroller) {
+  list.forEach(function (s) { FM[s.id] = FM[s.id] || s; });
+  var key = regList(list.map(function (s) { return s.id; }));
+  return '<div class="' + (scroller ? 'scroller' : 'grid-cards') + '">' + list.map(function (s, i) {
+    var sub = [s.artist, (s.tags || '').split(',').slice(0, 2).join(', ')].filter(Boolean).join(' • ') || 'Live radio';
+    return '<div class="card" data-act="fm" data-li="' + key + '" data-i="' + i + '"><div class="art"><img loading="lazy"' + (s.art ? ' class="logo"' : '') + ' src="' + esc(s.art || E.cover(s.title, 'radio', 360)) + '" alt="' + esc(s.title) + '"><div class="shade"></div>' +
+      '<button class="play-fab" data-act="fm" data-li="' + key + '" data-i="' + i + '" aria-label="Play">' + icon('play') + '</button></div><div class="t">' + esc(s.title) + '</div><div class="s">' + esc(sub) + '</div></div>';
+  }).join('') + '</div>';
+}
+function fmFail(el) { el.innerHTML = '<div class="empty"><b>Couldn’t load radio stations</b>The station directory didn’t answer — you may be offline.<br><button class="btn ghost" data-act="fm-retry">Try again</button></div>'; }
+function fmParams() {
+  if (fmState.q) return { name: fmState.q };
+  var p = { countrycode: fmState.cc };
+  if (fmState.f.indexOf('lang:') === 0) p.language = fmState.f.slice(5).toLowerCase();
+  else if (fmState.f.indexOf('tag:') === 0) p.tag = fmState.f.slice(4);
+  return p;
+}
+function runFM() {
+  var el = $('#fmRes'); if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  rbStations(fmParams()).then(function (list) {
+    if (!document.body.contains(el)) return;
+    el.innerHTML = list.length ? stationCards(list, false) : '<div class="empty"><b>No stations found</b>' + (fmState.q ? 'Try a different name.' : 'Try another language or category.') + '</div>';
+  }).catch(function () { if (document.body.contains(el)) fmFail(el); });
+}
+
 /* ================= Internet Archive ================= */
 var IAX = {}, iaAlbums = {}, iaSearchCache = {};
 var IA_COLL = { netlabels: { name: 'Netlabels', q: 'collection:(netlabels)' }, etree: { name: 'Live concerts', q: 'collection:(etree)' }, all: { name: 'All audio', q: 'mediatype:(audio)' } };
@@ -705,7 +782,7 @@ function loadAt(i, autoplay, seek) {
   P.i = i; var id = P.queue[i], t = T(id);
   if (!t) { P.queue.splice(i, 1); if (P.queue.length) loadAt(Math.min(i, P.queue.length - 1), autoplay); return; }
   var tok = ++P.token;
-  P.loadedId = null; P.vis = null; P.pendingSeek = seek || 0;
+  P.loadedId = null; P.vis = null; P.pendingSeek = t.src === 'radio' ? 0 : seek || 0;
   try { au.pause(); } catch (e) {}
   setLoading(true); updateNow(); renderQueueIfOpen(); markRows(); saveResume();
   if (t.src === 'gen' && !E.cached(id)) { $('#barSub').textContent = 'Composing on your device…'; $('#npmSub').textContent = 'Composing on your device…'; }
@@ -737,6 +814,8 @@ function prefetchNext() {
 function toggle() {
   if (P.i < 0) { if (S.resume && S.resume.queue && S.resume.queue.length) return resume(true); setQueue(mixTracks('supermix'), 0, { noShuffle: true }); return; }
   if (!P.loadedId) return loadAt(P.i, true, P.pendingSeek);
+  // a live stream resumes at "now", not where it was paused
+  if (au.paused && isLive()) { au.src = T(P.queue[P.i]).url; setLoading(true); playAudio(); return; }
   if (au.paused) playAudio(); else au.pause();
 }
 function next(auto) {
@@ -755,7 +834,9 @@ function prev() {
   if (au.currentTime > 3 || P.i === 0) { au.currentTime = 0; if (au.paused && P.loadedId) playAudio(); return; }
   loadAt(P.i - 1, true);
 }
+function isLive() { var t = T(P.queue[P.i]); return !!(t && t.src === 'radio'); }
 function seekTo(sec) {
+  if (isLive()) return;
   if (!P.loadedId) { P.pendingSeek = sec; return; }
   if (isFinite(sec)) au.currentTime = Math.max(0, sec);
 }
@@ -783,6 +864,8 @@ function toggleShuffle() {
 }
 function cycleRepeat() { S.repeat = S.repeat === 'off' ? 'all' : S.repeat === 'all' ? 'one' : 'off'; save(); syncModes(); toast({ off: 'Repeat off', all: 'Repeat all', one: 'Repeat one' }[S.repeat]); }
 function addHistory(id) {
+  var ht = T(id);
+  if (ht && ht.src === 'radio') { S.fmRecent = [ht].concat(S.fmRecent.filter(function (x) { return x.id !== id; })).slice(0, 12); save(); rbGet('url/' + ht.uuid).catch(function () {}); return; }
   S.history = [id].concat(S.history.filter(function (x) { return x !== id; })).slice(0, 100);
   remember(T(id)); save();
 }
@@ -816,6 +899,7 @@ au.addEventListener('loadedmetadata', function () {
   updateTimes();
 });
 au.addEventListener('ended', function () {
+  if (isLive()) { toast('The station stopped broadcasting'); return; }
   if (S.repeat === 'one') { au.currentTime = 0; playAudio(); return; }
   next(true);
 });
@@ -823,8 +907,9 @@ au.addEventListener('error', function () {
   if (!au.getAttribute('src') || !P.loadedId) return;
   setLoading(false);
   var t = T(P.queue[P.i]);
-  toast('Couldn’t play “' + (t ? t.title : 'this song') + '”' + (t && t.src === 'ia' ? ' — check your connection' : ''));
-  if (t && t.src === 'ia' && P.i < P.queue.length - 1) setTimeout(function () { next(true); }, 1800);
+  if (t && t.src === 'radio') toast('“' + t.title + '” isn’t responding right now' + (P.i < P.queue.length - 1 ? ' — trying the next station' : ''));
+  else toast('Couldn’t play “' + (t ? t.title : 'this song') + '”' + (t && t.src === 'ia' ? ' — check your connection' : ''));
+  if (t && (t.src === 'ia' || t.src === 'radio') && P.i < P.queue.length - 1) setTimeout(function () { next(true); }, 1800);
 });
 au.addEventListener('timeupdate', function () { if (Math.floor(au.currentTime) % 5 === 0) saveResume(); updatePosState(); });
 
@@ -878,6 +963,14 @@ function curDur() { var t = T(P.queue[P.i]); return isFinite(au.duration) && au.
 function curTime() { return P.loadedId ? au.currentTime : P.pendingSeek || 0; }
 var dragging = false;
 function updateTimes() {
+  var live = isLive(); $('#npmSeek').disabled = live; $('#seekTop').style.pointerEvents = live ? 'none' : '';
+  if (live) {
+    var on = !!P.loadedId && !au.paused;
+    $('#seekFill').style.width = on ? '100%' : '0%'; $('#seekKnob').style.left = '0%'; $('#bufFill').style.width = '0%';
+    $('#barTime').innerHTML = '<span class="live-dot"></span>LIVE' + (on ? ' · ' + fmt(au.currentTime) : '');
+    $('#npmCur').textContent = fmt(curTime()); $('#npmDur').textContent = 'LIVE'; $('#npmSeek').value = on ? 1000 : 0;
+    return;
+  }
   var d = curDur(), c = curTime(), f = d ? Math.min(1, c / d) : 0;
   if (!dragging) { $('#seekFill').style.width = f * 100 + '%'; $('#seekKnob').style.left = f * 100 + '%'; }
   $('#barTime').textContent = fmt(c) + ' / ' + fmt(d);
@@ -933,13 +1026,29 @@ function renderTab() {
   var body = $('#tabBody'), id = P.queue[P.i], t = T(id);
   if (tab === 'queue') {
     var rest = P.queue.length - P.i - 1;
-    var h = '<div class="qhead"><span><b>Up next</b> · ' + plural(Math.max(0, rest), 'song') + ' · ' + fmtLong(P.queue.slice(P.i + 1).reduce(function (a, x) { var tt = T(x); return a + (tt && tt.dur || 0); }, 0)) + '</span>' +
+    var h = '<div class="qhead"><span><b>Up next</b> · ' + (isLive() ? plural(Math.max(0, rest), 'station') + '</span>' : plural(Math.max(0, rest), 'song') + ' · ' + fmtLong(P.queue.slice(P.i + 1).reduce(function (a, x) { var tt = T(x); return a + (tt && tt.dur || 0); }, 0)) + '</span>') +
       '<label class="switch" title="Keep playing similar music when the queue ends"><input type="checkbox" id="apSw"' + (S.autoplay ? ' checked' : '') + '>Autoplay</label></div>';
     var key = regList(P.queue);
     h += '<div class="list">' + P.queue.map(function (qid, k) { return rowHTML(qid, k, key, { ctx: 'queue:' + k }).replace('data-act="row"', 'data-act="qrow" data-qi="' + k + '"'); }).join('') + '</div>';
     body.innerHTML = h;
     $('#apSw').addEventListener('change', function () { S.autoplay = this.checked; save(); });
     var cur = body.querySelector('.row.cur'); if (cur && !isPhone()) body.scrollTop = Math.max(0, cur.offsetTop - body.offsetTop - 80);
+  } else if (tab === 'related' && t && t.src === 'radio') {
+    body.innerHTML = '<div class="qhead"><b>Similar stations</b></div><div class="spinner"></div>';
+    var tag = (t.tags || '').split(',')[0];
+    rbStations({ countrycode: t.cc, tag: tag }).then(function (list) {
+      if (tab !== 'related' || P.queue[P.i] !== id) return;
+      list = list.filter(function (x) { return x.id !== id; }).slice(0, 20);
+      if (list.length < 5) return rbStations({ countrycode: t.cc }).then(function (l2) { return list.concat(l2.filter(function (x) { return x.id !== id && list.indexOf(x) < 0; })).slice(0, 20); });
+      return list;
+    }).then(function (list) {
+      if (!list || tab !== 'related' || P.queue[P.i] !== id) return;
+      body.innerHTML = '<div class="qhead"><b>Similar stations</b></div>' + listHTML(list.map(function (x) { return x.id; }), {});
+    }).catch(function () { if (tab === 'related') body.innerHTML = '<p class="note" style="padding:16px 8px">Couldn’t load similar stations.</p>'; });
+  } else if (tab === 'about' && t && t.src === 'radio') {
+    var fr = [['Station', t.title], ['Location', t.artist || '—'], ['Language', t.lang || '—'], ['Tags', (t.tags || '—').split(',').slice(0, 6).join(', ')], ['Stream', [t.codec, t.bitrate ? t.bitrate + ' kbps' : ''].filter(Boolean).join(' · ') || '—']];
+    body.innerHTML = '<div class="about"><dl>' + fr.map(function (r) { return '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('') + '</dl><p>A live stream listed in the community-run <a href="https://www.radio-browser.info" target="_blank" rel="noopener" style="text-decoration:underline">Radio Browser</a> directory.' +
+      (t.home ? ' <a href="' + esc(t.home) + '" target="_blank" rel="noopener" style="text-decoration:underline">Station website</a>' : '') + '</p></div>';
   } else if (tab === 'related') {
     if (!t) { body.innerHTML = ''; return; }
     var rel;
@@ -1011,6 +1120,14 @@ setInterval(function () { if (sleep) updateSleep(); }, 20000);
 /* ================= likes & playlists ================= */
 function toggleLike(id) {
   var t = T(id); if (!t) return;
+  if (t.src === 'radio') {
+    if (isLiked(id)) { S.fmFav = S.fmFav.filter(function (x) { return x.id !== id; }); toast('Removed from your stations'); }
+    else { S.fmFav.unshift(t); toast('Added to your stations'); }
+    save(); updateLikes();
+    document.querySelectorAll('.like-btn[data-id="' + cssEsc(id) + '"]').forEach(function (b) { var on = isLiked(id); b.classList.toggle('on', on); b.innerHTML = icon(on ? 'heart' : 'heart-o', 'sm'); });
+    if (route.name === 'radio') render();
+    return;
+  }
   if (isLiked(id)) { S.likes = S.likes.filter(function (x) { return x !== id; }); toast('Removed from Liked songs'); }
   else { S.likes.unshift(id); remember(t); toast('Added to Liked songs'); }
   save(); updateLikes();
@@ -1152,6 +1269,17 @@ function toast(msg, action) {
 
 function trackMenu(anchor, id, ctx) {
   var t = T(id); if (!t) return;
+  if (t.src === 'radio') {
+    var fi = [
+      { icon: isLiked(id) ? 'heart' : 'heart-o', label: isLiked(id) ? 'Remove from your stations' : 'Add to your stations', fn: function () { toggleLike(id); } },
+      { icon: 'playnext', label: 'Play next', fn: function () { playNext(id); } },
+      { icon: 'queue', label: 'Add to queue', fn: function () { addToQueue(id); } }
+    ];
+    if (t.home) fi.push('sep', { icon: 'open', label: 'Station website', fn: function () { window.open(t.home, '_blank', 'noopener'); } });
+    if (ctx && ctx.indexOf('queue:') === 0) { var q0 = +ctx.slice(6); if (q0 !== P.i) fi.push('sep', { icon: 'close', label: 'Remove from queue', fn: function () { removeQ(q0); } }); }
+    openMenu(anchor, fi, { track: t });
+    return;
+  }
   var items = [
     { icon: 'radio', label: 'Start radio', fn: function () { startRadio(id); } },
     { icon: 'playnext', label: 'Play next', fn: function () { playNext(id); } },
@@ -1220,7 +1348,7 @@ function render() {
   if (AFTER[route.name]) AFTER[route.name](route.arg);
   document.title = P.queue[P.i] && T(P.queue[P.i]) && !au.paused ? T(P.queue[P.i]).title + ' • ' + T(P.queue[P.i]).artist + ' — Dhun' : (TITLES[route.name] || 'Dhun') + ' — Dhun';
 }
-var TITLES = { home: 'Home', explore: 'Explore', library: 'Library', search: 'Search' };
+var TITLES = { radio: 'Radio', home: 'Home', explore: 'Explore', library: 'Library', search: 'Search' };
 function greeting() { var h = new Date().getHours(); return h < 5 ? 'Up late?' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
 
 function quickPicks() {
@@ -1247,6 +1375,7 @@ var VIEWS = {
     var ups = Object.keys(UP);
     h += shelf('Artists', '<div class="scroller">' + CAT.artists.map(artistCard).join('') + '</div>');
     if (ups.length) h += shelf('Your uploads', listHTML(ups.sort(function (a, b) { return UP[b].added - UP[a].added; }).slice(0, 5), {}), { more: '#/library/uploads', moreLabel: 'See all' });
+    h += shelf('Live radio', '<div id="fmHome"><div class="spinner"></div></div>', { kicker: 'FM & internet radio', more: '#/radio', moreLabel: 'All stations' });
     h += shelf('From the Internet Archive', '<div class="scroller" id="iaHome"><div class="spinner"></div></div>', { kicker: 'Free & legal to stream', more: '#/explore', moreLabel: 'Explore' });
     return h;
   },
@@ -1327,6 +1456,24 @@ var VIEWS = {
     return h;
   },
   ia: function (id) { return '<div id="iaAlbum"><div class="spinner"></div></div>'; },
+  radio: function () {
+    var h = '<div class="fm-hero"><h1 class="page-title">Radio</h1><span class="src-badge live">LIVE</span></div>';
+    h += '<form class="ia-search" id="fmForm"><label class="search"><svg class="ic sm"><use href="#i-search"/></svg><input id="fmQ" type="search" placeholder="Find a station, e.g. Vividh Bharati, Mirchi, BBC" value="' + esc(fmState.q) + '"></label><button class="btn primary" type="submit">Search</button></form>';
+    if (S.fmFav.length) h += shelf('Your stations', stationCards(S.fmFav, true));
+    if (S.fmRecent.length) h += shelf('Recently played', stationCards(S.fmRecent, true));
+    if (fmState.q) {
+      h += '<div class="shelf-head" style="margin-top:8px"><div class="grow"><h2>Stations matching “' + esc(fmState.q) + '”</h2></div><button class="more" data-act="fm-clear">Clear</button></div>';
+    } else {
+      h += '<div class="shelf-head" style="margin-top:8px"><div class="grow"><h2>Browse stations</h2></div></div>';
+      h += '<div class="chips scroll tight">' + FM_COUNTRIES.map(function (c) { return '<button class="chip' + (fmState.cc === c[0] ? ' on' : '') + '" data-fmcc="' + c[0] + '">' + c[1] + '</button>'; }).join('') + '</div>';
+      var fl = [['top', 'Popular']].concat((FM_LANGS[fmState.cc] || []).map(function (l) { return ['lang:' + l, l]; }), FM_TAGS.map(function (t) { return ['tag:' + t[0], t[1]]; }));
+      h += '<div class="chips scroll">' + fl.map(function (f) { return '<button class="chip' + (fmState.f === f[0] ? ' on' : '') + '" data-fmf="' + esc(f[0]) + '">' + esc(f[1]) + '</button>'; }).join('') + '</div>';
+    }
+    h += '<div id="fmRes"><div class="spinner"></div></div>';
+    h += '<p class="note" style="margin-top:24px">Live FM and internet radio from the community-run <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a> directory. Stations come and go, so some may be offline.' +
+      (ALLOW_HTTP ? '' : ' Web browsers can only play stations with secure (https) streams; the Android app can play more stations.') + '</p>';
+    return h;
+  },
   search: function (q) {
     q = (q || '').trim();
     if (!q) return '<h1 class="page-title">Search</h1><div class="chips">' + E.MOODS.map(function (m) { return '<a class="chip" href="#/mix/' + m.id + '">' + esc(m.name) + '</a>'; }).join('') + '</div>';
@@ -1344,6 +1491,7 @@ var VIEWS = {
     if (albums.length) h += shelf('Albums', '<div class="scroller">' + albums.map(albumCard).join('') + '</div>');
     if (pls.length) h += shelf('Your playlists', '<div class="scroller">' + pls.map(function (p) { return cardHTML({ href: '#/playlist/' + p.id, art: plArt(p.id), title: p.name, sub: plural(p.tracks.length, 'song'), play: 'playlist:' + p.id }); }).join('') + '</div>');
     if (!songs.length && !albums.length && !artists.length) h += '<p class="note" style="margin:-6px 0 24px">Nothing in the built-in library matches — see the Internet Archive results below.</p>';
+    h += shelf('Radio stations', '<div id="fmSearchRes"><div class="spinner"></div></div>', { kicker: 'Live' });
     h += shelf('On the Internet Archive', '<div class="grid-cards" id="iaSearchRes"><div class="spinner"></div></div>', { kicker: 'Free music' });
     return h;
   }
@@ -1357,7 +1505,19 @@ function notFound() { return '<div class="empty" style="margin-top:40px"><b>Not 
 var iaState = { q: '', coll: 'netlabels' };
 function iaFail(el, msg) { el.innerHTML = '<div class="empty" style="grid-column:1/-1;width:100%"><b>Couldn’t reach the Internet Archive</b>' + esc(msg || 'You may be offline.') + ' The built-in library still works without a connection.<br><button class="btn ghost" data-act="ia-retry">Try again</button></div>'; }
 var AFTER = {
+  radio: function () {
+    $('#fmForm').addEventListener('submit', function (e) { e.preventDefault(); fmState.q = $('#fmQ').value.trim(); render(); });
+    runFM();
+  },
   home: function () {
+    var fe = $('#fmHome');
+    if (fe) rbStations({ countrycode: fmState.cc }).then(function (list) {
+      if (!document.body.contains(fe)) return;
+      var favIds = {}; S.fmFav.forEach(function (x) { favIds[x.id] = 1; });
+      var all = S.fmFav.concat(list.filter(function (x) { return !favIds[x.id]; })).slice(0, 16);
+      fe.innerHTML = all.length ? stationCards(all, true) : '';
+      if (!all.length) fe.closest('.shelf').style.display = 'none';
+    }).catch(function () { if (!document.body.contains(fe)) return; if (S.fmFav.length) fe.innerHTML = stationCards(S.fmFav, true); else fe.closest('.shelf').style.display = 'none'; });
     var el = $('#iaHome'); if (!el) return;
     iaSearch('', 'netlabels').then(function (docs) { if (!document.body.contains(el)) return; el.innerHTML = docs.slice(0, 14).map(iaCard).join('') || '<p class="note">No results.</p>'; })
       .catch(function () { if (document.body.contains(el)) el.closest('.shelf').style.display = 'none'; });
@@ -1367,6 +1527,11 @@ var AFTER = {
     runIA();
   },
   search: function (q) {
+    var fe = $('#fmSearchRes');
+    if (fe) rbStations({ name: q }).then(function (list) {
+      if (!document.body.contains(fe)) return;
+      if (list.length) fe.innerHTML = stationCards(list.slice(0, 16), true); else fe.closest('.shelf').style.display = 'none';
+    }).catch(function () { if (document.body.contains(fe)) fe.closest('.shelf').style.display = 'none'; });
     var el = $('#iaSearchRes'); if (!el) return;
     iaSearch(q, 'all').then(function (docs) { if (!document.body.contains(el)) return; el.innerHTML = docs.slice(0, 18).map(iaCard).join('') || '<p class="note">No matches on the Internet Archive.</p>'; })
       .catch(function (e) { if (document.body.contains(el)) iaFail(el); });
@@ -1432,7 +1597,7 @@ document.addEventListener('click', function (e) {
     case 'mute': au.muted = !au.muted; updateVolIcon(); return;
     case 'like-cur': if (P.queue[P.i]) toggleLike(P.queue[P.i]); return;
     case 'menu-cur': if (P.queue[P.i]) trackMenu(el, P.queue[P.i], ''); return;
-    case 'radio-cur': if (P.queue[P.i]) startRadio(P.queue[P.i]); return;
+    case 'radio-cur': if (isLive()) { if (!npOpen) openNP(); document.querySelector('.tabs [data-tab="related"]').click(); return; } if (P.queue[P.i]) startRadio(P.queue[P.i]); return;
     case 'radio-artist': { var ar = CAT.artistById[id]; startRadio(ar.tracks[Math.floor(Math.random() * ar.tracks.length)]); return; }
     case 'np-open': if (isPhone() || !npOpen) openNP(); else closeNP(); return;
     case 'np-toggle': npOpen ? closeNP() : openNP(); return;
@@ -1445,7 +1610,20 @@ document.addEventListener('click', function (e) {
     case 'playlist-ids': setQueue(Object.keys(UP).sort(function (a, b) { return UP[b].added - UP[a].added; }), 0); return;
     case 'clear-history': confirmDialog('Clear listening history?', 'Listen again, Replay mix and recommendations will start fresh.', 'Clear').then(function (ok) { if (ok) { S.history = []; save(); render(); } }); return;
     case 'ia-retry': iaSearchCache = {}; render(); return;
+    case 'fm': {
+      e.stopPropagation();
+      var fl2 = LISTS[el.getAttribute('data-li')], fi2 = +el.getAttribute('data-i'); if (!fl2) return;
+      if (P.queue[P.i] === fl2[fi2] && P.loadedId) { toggle(); return; }
+      setQueue(fl2, fi2, { noShuffle: true }); return;
+    }
+    case 'fm-retry': fmCache = {}; render(); return;
+    case 'fm-clear': fmState.q = ''; render(); return;
   }
+});
+document.addEventListener('click', function (e) {
+  var c = e.target.closest('[data-fmcc]'), f = e.target.closest('[data-fmf]');
+  if (c) { fmState.cc = c.getAttribute('data-fmcc'); fmState.f = 'top'; S.fmCC = fmState.cc; save(); render(); }
+  else if (f) { fmState.f = f.getAttribute('data-fmf'); document.querySelectorAll('[data-fmf]').forEach(function (x) { x.classList.toggle('on', x === f); }); runFM(); }
 });
 document.addEventListener('click', function (e) { var c = e.target.closest('[data-iacoll]'); if (c) { iaState.coll = c.getAttribute('data-iacoll'); document.querySelectorAll('[data-iacoll]').forEach(function (x) { x.classList.toggle('on', x === c); }); runIA(); } });
 document.addEventListener('contextmenu', function (e) { var r = e.target.closest('.row'); if (r) { e.preventDefault(); trackMenu(r.querySelector('[data-act="tmenu"]') || r, r.getAttribute('data-id'), r.getAttribute('data-ctx')); } });
@@ -1521,7 +1699,9 @@ window.addEventListener('pagehide', function () { saveResume(); saveNow(); });
 /* archive.org covers can fail offline: fall back to a drawn cover */
 document.addEventListener('error', function (e) {
   var im = e.target; if (!im || im.tagName !== 'IMG' || im.dataset.fb) return;
-  im.dataset.fb = '1'; im.src = E.cover(im.getAttribute('src') || 'x', 'upload', 360);
+  im.dataset.fb = '1';
+  if (im.classList.contains('logo')) { im.classList.remove('logo'); im.src = E.cover(im.alt || 'Radio', 'radio', 360); return; }
+  im.src = E.cover(im.getAttribute('src') || 'x', 'upload', 360);
 }, true);
 
 /* ================= start ================= */
