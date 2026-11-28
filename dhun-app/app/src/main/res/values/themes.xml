@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The WebView's prefers-color-scheme follows this theme, so the app goes dark with the phone. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#faf8fb</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowBackground">#faf8fb</item>
+    </style>
+</resources>
