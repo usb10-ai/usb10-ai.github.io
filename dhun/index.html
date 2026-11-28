@@ -669,13 +669,15 @@ function rbGet(path) {
 function stationFrom(s) {
   var url = (s.url_resolved || s.url || '').trim();
   if (!url || !s.stationuuid) return null;
-  if (!ALLOW_HTTP && !/^https:/i.test(url)) return null;
+  var upgraded = false;
+  if (!ALLOW_HTTP && !/^https:/i.test(url)) { url = url.replace(/^http:/i, 'https:'); upgraded = true; }
   if ((s.hls == 1 || /\.m3u8(\?|$)/i.test(url)) && !CAN_HLS) return null;
   var loc = [s.state, s.country].filter(function (x) { return x && x.trim(); }).join(', ');
   var name = (s.name || '').replace(/\s+/g, ' ').trim(); if (!name) return null;
   return { id: 'fm:' + s.stationuuid, uuid: s.stationuuid, src: 'radio', title: name, artist: loc, album: 'Live radio', url: url,
     art: /^https:/i.test(s.favicon || '') ? s.favicon : '', tags: s.tags || '', cc: s.countrycode || '', lang: s.language || '',
-    codec: s.codec || '', bitrate: s.bitrate || 0, home: /^https?:/i.test(s.homepage || '') ? s.homepage : '', dur: 0 };
+    codec: s.codec || '', bitrate: s.bitrate || 0, home: /^https?:/i.test(s.homepage || '') ? s.homepage : '', dur: 0,
+    clicks: s.clickcount || 0, upgraded: upgraded };
 }
 function rbStations(params) {
   var q = Object.keys(params).filter(function (k) { return params[k]; }).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
@@ -684,6 +686,7 @@ function rbStations(params) {
   return rbGet('stations/search?' + q).then(function (arr) {
     var seen = {}, out = [];
     (arr || []).forEach(function (s) { var st = stationFrom(s); if (!st) return; var k = st.title.toLowerCase(); if (seen[k]) return; seen[k] = 1; FM[st.id] = FM[st.id] || st; out.push(FM[st.id]); });
+    out.sort(function (a, b) { return (a.upgraded - b.upgraded) || (b.clicks - a.clicks); });
     out = out.slice(0, 60); fmCache[q] = out; return out;
   });
 }
@@ -704,10 +707,30 @@ function fmParams() {
   else if (fmState.f.indexOf('tag:') === 0) p.tag = fmState.f.slice(4);
   return p;
 }
+// The directory spells languages inconsistently (Odia is often "oriya") and many stations only tag it.
+var LANG_ALIASES = { odia: ['odia', 'oriya', 'odisha', 'orissa'], bengali: ['bengali', 'bangla'], punjabi: ['punjabi', 'panjabi'],
+  hindi: ['hindi'], telugu: ['telugu'], tamil: ['tamil'], kannada: ['kannada'], malayalam: ['malayalam'], marathi: ['marathi'], gujarati: ['gujarati'], english: ['english'] };
+function rbLanguage(lang, cc) {
+  lang = lang.toLowerCase();
+  var al = LANG_ALIASES[lang] || [lang], reqs = [];
+  al.forEach(function (a) {
+    reqs.push({ language: a }, { tag: a });
+    if (lang !== 'english' && lang !== 'hindi') reqs.push({ name: a });
+  });
+  return Promise.all(reqs.map(function (p) { return rbStations(p).catch(function () { return null; }); })).then(function (lists) {
+    if (lists.every(function (l) { return l === null; })) throw new Error('directory unreachable');
+    var seen = {}, out = [];
+    lists.forEach(function (l) { (l || []).forEach(function (st) { if (!seen[st.id] && !seen[st.title.toLowerCase()]) { seen[st.id] = seen[st.title.toLowerCase()] = 1; out.push(st); } }); });
+    // stations from the chosen country first, then secure streams, then the most popular
+    out.sort(function (a, b) { return ((b.cc === cc) - (a.cc === cc)) || (a.upgraded - b.upgraded) || (b.clicks - a.clicks); });
+    return out.slice(0, 80);
+  });
+}
 function runFM() {
   var el = $('#fmRes'); if (!el) return;
   el.innerHTML = '<div class="spinner"></div>';
-  rbStations(fmParams()).then(function (list) {
+  var pr = !fmState.q && fmState.f.indexOf('lang:') === 0 ? rbLanguage(fmState.f.slice(5), fmState.cc) : rbStations(fmParams());
+  pr.then(function (list) {
     if (!document.body.contains(el)) return;
     el.innerHTML = list.length ? stationCards(list, false) : '<div class="empty"><b>No stations found</b>' + (fmState.q ? 'Try a different name.' : 'Try another language or category.') + '</div>';
   }).catch(function () { if (document.body.contains(el)) fmFail(el); });
@@ -907,9 +930,10 @@ au.addEventListener('error', function () {
   if (!au.getAttribute('src') || !P.loadedId) return;
   setLoading(false);
   var t = T(P.queue[P.i]);
-  if (t && t.src === 'radio') toast('“' + t.title + '” isn’t responding right now' + (P.i < P.queue.length - 1 ? ' — trying the next station' : ''));
+  if (t && t.src === 'radio' && t.upgraded) toast('“' + t.title + '” only streams over http, which browsers block here — it plays in the Dhun Android app' + (P.i < P.queue.length - 1 ? '. Trying the next station' : ''));
+  else if (t && t.src === 'radio') toast('“' + t.title + '” isn’t responding right now' + (P.i < P.queue.length - 1 ? ' — trying the next station' : ''));
   else toast('Couldn’t play “' + (t ? t.title : 'this song') + '”' + (t && t.src === 'ia' ? ' — check your connection' : ''));
-  if (t && (t.src === 'ia' || t.src === 'radio') && P.i < P.queue.length - 1) setTimeout(function () { next(true); }, 1800);
+  if (t && (t.src === 'ia' || t.src === 'radio') && P.i < P.queue.length - 1) setTimeout(function () { next(true); }, t.src === 'radio' ? 3200 : 1800);
 });
 au.addEventListener('timeupdate', function () { if (Math.floor(au.currentTime) % 5 === 0) saveResume(); updatePosState(); });
 
@@ -1471,7 +1495,7 @@ var VIEWS = {
     }
     h += '<div id="fmRes"><div class="spinner"></div></div>';
     h += '<p class="note" style="margin-top:24px">Live FM and internet radio from the community-run <a href="https://www.radio-browser.info" target="_blank" rel="noopener">Radio Browser</a> directory. Stations come and go, so some may be offline.' +
-      (ALLOW_HTTP ? '' : ' Web browsers can only play stations with secure (https) streams; the Android app can play more stations.') + '</p>';
+      (ALLOW_HTTP ? '' : ' Some stations only stream over http, which browsers block on secure websites; Dhun tries a secure link for them, and the Android app plays them all.') + '</p>';
     return h;
   },
   search: function (q) {
