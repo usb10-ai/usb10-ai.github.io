@@ -67,7 +67,11 @@ object ScreenTime {
     fun foregroundMs(events: List<Ev>, start: Long, end: Long, excluded: Set<String>): Long =
         perAppMs(events, start, end).filterKeys { it !in excluded }.values.sum()
 
-    private fun excluded(c: Context) = setOfNotNull(c.packageName, Restriction.homePackage(c), "com.android.systemui")
+    /** In-call screens: Digital Wellbeing doesn't count time on phone calls. */
+    val CALL_SCREENS = setOf("com.samsung.android.incallui", "com.android.incallui", "com.android.server.telecom")
+
+    private fun excluded(c: Context) =
+        setOfNotNull(c.packageName, Restriction.homePackage(c), "com.android.systemui") + CALL_SCREENS
 
     /** Per-app visible time for [day] from Android's usage history, or null without Usage access. */
     fun systemPerApp(c: Context, day: LocalDate): Map<String, Long>? {
