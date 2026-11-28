@@ -13,7 +13,13 @@ import android.widget.*
 
 class MainActivity : Activity() {
     private var refreshAllowedHook: (() -> Unit)? = null
-    override fun onResume() { super.onResume(); refreshAllowedHook?.invoke() }
+    private var summaryHook: (() -> Unit)? = null
+    private val ui = android.os.Handler(android.os.Looper.getMainLooper())
+    private val periodic = object : Runnable {
+        override fun run() { summaryHook?.invoke(); ui.postDelayed(this, 60_000L) }
+    }
+    override fun onResume() { super.onResume(); refreshAllowedHook?.invoke(); ui.postDelayed(periodic, 60_000L) }
+    override fun onPause() { ui.removeCallbacks(periodic); super.onPause() }
 
     override fun onCreate(b: Bundle?) {
         super.onCreate(b)
@@ -70,20 +76,29 @@ class MainActivity : Activity() {
             addView(Ui.text(c, "Screen time today", 14f, Ui.MUTED)); addView(stToday); addView(stCompare); addView(chart)
         })
         fun refreshSummary() {
-            val d0 = java.time.LocalDate.now()
-            val t = ScreenTime.msOn(c, d0); val y = ScreenTime.msOn(c, d0.minusDays(1))
-            stToday.text = ScreenTime.format(t)
-            val diff = t - y
-            val cmp = when {
-                y == 0L -> "No data for yesterday yet"
-                diff <= 0 -> "▼ ${ScreenTime.format(-diff)} less than yesterday so far"
-                else -> "▲ ${ScreenTime.format(diff)} more than yesterday"
-            }
-            stCompare.text = "$cmp  ·  Reminders today: ${ScreenTime.reminders(c, d0)}"
-            val days = (6 downTo 0).map { d0.minusDays(it.toLong()) }
-            chart.values = days.map { ScreenTime.msOn(c, it) }
-            chart.labels = days.map { if (it == d0) "Today" else it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()) }
+            // Reading a week of usage history can take a moment, so do it off the UI thread.
+            Thread {
+                val d0 = java.time.LocalDate.now()
+                val days = (6 downTo 0).map { d0.minusDays(it.toLong()) }
+                val accurate = Restriction.usageAccessGranted(c)
+                val values = days.map { runCatching { ScreenTime.msFor(c, it) }.getOrDefault(ScreenTime.msOn(c, it)) }
+                runOnUiThread {
+                    val t = values.last(); val y = values[values.size - 2]
+                    stToday.text = ScreenTime.format(t)
+                    val diff = t - y
+                    val cmp = when {
+                        !accurate -> "⚠️ Grant Usage access (Settings tab) for accurate screen time"
+                        y == 0L -> "No data for yesterday"
+                        diff <= 0 -> "▼ ${ScreenTime.format(-diff)} less than yesterday so far"
+                        else -> "▲ ${ScreenTime.format(diff)} more than yesterday"
+                    }
+                    stCompare.text = "$cmp  ·  Reminders today: ${ScreenTime.reminders(c, d0)}"
+                    chart.values = values
+                    chart.labels = days.map { if (it == d0) "Today" else it.dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.getDefault()) }
+                }
+            }.start()
         }
+        summaryHook = ::refreshSummary
         refreshSummary()
 
         // Badges (card is added below the habits)
@@ -242,8 +257,8 @@ class MainActivity : Activity() {
                     Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))),
                 Triple("Battery: unrestricted", pm.isIgnoringBatteryOptimizations(packageName),
                     Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))),
-                Triple("Usage access" + if (needsUsage) "" else " (only for one-app restriction)",
-                    Restriction.usageAccessGranted(c) || !needsUsage, Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)))
+                Triple("Usage access (screen time" + (if (needsUsage) ", one-app restriction)" else ")"),
+                    Restriction.usageAccessGranted(c), Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)))
             checklist.removeAllViews()
             checklist.addView(Ui.text(c, "Setup checklist", 18f, bold = true))
             items.forEach { (name, ok, fix) ->
