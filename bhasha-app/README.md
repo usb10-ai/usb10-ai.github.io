@@ -15,6 +15,16 @@ mkdir -p app/src/main/assets/www && cp ../bhasha/index.html ../bhasha/courses.js
 gradle assembleDebug        # JDK 17, Android SDK 34
 ```
 
+## In-app updates
+Each build also publishes `bhasha/version.json` (`code` = workflow run number = the APK's versionCode,
+`name`, `notes` = the commit subject). On launch the app fetches it; when `code` is higher than the
+installed version it shows an "Update available" banner. **Update now** downloads the APK inside the
+app and hands it to Android's installer (PackageInstaller), so the learner just taps Install.
+The first time, Android asks to allow Bhasha to install apps. Progress → "Check for updates" checks on demand.
+
+To ship an update: change `bhasha/` or `bhasha-app/`, push to main, wait for the "Build Bhasha APK" workflow.
+The commit subject becomes the "what's new" text in the banner.
+
 ## Notes
 - Pronunciation uses the phone's text-to-speech engine (Android's WebView has no Web Speech API).
   Telugu voices come with Google's speech engine on most phones; if a language has no voice,

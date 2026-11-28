@@ -203,6 +203,14 @@ select{font:inherit;border:2px solid var(--line);border-radius:10px;padding:6px 
 .rstat.ok{border-color:var(--ok)} .rstat.ok .k{background:var(--ok)}
 .rstat.fire{border-color:var(--accent)} .rstat.fire .k{background:var(--accent)}
 .foot-note{color:var(--ink-faint);font-size:.8rem;text-align:center;padding:30px 0}
+.upd{border:2px solid var(--ok);background:var(--ok-soft);border-radius:16px;padding:12px 14px;margin:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.upd .t{flex:1;min-width:180px}
+.upd .t b{display:block;color:var(--ok-dark)}
+.upd .t small{color:var(--ink-soft)}
+.upd .bar{width:100%;height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.upd .bar i{display:block;height:100%;background:var(--ok);transition:width .2s}
+.upd.err{border-color:var(--bad);background:var(--bad-soft)}
+.upd.err .t b{color:var(--bad)}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;font-size:.9rem;z-index:20;max-width:calc(100% - 32px)}
 </style>
 </head>
@@ -275,6 +283,28 @@ function refreshVoices() {
   if (!("speechSynthesis" in window)) return;
   const v = speechSynthesis.getVoices();
   for (const k in C) voices[k] = v.find(x => x.lang && x.lang.toLowerCase().replace("_","-").startsWith(C[k].speech + "-")) || v.find(x => x.lang && x.lang.toLowerCase() === C[k].speech) || null;
+}
+/* ---------- App updates (Android app only) ---------- */
+const APP = window.AndroidApp || null;
+const UPD = { info: null, pct: null, msg: "", err: false, later: false, checking: false };
+const updRender = () => { if (view === "home") render(); };
+window.bhashaUpdate = {
+  onAvailable(info) { UPD.info = info; UPD.checking = false; UPD.msg = ""; UPD.err = false; updRender(); },
+  onNone() { UPD.checking = false; UPD.err = false; UPD.msg = "✓ You have the latest version."; updRender(); },
+  onProgress(p) { UPD.pct = p; UPD.err = false; UPD.msg = ""; updRender(); },
+  onStatus(m) { UPD.msg = m; UPD.err = false; updRender(); },
+  onError(m) { UPD.checking = false; UPD.pct = null; UPD.msg = m; UPD.err = true; updRender(); }
+};
+function updateBanner() {
+  if (!APP || !UPD.info || (UPD.later && UPD.pct == null)) return "";
+  const busy = UPD.pct != null && !UPD.err;
+  return `<div class="upd ${UPD.err ? "err" : ""}"><div class="t">
+      <b>${UPD.err ? "Update didn't finish" : busy ? (UPD.pct >= 100 || UPD.pct < 0 ? "Downloading update…" : `Downloading update… ${UPD.pct}%`) : `🎉 New version ${esc(UPD.info.name || "")} is ready`}</b>
+      <small>${esc(UPD.err || UPD.msg ? UPD.msg : UPD.info.notes || "New lessons and improvements.")}</small></div>
+    ${busy ? `<div class="bar"><i style="width:${Math.max(3, UPD.pct)}%"></i></div>` :
+      `<button class="btn ok" data-act="updNow" style="padding:10px 16px">${UPD.err ? "Try again" : "Update now"}</button>
+       ${UPD.err ? "" : `<button class="btn ghost" data-act="updLater" style="padding:10px 14px">Later</button>`}`}
+  </div>`;
 }
 // Called by the Android app once its speech engine has started.
 window.bhashaVoicesReady = () => { refreshVoices(); if (view === "home") render(); };
@@ -497,6 +527,7 @@ function renderHome() {
     ${[["learn","🗺️","Learn"],["letters","🔤","Letters"],["me","📊","Progress"]].map(([k,i,l]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${tab===k}">${i} ${l}</button>`).join("")}
   </nav>`;
   if (tab === "learn") {
+    body += updateBanner();
     body += `<div class="goal">${ring(xpToday / S.goal)}<div style="flex:1"><b>Daily goal: ${Math.min(xpToday, S.goal)} / ${S.goal} XP</b><small>${xpToday >= S.goal ? "Goal reached — nice work!" : "Finish a lesson to earn 10–15 XP."}</small></div>
       <button class="btn ghost" data-act="practice" style="padding:10px 14px">Practice</button></div>`;
     let currentFound = false;
@@ -547,6 +578,8 @@ function renderHome() {
       <div class="row"><span><b>Show transliteration</b><br><small style="color:var(--ink-soft)">Roman letters under ${esc(c.name)} words</small></span><input type="checkbox" data-set="translit" ${S.translit?"checked":""} style="width:22px;height:22px"></div>
       <div class="row"><span><b>Sound effects</b></span><input type="checkbox" data-set="sound" ${S.sound?"checked":""} style="width:22px;height:22px"></div>
       <div class="row"><span><b>Voice for ${esc(c.name)}</b><br><small style="color:var(--ink-soft)">${canSpeak(S.lang) ? esc(voices[S.lang].name) : "None found on this device — listening drills are skipped"}</small></span>${IN_APP && !canSpeak(S.lang) ? `<button class="btn ghost" data-act="ttsSettings" style="padding:8px 14px;font-size:.8rem">Get voice</button>` : ""}</div>
+      ${APP ? `<div class="row"><span><b>App version ${esc(APP.versionName())}</b><br><small style="color:var(--ink-soft)">${UPD.info && UPD.pct == null ? "Version " + esc(UPD.info.name) + " is available" : UPD.checking ? "Checking…" : esc(UPD.msg)}</small></span>
+        ${UPD.info && UPD.pct == null ? `<button class="btn ok" data-act="updNow" style="padding:8px 14px;font-size:.8rem">Update now</button>` : `<button class="btn ghost" data-act="updCheck" style="padding:8px 14px;font-size:.8rem">Check for updates</button>`}</div>` : ""}
       <div class="row"><span><b>Reset ${esc(c.name)} progress</b></span><button class="btn bad" data-act="reset" style="padding:8px 14px;font-size:.8rem">Reset</button></div>
     </div>`;
   }
@@ -565,6 +598,9 @@ app.addEventListener("click", e => {
   if (act === "pick") { view = "pick"; render(); }
   else if (act === "home") { view = S.lang ? "home" : "pick"; render(); }
   else if (act === "practice") { const ex = buildPractice(); if (!ex) toast("Finish your first lesson to unlock practice."); else startLesson(ex, { kind: "practice" }); }
+  else if (act === "updNow") { UPD.later = false; UPD.err = false; UPD.msg = ""; UPD.pct = 0; render(); try { APP.installUpdate((UPD.info && UPD.info.apk) || "Bhasha.apk"); } catch (e) {} }
+  else if (act === "updLater") { UPD.later = true; render(); }
+  else if (act === "updCheck") { UPD.checking = true; UPD.msg = ""; UPD.err = false; render(); try { APP.checkUpdate(); } catch (e) {} }
   else if (act === "ttsSettings") { try { NATIVE.openSettings(); } catch (e) {} }
   else if (act === "reset") { if (confirm(`Reset all ${course().name} progress?`)) { S.progress[S.lang] = { done: {}, xp: 0, letters: 0 }; save(); render(); } }
 });
