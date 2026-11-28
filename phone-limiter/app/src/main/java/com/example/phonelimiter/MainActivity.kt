@@ -290,6 +290,13 @@ class MainActivity : Activity() {
         }
         refreshChecklist()
 
+        // In-app updates
+        settingsPage.addView(Ui.card(c).apply {
+            addView(Ui.text(c, "App updates", 18f, bold = true))
+            addView(Ui.text(c, "Installed: ${BuildConfig.VERSION_NAME}. New versions download straight into the app.", 14f, Ui.MUTED))
+            addView(Ui.button(c, "Check for updates").apply { setOnClickListener { Updater.check(c, silent = false) } })
+        })
+
         // Break reminder settings
         val limit = Ui.number(c, Prefs.limitMin(c))
         val brk = Ui.number(c, Prefs.breakMin(c))
@@ -378,5 +385,6 @@ class MainActivity : Activity() {
         })
         refresh()
         setContentView(ScrollView(c).apply { setBackgroundColor(Ui.BG); addView(root) })
+        if (b == null) Updater.check(this, silent = true) // quietly look for a newer build on launch
     }
 }

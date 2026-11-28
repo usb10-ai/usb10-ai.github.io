@@ -28,4 +28,7 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { buildConfig = true }
 }
-dependencies { testImplementation("junit:junit:4.13.2") }
+dependencies {
+    implementation("androidx.core:core:1.13.1") // FileProvider, to hand the downloaded update to the installer
+    testImplementation("junit:junit:4.13.2")
+}

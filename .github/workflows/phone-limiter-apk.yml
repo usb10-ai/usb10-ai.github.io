@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
   push:
     paths: ["phone-limiter/**"]
+permissions:
+  contents: write   # publish the APK as a release so the app can update itself
+concurrency: phone-limiter-release
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,3 +21,15 @@ jobs:
         with:
           name: phone-limiter-debug-apk
           path: phone-limiter/app/build/outputs/apk/debug/app-debug.apk
+      # The app's "Check for updates" reads version.json and downloads app-debug.apk from this release.
+      - name: Publish in-app update
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk phone-limiter.apk
+          echo "{\"versionCode\": ${GITHUB_RUN_NUMBER}, \"versionName\": \"build ${GITHUB_RUN_NUMBER}\"}" > version.json
+          gh release delete phone-limiter-latest --yes --cleanup-tag || true
+          gh release create phone-limiter-latest phone-limiter.apk version.json \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Phone Limiter build ${GITHUB_RUN_NUMBER}" \
+            --notes "Latest Phone Limiter APK. The app updates itself from here (Settings > App updates)."
